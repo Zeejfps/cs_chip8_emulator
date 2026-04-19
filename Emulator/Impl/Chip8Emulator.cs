@@ -51,6 +51,7 @@ internal sealed class Chip8Emulator : IChip8
     }
     
     public int ProgramCounter => _programCounter;
+    public int IndexRegister => _indexRegister;
     public byte DelayTimer => _delayTimer;
     public byte SoundTimer => _soundTimer;
     public ReadOnlySpan<byte> Memory => _memory;
