@@ -145,11 +145,30 @@ internal sealed class Chip8Emulator : IChip8
             case 0xC:
                 break;
             case 0xD:
+                DrawToScreen(ins);
                 break;
             case 0xE:
                 break;
             case 0xF:
                 break;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void DrawToScreen(int ins)
+    {
+        var x = _vRegisters[ExtractX(ins)];
+        var y = _vRegisters[ExtractY(ins)];
+        var n = ExtractN(ins);
+
+        for (var i = 0; i < n; i++)
+        {
+            var row = _memory[_indexRegister + i];
+            var result = _display.BlitRow(x, y, row);
+            if (result == 0)
+            {
+                _vRegisters[0xF] = 1;
+            }
         }
     }
 
