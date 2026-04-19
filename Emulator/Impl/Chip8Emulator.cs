@@ -6,10 +6,14 @@ namespace Emulator.Impl;
 
 internal sealed class Chip8Emulator : IChip8
 {
+    private const double FrameTimeInSeconds = 1.0 / 60.0;
+    private const int InstructionsPerSecond = 700;
+    
     private readonly IDisplay _display;
     private readonly IAudio _audio;
     
     private readonly byte[] _memory = new byte[4096];
+    private readonly byte[] _vRegisters = new byte[16];
     private readonly byte[] _font =
     [
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -34,19 +38,25 @@ internal sealed class Chip8Emulator : IChip8
     private byte _soundTimer;
     private int _programCounter;
     private int _indexRegister;
-    private byte[] _vRegisters = new byte[16];
     private Stack<ushort> _stack = new();
-    
-    private const double FrameTimeInSeconds = 1.0 / 60.0;
-    private const int InstructionsPerSecond = 700;
     
     private long _startTime;
     private double _totalElapsedSeconds;
+    private int _instructionsExecuted;
     
     public Chip8Emulator(IDisplay display, IAudio audio)
     {
         _display = display;
         _audio = audio;
+    }
+    
+    public int ProgramCounter => _programCounter;
+    public byte DelayTimer => _delayTimer;
+    public byte SoundTimer => _soundTimer;
+    public ReadOnlySpan<byte> Memory => _memory;
+    public byte ReadRegister(int x)
+    {
+        return _vRegisters[x];
     }
 
     public void Execute(ReadOnlySpan<byte> program)
@@ -61,17 +71,19 @@ internal sealed class Chip8Emulator : IChip8
 
     public void Tick()
     {
+        if (_instructionsExecuted < InstructionsPerSecond)
+        {
+            FetchDecodeExecute();
+            _instructionsExecuted++;
+        }
+        
         var endTime = Stopwatch.GetTimestamp();
         var elapsed = endTime - _startTime;
         _totalElapsedSeconds += elapsed / (double) Stopwatch.Frequency ;
         _startTime = endTime;
+        
         if (_totalElapsedSeconds >= FrameTimeInSeconds)
         {
-            for (var i = 0; i < InstructionsPerSecond; i++)
-            {
-                FetchDecodeExecute();
-            }
-            
             if (_delayTimer > 0)
             {
                 _delayTimer--;
@@ -85,6 +97,7 @@ internal sealed class Chip8Emulator : IChip8
                 
             _display.Update();
             _totalElapsedSeconds = 0;
+            _instructionsExecuted = 0;
         }
     }
 
