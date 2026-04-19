@@ -1,0 +1,12 @@
+using Emulator.Api;
+
+namespace Emulator.Tests.Fakes;
+
+internal sealed class FakeDisplay : IDisplay
+{
+    public int ClearCount { get; private set; }
+    public int UpdateCount { get; private set; }
+
+    public void Clear() => ClearCount++;
+    public void Update() => UpdateCount++;
+}
