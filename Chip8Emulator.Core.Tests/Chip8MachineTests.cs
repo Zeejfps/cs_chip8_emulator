@@ -319,6 +319,149 @@ public class Chip8MachineTests
         Assert.Equal(0, emulator.ReadRegister(0xF));
     }
 
+    [Fact]
+    public void VxSubVy_NoBorrow_StoresDifferenceAndSetsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x610A);
+        emulator.ExecuteSetRegisterValueIns(0x6203);
+
+        emulator.ExecuteVxSubVyIns(0x8125);
+
+        Assert.Equal(0x07, emulator.ReadRegister(1));
+        Assert.Equal(0x03, emulator.ReadRegister(2));
+        Assert.Equal(1, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void VxSubVy_Borrow_WrapsAndClearsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6103);
+        emulator.ExecuteSetRegisterValueIns(0x620A);
+
+        emulator.ExecuteVxSubVyIns(0x8125);
+
+        Assert.Equal(0xF9, emulator.ReadRegister(1));
+        Assert.Equal(0x0A, emulator.ReadRegister(2));
+        Assert.Equal(0, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void VxSubVy_WhenEqual_SetsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6142);
+        emulator.ExecuteSetRegisterValueIns(0x6242);
+
+        emulator.ExecuteVxSubVyIns(0x8125);
+
+        Assert.Equal(0x00, emulator.ReadRegister(1));
+        Assert.Equal(1, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void VySubVx_NoBorrow_StoresDifferenceAndSetsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6103);
+        emulator.ExecuteSetRegisterValueIns(0x620A);
+
+        emulator.ExecuteVySubVxIns(0x8127);
+
+        Assert.Equal(0x07, emulator.ReadRegister(1));
+        Assert.Equal(0x0A, emulator.ReadRegister(2));
+        Assert.Equal(1, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void VySubVx_Borrow_WrapsAndClearsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x610A);
+        emulator.ExecuteSetRegisterValueIns(0x6203);
+
+        emulator.ExecuteVySubVxIns(0x8127);
+
+        Assert.Equal(0xF9, emulator.ReadRegister(1));
+        Assert.Equal(0x03, emulator.ReadRegister(2));
+        Assert.Equal(0, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void ShiftRight_EvenValue_ShiftsAndClearsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6108);
+
+        emulator.ExecuteShiftRightIns(0x8106);
+
+        Assert.Equal(0x04, emulator.ReadRegister(1));
+        Assert.Equal(0, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void ShiftRight_OddValue_ShiftsAndSetsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6109);
+
+        emulator.ExecuteShiftRightIns(0x8106);
+
+        Assert.Equal(0x04, emulator.ReadRegister(1));
+        Assert.Equal(1, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void ShiftLeft_MsbClear_ShiftsAndClearsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6141);
+
+        emulator.ExecuteShiftLeftIns(0x810E);
+
+        Assert.Equal(0x82, emulator.ReadRegister(1));
+        Assert.Equal(0, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void ShiftLeft_MsbSet_ShiftsAndSetsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6181);
+
+        emulator.ExecuteShiftLeftIns(0x810E);
+
+        Assert.Equal(0x02, emulator.ReadRegister(1));
+        Assert.Equal(1, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void SkipIfRegisterNotEqualsRegister_SkipsNextInstruction_WhenNotEqual()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6142);
+        emulator.ExecuteSetRegisterValueIns(0x6201);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
+
+        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfRegisterNotEqualsRegister_DoesNotSkip_WhenEqual()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6142);
+        emulator.ExecuteSetRegisterValueIns(0x6242);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
+    }
+
     [Theory]
     [InlineData(0x8120, 0x05, 0xAA, 0xAA)]
     [InlineData(0x8121, 0xF0, 0x0F, 0xFF)]
