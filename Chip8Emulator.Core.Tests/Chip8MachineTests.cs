@@ -41,14 +41,24 @@ public class Chip8MachineTests
     }
 
     [Fact]
-    public void InitialState_AllMemoryIsZero()
+    public void InitialState_MemoryIsZeroOutsideFontRegion()
     {
         var emulator = CreateEmulator();
 
-        foreach (var b in emulator.Memory)
+        for (var i = 0; i < emulator.Memory.Length; i++)
         {
-            Assert.Equal(0, b);
+            if (i >= 0x050 && i < 0x050 + 80) continue;
+            Assert.Equal(0, emulator.Memory[i]);
         }
+    }
+
+    [Fact]
+    public void InitialState_FontLoadedAt0x050()
+    {
+        var emulator = CreateEmulator();
+
+        var zeroSprite = emulator.Memory.Slice(0x050, 5);
+        Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, zeroSprite.ToArray());
     }
 
     [Theory]
@@ -648,6 +658,104 @@ public class Chip8MachineTests
 
         Assert.Equal(0, emulator.DelayTimer);
         Assert.Equal(0, emulator.SoundTimer);
+    }
+
+    [Fact]
+    public void AddVxToI_AddsVxToIndexRegister()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetIndexRegisterIns(0xA100);
+        emulator.ExecuteSetRegisterValueIns(0x6125);
+
+        emulator.ExecuteAddVxToI(0xF11E);
+
+        Assert.Equal(0x125, emulator.IndexRegister);
+    }
+
+    [Fact]
+    public void AddVxToI_AccumulatesAcrossCalls()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetIndexRegisterIns(0xA010);
+        emulator.ExecuteSetRegisterValueIns(0x6105);
+
+        emulator.ExecuteAddVxToI(0xF11E);
+        emulator.ExecuteAddVxToI(0xF11E);
+
+        Assert.Equal(0x01A, emulator.IndexRegister);
+    }
+
+    [Theory]
+    [InlineData(0x0, 0x050)]
+    [InlineData(0x1, 0x055)]
+    [InlineData(0x9, 0x07D)]
+    [InlineData(0xA, 0x082)]
+    [InlineData(0xF, 0x09B)]
+    public void LoadFontCharacter_SetsIndexToFontBasePlus5TimesVx(byte vx, int expectedIndex)
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6100 | vx);
+
+        emulator.ExecuteLoadFontCharacter(0xF129);
+
+        Assert.Equal(expectedIndex, emulator.IndexRegister);
+    }
+
+    [Fact]
+    public void LoadFontCharacter_IndexPointsAtFontSpriteData()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6100);
+
+        emulator.ExecuteLoadFontCharacter(0xF129);
+
+        var sprite = emulator.Memory.Slice(emulator.IndexRegister, 5);
+        Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, sprite.ToArray());
+    }
+
+    [Fact]
+    public void WaitForKeyPress_StoresKeyFromInputIntoVx()
+    {
+        var emulator = CreateEmulator(out var input);
+        input.NextKey = 0x7;
+
+        emulator.ExecuteWaitForKeyPress(0xF20A);
+
+        Assert.Equal(0x7, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches0AToWaitForKeyPress()
+    {
+        var emulator = CreateEmulator(out var input);
+        input.NextKey = 0xB;
+
+        emulator.ExecuteTimerIns(0xF10A);
+
+        Assert.Equal(0xB, emulator.ReadRegister(1));
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches1EToAddVxToI()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetIndexRegisterIns(0xA020);
+        emulator.ExecuteSetRegisterValueIns(0x6103);
+
+        emulator.ExecuteTimerIns(0xF11E);
+
+        Assert.Equal(0x023, emulator.IndexRegister);
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches29ToLoadFontCharacter()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6103);
+
+        emulator.ExecuteTimerIns(0xF129);
+
+        Assert.Equal(0x050 + 5 * 3, emulator.IndexRegister);
     }
 
     [Fact]

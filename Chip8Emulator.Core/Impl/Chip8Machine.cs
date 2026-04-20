@@ -1,10 +1,31 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Chip8Emulator.Core.Impl;
 
 internal sealed class Chip8Machine : IChip8Machine
 {
+    private const int FontBaseAddress = 0x050;
+
+    private static ReadOnlySpan<byte> Font =>             
+    [
+        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0                
+        0x20, 0x60, 0x20, 0x20, 0x70, // 1                
+        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2              
+        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3                
+        0x90, 0x90, 0xF0, 0x10, 0x10, // 4              
+        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5                
+        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6              
+        0xF0, 0x10, 0x20, 0x40, 0x40, // 7                
+        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8              
+        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9                
+        0xF0, 0x90, 0xF0, 0x90, 0x90, // A                
+        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B              
+        0xF0, 0x80, 0x80, 0x80, 0xF0, // C                
+        0xE0, 0x90, 0x90, 0x90, 0xE0, // D              
+        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E                
+        0xF0, 0x80, 0xF0, 0x80, 0x80, // F              
+    ];
+    
     private const int ScreenWidth = 64;
     private const int ScreenHeight = 32;
     private const double FrameTimeInSeconds = 1.0 / 60.0;
@@ -19,25 +40,6 @@ internal sealed class Chip8Machine : IChip8Machine
     
     private readonly byte[] _memory = new byte[4096];
     private readonly byte[] _vRegisters = new byte[16];
-    private readonly byte[] _font =
-    [
-        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-        0x20, 0x60, 0x20, 0x20, 0x70, // 1
-        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-    ];
 
     private readonly byte[] _displayPixels = new byte[ScreenWidth * ScreenHeight];
     private readonly int[] _stack = new int[16];
@@ -57,6 +59,7 @@ internal sealed class Chip8Machine : IChip8Machine
         _audio = audio;
         _clock = clock;
         _input = input;
+        Font.CopyTo(_memory.AsSpan(FontBaseAddress));
     }
     
     public int ProgramCounter => _programCounter;
@@ -65,6 +68,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public byte DelayTimer => _delayTimer;
     public byte SoundTimer => _soundTimer;
     public ReadOnlySpan<byte> Memory => _memory;
+    
     public byte ReadRegister(int x)
     {
         return _vRegisters[x];
@@ -230,11 +234,12 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteAddVxToI(ins);
                 break;
             case 0x29:
-                ExecuteSetIToDigitVx(ins);
+                ExecuteLoadFontCharacter(ins);
                 break;
             case 0x33:
                 break;
             case 0x55:
+                ExecuteStoreRegisters(ins);
                 break;
             case 0x65:
                 break;
@@ -242,9 +247,16 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSetIToDigitVx(int ins)
+    public void ExecuteStoreRegisters(int ins)
     {
-        
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteLoadFontCharacter(int ins)
+    {
+        var x = ExtractX(ins);
+        var value = _vRegisters[x];
+        _indexRegister = value * 5 + FontBaseAddress;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

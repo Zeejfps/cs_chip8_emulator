@@ -7,9 +7,8 @@ internal sealed class FakeInput : IInput
     public void Press(byte key) => _pressedKeys.Add(key);
     public void Release(byte key) => _pressedKeys.Remove(key);
 
+    public byte NextKey { get; set; }
+
     public bool IsKeyPressed(byte key) => _pressedKeys.Contains(key);
-    public byte WaitForKeyPress()
-    {
-        throw new NotImplementedException();
-    }
+    public byte WaitForKeyPress() => NextKey;
 }
