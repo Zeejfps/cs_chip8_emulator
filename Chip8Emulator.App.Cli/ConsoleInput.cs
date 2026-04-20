@@ -9,22 +9,25 @@ public sealed class ConsoleInput : IInput, IDisposable
     private const int NoPendingKey = -1;
 
     private readonly long[] _lastSeenTicks = new long[16];
-    private readonly Thread _readerThread;
     private volatile bool _stopping;
     private volatile bool _isCancelRequested;
     private int _pendingKey = NoPendingKey;
+    private int _restartRequested;
 
     public ConsoleInput()
     {
-        _readerThread = new Thread(ReaderLoop)
+        var readerThread = new Thread(ReaderLoop)
         {
             IsBackground = true,
             Name = "ConsoleInput-Reader",
         };
-        _readerThread.Start();
+        readerThread.Start();
     }
 
     public bool IsCancelRequested => _isCancelRequested;
+
+    public bool ConsumeRestartRequest()
+        => Interlocked.Exchange(ref _restartRequested, 0) == 1;
 
     public bool IsKeyPressed(byte key)
     {
@@ -64,6 +67,12 @@ public sealed class ConsoleInput : IInput, IDisposable
             {
                 _isCancelRequested = true;
                 return;
+            }
+
+            if (info.Key == ConsoleKey.F5)
+            {
+                Interlocked.Exchange(ref _restartRequested, 1);
+                continue;
             }
 
             if (TryMap(info.Key, out var chip8Key))

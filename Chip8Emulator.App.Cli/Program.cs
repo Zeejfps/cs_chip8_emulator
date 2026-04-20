@@ -28,11 +28,12 @@ try
 
     using var display = new AnsiConsoleDisplay();
     using var input = new ConsoleInput();
+    var audio = new ConsoleBeepAudio();
 
     var clock = new StopwatchClock();
     var machine = Chip8.Builder()
         .WithDisplay(display)
-        .WithAudio(new ConsoleBeepAudio())
+        .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
         .Build();
@@ -40,13 +41,17 @@ try
     Console.WriteLine($"Loading ROM: {romPath}");
     var romData = File.ReadAllBytes(romPath);
 
-    Console.WriteLine($"Rom size: {romData.Length}");
     machine.LoadProgram(romData);
 
     clock.Start();
     while (!cancelled && !input.IsCancelRequested)
     {
         machine.Update();
+
+        if (input.ConsumeRestartRequest())
+        {
+            machine.LoadProgram(romData);
+        }
     }
 
     return 0;
