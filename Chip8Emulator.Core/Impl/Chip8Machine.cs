@@ -109,6 +109,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         Array.Clear(_memory);
+        Font.CopyTo(_memory.AsSpan(FontBaseAddress));
         program.CopyTo(_memory.AsSpan(0x200));
         _programCounter = 0x200;
         _indexRegister = 0;
@@ -118,6 +119,9 @@ internal sealed class Chip8Machine : IChip8Machine
         _instructionsExecuted = 0;
         _isWaitingForKeyPress = false;
         _keyRegisterIndex = 0;
+        _totalElapsedSeconds = 0;
+        Array.Clear(_vRegisters);
+        Array.Clear(_stack);
         Array.Clear(_displayPixels);
     }
 
@@ -531,6 +535,8 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0xE:
                 ExecuteShiftLeftIns(ins);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
         }
     }
 
