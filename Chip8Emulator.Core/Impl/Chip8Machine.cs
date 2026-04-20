@@ -226,7 +226,7 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        Console.WriteLine($"Add Value To Register: {x:X}, Value: {nn:X}");
+        //Console.WriteLine($"Add Value To Register: {x:X}, Value: {nn:X}");
         _vRegisters[x] += nn;
     }
 
