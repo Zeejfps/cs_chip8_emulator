@@ -4,5 +4,5 @@ public interface IDisplay
 {
     void Clear();
     void Update();
-    int BlitRow(byte x, byte y, byte row);
+    byte BlitRow(byte x, byte y, byte row);
 }

@@ -161,14 +161,12 @@ internal sealed class Chip8Emulator : IChip8
         var y = _vRegisters[ExtractY(ins)];
         var n = ExtractN(ins);
 
+        _vRegisters[0xF] = 0;
         for (var i = 0; i < n; i++)
         {
             var row = _memory[_indexRegister + i];
-            var result = _display.BlitRow(x, y, row);
-            if (result == 0)
-            {
-                _vRegisters[0xF] = 1;
-            }
+            var vfFlag = _display.BlitRow(x, y, row);
+            _vRegisters[0xF] |= vfFlag;
         }
     }
 
