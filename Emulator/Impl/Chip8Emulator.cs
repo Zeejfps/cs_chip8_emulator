@@ -6,6 +6,8 @@ namespace Emulator.Impl;
 
 internal sealed class Chip8Emulator : IChip8
 {
+    private const int ScreenWidth = 64;
+    private const int ScreenHeight = 32;
     private const double FrameTimeInSeconds = 1.0 / 60.0;
     private const int InstructionsPerSecond = 700;
     
@@ -34,6 +36,8 @@ internal sealed class Chip8Emulator : IChip8
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     ];
 
+    private readonly byte[] _displayPixels = new byte[ScreenWidth * ScreenHeight];
+    
     private byte _delayTimer;
     private byte _soundTimer;
     private int _programCounter;
@@ -96,7 +100,7 @@ internal sealed class Chip8Emulator : IChip8
                 _soundTimer--;
             }
                 
-            _display.Update();
+            _display.Draw(_displayPixels);
             _totalElapsedSeconds = 0;
             _instructionsExecuted = 0;
         }
@@ -155,18 +159,40 @@ internal sealed class Chip8Emulator : IChip8
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void DrawToScreen(int ins)
+    public void DrawToScreen(int ins)
     {
-        var x = _vRegisters[ExtractX(ins)];
-        var y = _vRegisters[ExtractY(ins)];
-        var n = ExtractN(ins);
+        var x = _vRegisters[ExtractX(ins)] % ScreenWidth;
+        var y = _vRegisters[ExtractY(ins)] % ScreenHeight;
+        var spriteHeight = ExtractN(ins);
 
-        _vRegisters[0xF] = 0;
-        for (var i = 0; i < n; i++)
+        byte collision = 0;
+        for (var i = 0; i < spriteHeight; i++)
         {
-            var row = _memory[_indexRegister + i];
-            var vfFlag = _display.BlitRow(x, y, row);
-            _vRegisters[0xF] |= vfFlag;
+            var dstY = y + i;
+            if (dstY >= ScreenHeight) break;
+            
+            var spritePixelsRow = _memory[_indexRegister + i];
+            for (var bit = 0; bit < 8; bit++)
+            {
+                var dstX = x + bit;
+                if (dstX >= ScreenWidth) continue;
+                
+                var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
+                var dstIndex = dstY * ScreenWidth + dstX;
+                var before = _displayPixels[dstIndex];
+                collision |= (byte)(before & spritePixel);
+                _displayPixels[dstIndex] = (byte)(before ^ spritePixel);
+            }
+        }
+
+        var vf = collision != 0;
+        if (vf)
+        {
+            _vRegisters[0xF] = 1;
+        }
+        else
+        {
+            _vRegisters[0xF] = 0;
         }
     }
 
@@ -236,7 +262,7 @@ internal sealed class Chip8Emulator : IChip8
 
     public void ClearDisplay()
     {
-        _display.Clear();
+        Array.Clear(_displayPixels);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
