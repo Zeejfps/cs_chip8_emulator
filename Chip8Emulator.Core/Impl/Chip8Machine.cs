@@ -192,6 +192,7 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0xB:
                 break;
             case 0xC:
+                ExecuteGenerateRandomNumIns(ins);
                 break;
             case 0xD:
                 ExeuteDrawToScreenIns(ins);
@@ -201,6 +202,15 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0xF:
                 break;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteGenerateRandomNumIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var nn = ExtractNn(ins);
+        var randNum = (byte)Random.Shared.Next(0, 256);
+        _vRegisters[x] = (byte)(randNum & nn);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
