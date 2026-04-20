@@ -43,7 +43,8 @@ internal sealed class Chip8Machine : IChip8Machine
     private byte _soundTimer;
     private int _programCounter;
     private int _indexRegister;
-    private Stack<ushort> _stack = new();
+    private byte[] _stack = new byte[16];
+    private int _stackPointer;
     
     private double _totalElapsedSeconds;
     private int _instructionsExecuted;
@@ -57,12 +58,28 @@ internal sealed class Chip8Machine : IChip8Machine
     
     public int ProgramCounter => _programCounter;
     public int IndexRegister => _indexRegister;
+    public int StackPointer => _stackPointer;
     public byte DelayTimer => _delayTimer;
     public byte SoundTimer => _soundTimer;
     public ReadOnlySpan<byte> Memory => _memory;
     public byte ReadRegister(int x)
     {
         return _vRegisters[x];
+    }
+
+    public byte PeekStack()
+    {
+        return _stack[_stackPointer];
+    }
+
+    public void PushStack(byte value)
+    {
+        _stack[_stackPointer++] = value;
+    }
+
+    public byte PopStack()
+    {
+        return _stack[_stackPointer--];   
     }
 
     internal ReadOnlySpan<byte> DisplayPixels => _displayPixels;
