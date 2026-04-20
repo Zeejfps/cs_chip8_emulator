@@ -113,16 +113,116 @@ public class Chip8EmulatorTests
     }
 
     [Theory]
-    [InlineData(0x000)]
-    [InlineData(0x200)]
-    [InlineData(0xFFF)]
-    public void JumpToAddress_SetsProgramCounter(int address)
+    [InlineData(0x1000, 0x000)]
+    [InlineData(0x1200, 0x200)]
+    [InlineData(0x1FFF, 0xFFF)]
+    public void JumpToAddress_SetsProgramCounterToNnn(int instruction, int expected)
     {
         var emulator = CreateEmulator();
 
-        emulator.ExecuteJumpToAddressIns(address);
+        emulator.ExecuteJumpToAddressIns(instruction);
 
-        Assert.Equal(address, emulator.ProgramCounter);
+        Assert.Equal(expected, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfRegisterEqualsValue_SkipsNextInstruction_WhenEqual()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6242);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfRegisterValueEqualsValueIns(0x3242);
+
+        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfRegisterEqualsValue_DoesNotSkip_WhenNotEqual()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6242);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfRegisterValueEqualsValueIns(0x3201);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfRegisterNotEqualsValue_SkipsNextInstruction_WhenNotEqual()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6242);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(0x4201);
+
+        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfRegisterNotEqualsValue_DoesNotSkip_WhenEqual()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6242);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(0x4242);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfRegisterEqualsRegister_SkipsNextInstruction_WhenEqual()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6142);
+        emulator.ExecuteSetRegisterValueIns(0x6242);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(0x5120);
+
+        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfRegisterEqualsRegister_DoesNotSkip_WhenNotEqual()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6142);
+        emulator.ExecuteSetRegisterValueIns(0x6201);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(0x5120);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void CallSubroutine_JumpsToAddressAndPushesReturnAddress()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteJumpToAddressIns(0x1246);
+        var spBefore = emulator.StackPointer;
+
+        emulator.ExecuteCallSubroutineIns(0x2ABC);
+
+        Assert.Equal(0xABC, emulator.ProgramCounter);
+        Assert.Equal(spBefore + 1, emulator.StackPointer);
+        Assert.Equal(0x246, emulator.PeekStack());
+    }
+
+    [Fact]
+    public void ReturnFromSubroutine_RestoresProgramCounterFromStack()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteJumpToAddressIns(0x1246);
+        emulator.ExecuteCallSubroutineIns(0x2ABC);
+
+        emulator.ExecuteReturnFromSubroutineIns();
+
+        Assert.Equal(0x246, emulator.ProgramCounter);
     }
 
     [Fact]
@@ -140,11 +240,4 @@ public class Chip8EmulatorTests
             Assert.Equal(0, p);
     }
 
-    [Fact]
-    public void ReturnFromSubroutine_NotYetImplemented()
-    {
-        var emulator = CreateEmulator();
-
-        Assert.Throws<NotImplementedException>(() => emulator.ExecuteReturnFromSubroutineIns());
-    }
 }

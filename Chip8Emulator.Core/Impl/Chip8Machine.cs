@@ -75,12 +75,19 @@ internal sealed class Chip8Machine : IChip8Machine
 
     public void PushStack(int value)
     {
-        _stack[_stackPointer++] = value;
+        _stackPointer++;
+        if(_stackPointer >= _stack.Length)
+            throw new InvalidOperationException("Stack overflow");
+        _stack[_stackPointer] = value;
     }
 
     public int PopStack()
     {
-        return _stack[_stackPointer--];   
+        var stackPointer = _stackPointer;
+        _stackPointer--;
+        if (_stackPointer < 0)
+            throw new InvalidOperationException("Stack underflow");
+        return _stack[stackPointer];   
     }
 
     internal ReadOnlySpan<byte> DisplayPixels => _displayPixels;
@@ -174,6 +181,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteAddValueToRegisterIns(ins);
                 break;
             case 8:
+                ExecuteSetRegisterValueFromRegisterIns(ins);
                 break;
             case 9:
                 break;
@@ -228,7 +236,7 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void ExecuteCallSubroutineIns(int ins)
+    public void ExecuteCallSubroutineIns(int ins)
     {
         var address = ExtractNnn(ins);
         PushStack((byte)_programCounter);
@@ -281,6 +289,14 @@ internal sealed class Chip8Machine : IChip8Machine
         var nn = ExtractNn(ins);
         _vRegisters[x] = nn;
         //Console.WriteLine($"Set Register Value: {x:X}, Value: {nn:X}");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSetRegisterValueFromRegisterIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        _vRegisters[x] = _vRegisters[y];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
