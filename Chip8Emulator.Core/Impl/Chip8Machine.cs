@@ -218,6 +218,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteReadDelayTimer(ins);
                 break;
             case 0x0A:
+                ExecuteWaitForKeyPress(ins);
                 break;
             case 0x15:
                 ExecuteSetDelayTimer(ins);
@@ -236,6 +237,13 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0x65:
                 break;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteWaitForKeyPress(int ins)
+    {
+        var x = ExtractX(ins);
+        _vRegisters[x] = _input.WaitForKeyPress();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
