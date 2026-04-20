@@ -571,6 +571,86 @@ public class Chip8MachineTests
     }
 
     [Fact]
+    public void SetDelayTimer_StoresVxIntoDelayTimer()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x613C);
+
+        emulator.ExecuteSetDelayTimer(0xF115);
+
+        Assert.Equal(0x3C, emulator.DelayTimer);
+    }
+
+    [Fact]
+    public void SetSoundTimer_StoresVxIntoSoundTimer()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6120);
+
+        emulator.ExecuteSetSoundTimer(0xF118);
+
+        Assert.Equal(0x20, emulator.SoundTimer);
+    }
+
+    [Fact]
+    public void ReadDelayTimer_StoresDelayTimerIntoVx()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x612A);
+        emulator.ExecuteSetDelayTimer(0xF115);
+
+        emulator.ExecuteReadDelayTimer(0xF207);
+
+        Assert.Equal(0x2A, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches07ToReadDelayTimer()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6155);
+        emulator.ExecuteSetDelayTimer(0xF115);
+
+        emulator.ExecuteTimerIns(0xF207);
+
+        Assert.Equal(0x55, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches15ToSetDelayTimer()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6199);
+
+        emulator.ExecuteTimerIns(0xF115);
+
+        Assert.Equal(0x99, emulator.DelayTimer);
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches18ToSetSoundTimer()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x617F);
+
+        emulator.ExecuteTimerIns(0xF118);
+
+        Assert.Equal(0x7F, emulator.SoundTimer);
+    }
+
+    [Fact]
+    public void TimerIns_UnknownSubOp_DoesNothing()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x61AA);
+
+        emulator.ExecuteTimerIns(0xF100);
+
+        Assert.Equal(0, emulator.DelayTimer);
+        Assert.Equal(0, emulator.SoundTimer);
+    }
+
+    [Fact]
     public void ClearDisplay_ZerosAllDisplayPixels()
     {
         var emulator = CreateEmulator();

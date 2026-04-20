@@ -203,8 +203,60 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteSkipNextInsIfKeyIsPressedOrReleased(ins);
                 break;
             case 0xF:
+                ExecuteTimerIns(ins);
                 break;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteTimerIns(int ins)
+    {
+        var op = ins & 0x00FF;
+        switch (op)
+        {
+            case 0x07:
+                ExecuteReadDelayTimer(ins);
+                break;
+            case 0x0A:
+                break;
+            case 0x15:
+                ExecuteSetDelayTimer(ins);
+                break;
+            case 0x18:
+                ExecuteSetSoundTimer(ins);
+                break;
+            case 0x1E:
+                break;
+            case 0x29:
+                break;
+            case 0x33:
+                break;
+            case 0x55:
+                break;
+            case 0x65:
+                break;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSetSoundTimer(int ins)
+    {
+        var x = ExtractX(ins);
+        _soundTimer = _vRegisters[x];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSetDelayTimer(int ins)
+    {
+        var x = ExtractX(ins);
+        _delayTimer = _vRegisters[x];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteReadDelayTimer(int ins)
+    {
+        var x = ExtractX(ins);
+        _vRegisters[x] = _delayTimer;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
