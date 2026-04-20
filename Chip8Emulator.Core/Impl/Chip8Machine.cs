@@ -181,7 +181,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteAddValueToRegisterIns(ins);
                 break;
             case 8:
-                ExecuteSetRegisterValueFromRegisterIns(ins);
+                ExecuteArithmeticOperationIns(ins);
                 break;
             case 9:
                 break;
@@ -289,6 +289,18 @@ internal sealed class Chip8Machine : IChip8Machine
         var nn = ExtractNn(ins);
         _vRegisters[x] = nn;
         //Console.WriteLine($"Set Register Value: {x:X}, Value: {nn:X}");
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteArithmeticOperationIns(int ins)
+    {
+        var op = ins & 0x000F;
+        switch (op)
+        {
+            case 0:
+                ExecuteSetRegisterValueFromRegisterIns(ins);
+                break;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
