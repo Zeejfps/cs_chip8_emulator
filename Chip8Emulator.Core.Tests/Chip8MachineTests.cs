@@ -226,6 +226,116 @@ public class Chip8MachineTests
     }
 
     [Fact]
+    public void SetRegisterValueFromRegister_CopiesVyIntoVx()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6142);
+        emulator.ExecuteSetRegisterValueIns(0x62AB);
+
+        emulator.ExecuteSetRegisterValueFromRegisterIns(0x8120);
+
+        Assert.Equal(0xAB, emulator.ReadRegister(1));
+        Assert.Equal(0xAB, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void BitwiseOrOnRegisters_StoresVxOrVyIntoVx()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x61F0);
+        emulator.ExecuteSetRegisterValueIns(0x620F);
+
+        emulator.ExecuteBitwiseOrOnRegistersIns(0x8121);
+
+        Assert.Equal(0xFF, emulator.ReadRegister(1));
+        Assert.Equal(0x0F, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void BitwiseAndOnRegisters_StoresVxAndVyIntoVx()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x61FC);
+        emulator.ExecuteSetRegisterValueIns(0x620F);
+
+        emulator.ExecuteBitwiseAndOnRegistersIns(0x8122);
+
+        Assert.Equal(0x0C, emulator.ReadRegister(1));
+        Assert.Equal(0x0F, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void XorRegisterValueFromRegister_StoresVxXorVyIntoVx()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x61FC);
+        emulator.ExecuteSetRegisterValueIns(0x620F);
+
+        emulator.ExecuteXorRegisterValueFromRegisterIns(0x8123);
+
+        Assert.Equal(0xF3, emulator.ReadRegister(1));
+        Assert.Equal(0x0F, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void AddValueToRegisterWithCarry_NoOverflow_StoresSumAndClearsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6105);
+        emulator.ExecuteSetRegisterValueIns(0x6203);
+        emulator.ExecuteSetRegisterValueIns(0x6F01);
+
+        emulator.ExecuteAddValueToRegisterWithCarryIns(0x8124);
+
+        Assert.Equal(0x08, emulator.ReadRegister(1));
+        Assert.Equal(0x03, emulator.ReadRegister(2));
+        Assert.Equal(0, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void AddValueToRegisterWithCarry_Overflow_WrapsAndSetsVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x61FF);
+        emulator.ExecuteSetRegisterValueIns(0x6202);
+
+        emulator.ExecuteAddValueToRegisterWithCarryIns(0x8124);
+
+        Assert.Equal(0x01, emulator.ReadRegister(1));
+        Assert.Equal(0x02, emulator.ReadRegister(2));
+        Assert.Equal(1, emulator.ReadRegister(0xF));
+    }
+
+    [Fact]
+    public void AddValueToRegisterWithCarry_AtBoundary_DoesNotSetVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x61F0);
+        emulator.ExecuteSetRegisterValueIns(0x620F);
+
+        emulator.ExecuteAddValueToRegisterWithCarryIns(0x8124);
+
+        Assert.Equal(0xFF, emulator.ReadRegister(1));
+        Assert.Equal(0, emulator.ReadRegister(0xF));
+    }
+
+    [Theory]
+    [InlineData(0x8120, 0x05, 0xAA, 0xAA)]
+    [InlineData(0x8121, 0xF0, 0x0F, 0xFF)]
+    [InlineData(0x8122, 0xFC, 0x0F, 0x0C)]
+    [InlineData(0x8123, 0xFC, 0x0F, 0xF3)]
+    public void ArithmeticOperation_DispatchesToCorrectOperation(int instruction, byte vx, byte vy, byte expected)
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6100 | vx);
+        emulator.ExecuteSetRegisterValueIns(0x6200 | vy);
+
+        emulator.ExecuteArithmeticOperationIns(instruction);
+
+        Assert.Equal(expected, emulator.ReadRegister(1));
+    }
+
+    [Fact]
     public void ClearDisplay_ZerosAllDisplayPixels()
     {
         var emulator = CreateEmulator();
