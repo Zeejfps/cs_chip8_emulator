@@ -175,7 +175,7 @@ internal sealed class Chip8Emulator : IChip8
             for (var bit = 0; bit < 8; bit++)
             {
                 var dstX = x + bit;
-                if (dstX >= ScreenWidth) continue;
+                if (dstX >= ScreenWidth) break;
                 
                 var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
                 var dstIndex = dstY * ScreenWidth + dstX;
