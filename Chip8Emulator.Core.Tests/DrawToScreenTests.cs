@@ -9,7 +9,7 @@ public class DrawToScreenTests
     private const int ScreenHeight = 32;
 
     private static Chip8Machine CreateEmulator()
-        => new(new FakeDisplay(), new FakeAudio());
+        => new(new FakeDisplay(), new FakeAudio(), new FakeClock());
 
     private static byte PixelAt(Chip8Machine emulator, int x, int y)
         => emulator.DisplayPixels[y * ScreenWidth + x];

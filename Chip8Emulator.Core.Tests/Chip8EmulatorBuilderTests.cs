@@ -11,7 +11,7 @@ public class Chip8EmulatorBuilderTests
         var builder = Chip8.Builder();
 
         Assert.NotNull(builder);
-        Assert.IsType<Chip8EmulatorBuilder>(builder);
+        Assert.IsType<Chip8MachineBuilder>(builder);
     }
 
     [Fact]
@@ -45,11 +45,22 @@ public class Chip8EmulatorBuilderTests
     }
 
     [Fact]
+    public void WithClock_ReturnsSameBuilder()
+    {
+        var builder = Chip8.Builder();
+
+        var result = builder.WithClock(new FakeClock());
+
+        Assert.Same(builder, result);
+    }
+
+    [Fact]
     public void Build_ReturnsChip8Emulator()
     {
         var chip = Chip8.Builder()
             .WithDisplay(new FakeDisplay())
             .WithAudio(new FakeAudio())
+            .WithClock(new FakeClock())
             .WithInput()
             .Build();
 

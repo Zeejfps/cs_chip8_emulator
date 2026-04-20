@@ -9,9 +9,11 @@ internal sealed class Chip8Machine : IChip8Machine
     private const int ScreenHeight = 32;
     private const double FrameTimeInSeconds = 1.0 / 60.0;
     private const int InstructionsPerSecond = 700;
+    private const int InstructionsPerFrame = InstructionsPerSecond / 60;
     
     private readonly IDisplay _display;
     private readonly IAudio _audio;
+    private readonly IClock _clock;
     
     private readonly byte[] _memory = new byte[4096];
     private readonly byte[] _vRegisters = new byte[16];
@@ -43,14 +45,14 @@ internal sealed class Chip8Machine : IChip8Machine
     private int _indexRegister;
     private Stack<ushort> _stack = new();
     
-    private long _startTime;
     private double _totalElapsedSeconds;
     private int _instructionsExecuted;
     
-    public Chip8Machine(IDisplay display, IAudio audio)
+    public Chip8Machine(IDisplay display, IAudio audio, IClock clock)
     {
         _display = display;
         _audio = audio;
+        _clock = clock;
     }
     
     public int ProgramCounter => _programCounter;
@@ -77,19 +79,27 @@ internal sealed class Chip8Machine : IChip8Machine
 
     public void Update()
     {
-        if (_instructionsExecuted < InstructionsPerSecond)
+        var elapsedTimeInSeconds = _clock.GetElapsedTimeInSeconds();
+        if (elapsedTimeInSeconds == 0)
+        {
+            return;
+        }
+        
+        if (_instructionsExecuted < InstructionsPerFrame)
         {
             FetchDecodeExecute();
             _instructionsExecuted++;
         }
         
-        var endTime = Stopwatch.GetTimestamp();
-        var elapsed = endTime - _startTime;
-        _totalElapsedSeconds += elapsed / (double) Stopwatch.Frequency ;
-        _startTime = endTime;
-        
-        if (_totalElapsedSeconds >= FrameTimeInSeconds)
+        _totalElapsedSeconds += elapsedTimeInSeconds;
+        while (_totalElapsedSeconds >= FrameTimeInSeconds)
         {
+            while (_instructionsExecuted < InstructionsPerFrame)
+            {
+                FetchDecodeExecute();
+                _instructionsExecuted++;
+            }
+            
             if (_delayTimer > 0)
             {
                 _delayTimer--;
@@ -102,7 +112,7 @@ internal sealed class Chip8Machine : IChip8Machine
             }
                 
             _display.Draw(_displayPixels);
-            _totalElapsedSeconds = 0;
+            _totalElapsedSeconds -= FrameTimeInSeconds;
             _instructionsExecuted = 0;
         }
     }

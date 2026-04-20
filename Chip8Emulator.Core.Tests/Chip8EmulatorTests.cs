@@ -5,14 +5,15 @@ namespace Chip8Emulator.Core.Tests;
 
 public class Chip8EmulatorTests
 {
-    private static Chip8Machine CreateEmulator(out FakeDisplay display, out FakeAudio audio)
+    private static Chip8Machine CreateEmulator(out FakeDisplay display, out FakeAudio audio, out FakeClock clock)
     {
         display = new FakeDisplay();
         audio = new FakeAudio();
-        return new Chip8Machine(display, audio);
+        clock = new FakeClock();
+        return new Chip8Machine(display, audio, clock);
     }
 
-    private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _);
+    private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _);
 
     [Fact]
     public void InitialState_IsZeroed()
