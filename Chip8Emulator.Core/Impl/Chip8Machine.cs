@@ -300,9 +300,48 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0:
                 ExecuteSetRegisterValueFromRegisterIns(ins);
                 break;
+            case 1:
+                ExecuteBitwiseOrOnRegistersIns(ins);
+                break;
+            case 2:
+                ExecuteBitwiseAndOnRegistersIns(ins);
+                break;
+            case 3:
+                ExecuteXorRegisterValueFromRegisterIns(ins);
+                break;
+            case 4:
+                ExecuteAddValueToRegisterWithCarryIns(ins);
+                break;
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteAddValueToRegisterWithCarryIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        var sum = _vRegisters[x] + _vRegisters[y];
+        var carry = (byte)(sum > 0xFF ? 1 : 0);
+        _vRegisters[0xF] = carry;
+        _vRegisters[x] = (byte)sum;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteBitwiseOrOnRegistersIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        _vRegisters[x] |= _vRegisters[y];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteBitwiseAndOnRegistersIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        _vRegisters[x] &= _vRegisters[y]; 
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteSetRegisterValueFromRegisterIns(int ins)
     {
@@ -311,6 +350,14 @@ internal sealed class Chip8Machine : IChip8Machine
         _vRegisters[x] = _vRegisters[y];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteXorRegisterValueFromRegisterIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        _vRegisters[x] ^= _vRegisters[y];  
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteAddValueToRegisterIns(int ins)
     {
