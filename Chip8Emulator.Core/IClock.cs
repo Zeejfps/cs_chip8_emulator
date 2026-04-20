@@ -2,5 +2,6 @@ namespace Chip8Emulator.Core;
 
 public interface IClock
 {
-    double GetElapsedTimeInSeconds();
+    long Timestamp { get; }
+    long Frequency { get; }
 }

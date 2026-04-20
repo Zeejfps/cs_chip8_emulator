@@ -28,7 +28,6 @@ internal sealed class Chip8Machine : IChip8Machine
     
     private const int ScreenWidth = 64;
     private const int ScreenHeight = 32;
-    private const double FrameTimeInSeconds = 1.0 / 60.0;
     private const int InstructionsPerSecond = 1000;
     private const int InstructionsPerFrame = InstructionsPerSecond / 60;
     private const int InstructionSizeInBytes = 2;
@@ -49,8 +48,10 @@ internal sealed class Chip8Machine : IChip8Machine
     private int _programCounter;
     private int _indexRegister;
     private int _stackPointer;
-    
-    private double _totalElapsedSeconds;
+
+    private readonly long _ticksPerFrame;
+    private long _lastTimestamp;
+    private long _accumulatedTicks;
     private int _instructionsExecuted;
     private bool _isWaitingForKeyPress;
     private int _keyRegisterIndex;
@@ -61,6 +62,8 @@ internal sealed class Chip8Machine : IChip8Machine
         _audio = audio;
         _clock = clock;
         _input = input;
+        _ticksPerFrame = clock.Frequency / 60;
+        _lastTimestamp = clock.Timestamp;
         Font.CopyTo(_memory.AsSpan(FontBaseAddress));
     }
     
@@ -121,7 +124,8 @@ internal sealed class Chip8Machine : IChip8Machine
         _instructionsExecuted = 0;
         _isWaitingForKeyPress = false;
         _keyRegisterIndex = 0;
-        _totalElapsedSeconds = 0;
+        _accumulatedTicks = 0;
+        _lastTimestamp = _clock.Timestamp;
         Array.Clear(_vRegisters);
         Array.Clear(_stack);
         Array.Clear(_displayPixels);
@@ -129,8 +133,10 @@ internal sealed class Chip8Machine : IChip8Machine
 
     public void Update()
     {
-        var elapsedTimeInSeconds = _clock.GetElapsedTimeInSeconds();
-        if (elapsedTimeInSeconds == 0)
+        var now = _clock.Timestamp;
+        var delta = now - _lastTimestamp;
+        _lastTimestamp = now;
+        if (delta == 0)
         {
             return;
         }
@@ -143,33 +149,33 @@ internal sealed class Chip8Machine : IChip8Machine
                 _isWaitingForKeyPress = false;
             }
         }
-        
+
         if (!_isWaitingForKeyPress && _instructionsExecuted < InstructionsPerFrame)
         {
             FetchDecodeExecute();
         }
 
-        _totalElapsedSeconds += elapsedTimeInSeconds;
-        while (_totalElapsedSeconds >= FrameTimeInSeconds)
+        _accumulatedTicks += delta;
+        while (_accumulatedTicks >= _ticksPerFrame)
         {
             while (!_isWaitingForKeyPress && _instructionsExecuted < InstructionsPerFrame)
             {
                 FetchDecodeExecute();
             }
-            
+
             if (_delayTimer > 0)
             {
                 _delayTimer--;
             }
-                
+
             if (_soundTimer > 0)
             {
                 _audio.Beep();
                 _soundTimer--;
             }
-                
+
             _renderer.Render();
-            _totalElapsedSeconds -= FrameTimeInSeconds;
+            _accumulatedTicks -= _ticksPerFrame;
             _instructionsExecuted = 0;
         }
     }

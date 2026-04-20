@@ -735,7 +735,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator(out var clock, out _);
         emulator.ExecuteWaitForKeyPress(0xF20A);
-        clock.ElapsedTimeInSeconds = 1.0 / 60.0;
+        clock.Timestamp = clock.Frequency / 60;
 
         emulator.Update();
 
@@ -750,7 +750,7 @@ public class Chip8MachineTests
         emulator.WriteMemory(0, [0x10, 0x00]);
         emulator.ExecuteWaitForKeyPress(0xF20A);
         input.QueueKeyPressEvent(0xA);
-        clock.ElapsedTimeInSeconds = 1.0 / 60.0;
+        clock.Timestamp = clock.Frequency / 60;
 
         emulator.Update();
 
@@ -765,7 +765,7 @@ public class Chip8MachineTests
         emulator.ExecuteSetRegisterValueIns(0x600A);
         emulator.ExecuteSetDelayTimer(0xF015);
         emulator.ExecuteWaitForKeyPress(0xF10A);
-        clock.ElapsedTimeInSeconds = 1.0 / 60.0;
+        clock.Timestamp = clock.Frequency / 60;
 
         emulator.Update();
 
@@ -780,7 +780,7 @@ public class Chip8MachineTests
         emulator.ExecuteSetRegisterValueIns(0x6005);
         emulator.ExecuteSetSoundTimer(0xF018);
         emulator.ExecuteWaitForKeyPress(0xF10A);
-        clock.ElapsedTimeInSeconds = 1.0 / 60.0;
+        clock.Timestamp = clock.Frequency / 60;
 
         emulator.Update();
 

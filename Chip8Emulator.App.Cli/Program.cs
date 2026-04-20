@@ -45,7 +45,6 @@ try
 
     machine.LoadProgram(romData);
 
-    clock.Start();
     while (!cancelled && !input.IsCancelRequested)
     {
         machine.Update();
