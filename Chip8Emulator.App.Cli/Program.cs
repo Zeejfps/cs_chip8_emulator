@@ -20,13 +20,14 @@ Console.CancelKeyPress += (_, e) =>
 };
 
 using var display = new AnsiConsoleDisplay();
+using var input = new ConsoleInput();
 
 var clock = new StopwatchClock();
 var machine = Chip8.Builder()
     .WithDisplay(display)
     .WithAudio(new ConsoleBeepAudio())
     .WithClock(clock)
-    .WithInput(new NoOpInput())
+    .WithInput(input)
     .Build();
 
 Console.WriteLine($"Loading ROM: {romPath}");
@@ -36,7 +37,7 @@ Console.WriteLine($"Rom size: {romData.Length}");
 machine.LoadProgram(romData);
 
 clock.Start();
-while (!cancelled)
+while (!cancelled && !input.IsCancelRequested)
 {
     machine.Update();
 }
