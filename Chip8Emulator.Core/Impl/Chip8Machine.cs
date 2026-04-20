@@ -227,8 +227,10 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteSetSoundTimer(ins);
                 break;
             case 0x1E:
+                ExecuteAddVxToI(ins);
                 break;
             case 0x29:
+                ExecuteSetIToDigitVx(ins);
                 break;
             case 0x33:
                 break;
@@ -237,6 +239,19 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0x65:
                 break;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSetIToDigitVx(int ins)
+    {
+        
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteAddVxToI(int ins)
+    {
+        var x = ExtractX(ins);
+        _indexRegister += _vRegisters[x];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
