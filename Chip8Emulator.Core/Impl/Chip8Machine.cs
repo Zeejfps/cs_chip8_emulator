@@ -74,7 +74,9 @@ internal sealed class Chip8Machine : IChip8Machine
 
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
-        throw new NotImplementedException();
+        Array.Clear(_memory);
+        Console.WriteLine(program.Length);
+        program.CopyTo(_memory.AsSpan(0x200));
     }
 
     public void Update()
@@ -121,7 +123,9 @@ internal sealed class Chip8Machine : IChip8Machine
     private void FetchDecodeExecute()
     {
         var ins = Fetch();
-        var opcode = ins & 0x00F0;
+        //Console.WriteLine("Executing: {0:X4}", ins);
+        var opcode = (ins & 0xF000) >> 12;
+        //Console.WriteLine("Op Code: {0:X4}", opcode);
         switch (opcode)
         {
             case 0:
@@ -172,6 +176,7 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void DrawToScreen(int ins)
     {
+        //Console.WriteLine($"Draw to screen");
         var x = _vRegisters[ExtractX(ins)] % ScreenWidth;
         var y = _vRegisters[ExtractY(ins)] % ScreenHeight;
         var spriteHeight = ExtractN(ins);
@@ -213,6 +218,7 @@ internal sealed class Chip8Machine : IChip8Machine
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
         _vRegisters[x] = nn;
+        //Console.WriteLine($"Set Register Value: {x:X}, Value: {nn:X}");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -220,6 +226,7 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
+        Console.WriteLine($"Add Value To Register: {x:X}, Value: {nn:X}");
         _vRegisters[x] += nn;
     }
 
@@ -227,6 +234,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public void SetIndexRegister(int ins)
     {
         var nnn = ExtractNnn(ins);
+        //Console.WriteLine($"Set Index Register: {nnn:X}");
         _indexRegister = nnn;   
     }
 
@@ -263,6 +271,7 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void JumpToAddress(int address)
     {
+        //Console.WriteLine($"Jumping to address: {address:X}");
         _programCounter = address;
     }
 
@@ -279,6 +288,8 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public int Fetch()
     {
-        return _memory[_programCounter] << 8 | _memory[_programCounter+1];
+        var ins = _memory[_programCounter] << 8 | _memory[_programCounter+1];
+        _programCounter += 2;
+        return ins;
     }
 }
