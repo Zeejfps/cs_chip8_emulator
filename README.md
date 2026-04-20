@@ -30,6 +30,10 @@ dotnet run --project Chip8Emulator.App.Wasm
 
 Open the printed URL in a Chromium-based browser, then load a ROM.
 
+## ROMs
+
+A large collection of public-domain CHIP-8 ROMs is available at [kripod/chip8-roms](https://github.com/kripod/chip8-roms/tree/master).
+
 ## Keyboard
 
 ```
