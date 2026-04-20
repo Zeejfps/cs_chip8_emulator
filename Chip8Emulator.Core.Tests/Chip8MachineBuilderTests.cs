@@ -3,7 +3,7 @@ using Chip8Emulator.Core.Tests.Fakes;
 
 namespace Chip8Emulator.Core.Tests;
 
-public class Chip8EmulatorBuilderTests
+public class Chip8MachineBuilderTests
 {
     [Fact]
     public void Builder_ReturnsNewBuilderInstance()

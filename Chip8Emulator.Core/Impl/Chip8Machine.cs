@@ -239,7 +239,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteCallSubroutineIns(int ins)
     {
         var address = ExtractNnn(ins);
-        PushStack((byte)_programCounter);
+        PushStack(_programCounter);
         _programCounter = address;
     }
 

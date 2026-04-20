@@ -3,7 +3,7 @@ using Chip8Emulator.Core.Tests.Fakes;
 
 namespace Chip8Emulator.Core.Tests;
 
-public class Chip8EmulatorTests
+public class Chip8MachineTests
 {
     private static Chip8Machine CreateEmulator(out FakeDisplay display, out FakeAudio audio, out FakeClock clock)
     {
