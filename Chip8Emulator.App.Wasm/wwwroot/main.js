@@ -77,6 +77,7 @@ for (let i = 0; i < pixelCount; i++) {
 }
 
 let lastRomBytes = null;
+let running = false;
 
 romInput.addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
@@ -88,6 +89,10 @@ romInput.addEventListener('change', async (e) => {
   api.LoadProgram(bytes);
   restartBtn.disabled = false;
   status.textContent = `Loaded ${file.name} (${bytes.length} bytes)`;
+  if (!running) {
+    running = true;
+    requestAnimationFrame(frame);
+  }
 });
 
 restartBtn.addEventListener('click', () => {
@@ -132,6 +137,3 @@ function frame() {
 }
 
 status.textContent = 'Ready. Load a ROM to begin.';
-requestAnimationFrame(frame);
-
-await dotnet.run();
