@@ -316,6 +316,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteVxSubVyIns(ins);
                 break;
             case 6:
+                ExecuteShiftRightIns(ins);
                 break;
             case 7:
                 ExecuteVySubVxIns(ins);
@@ -323,6 +324,19 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0xE:
                 break;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteShiftRightIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var value = _vRegisters[x];
+        //var y = ExtractY(ins);
+        //if (option){
+        //    value = _vRegisters[y];
+        //}
+        _vRegisters[0xF] = (byte)(value & 0x1);
+        _vRegisters[x] = (byte)(value >> 1);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
