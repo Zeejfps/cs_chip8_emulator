@@ -26,7 +26,7 @@ try
         cancelled = true;
     };
 
-    using var display = new AnsiConsoleDisplay();
+    using var display = new AnsiConsoleRenderer();
     using var input = new ConsoleInput();
     var audio = new ConsoleBeepAudio();
 

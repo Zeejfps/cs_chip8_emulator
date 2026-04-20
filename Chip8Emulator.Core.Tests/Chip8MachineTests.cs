@@ -5,13 +5,13 @@ namespace Chip8Emulator.Core.Tests;
 
 public class Chip8MachineTests
 {
-    private static Chip8Machine CreateEmulator(out FakeDisplay display, out FakeAudio audio, out FakeClock clock, out FakeInput input)
+    private static Chip8Machine CreateEmulator(out FakeRenderer renderer, out FakeAudio audio, out FakeClock clock, out FakeInput input)
     {
-        display = new FakeDisplay();
+        renderer = new FakeRenderer();
         audio = new FakeAudio();
         clock = new FakeClock();
         input = new FakeInput();
-        return new Chip8Machine(display, audio, clock, input);
+        return new Chip8Machine(renderer, audio, clock, input);
     }
 
     private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _, out _);
@@ -983,7 +983,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteClearDisplayIns();
 
-        foreach (var p in emulator.DisplayPixels)
+        foreach (var p in emulator.DisplayPixels.Span)
             Assert.Equal(0, p);
     }
 

@@ -33,7 +33,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private const int InstructionsPerFrame = InstructionsPerSecond / 60;
     private const int InstructionSizeInBytes = 2;
     
-    private readonly IDisplay _display;
+    private readonly IRenderer _renderer;
     private readonly IAudio _audio;
     private readonly IClock _clock;
     private readonly IInput _input;
@@ -54,10 +54,11 @@ internal sealed class Chip8Machine : IChip8Machine
     private int _instructionsExecuted;
     private bool _isWaitingForKeyPress;
     private int _keyRegisterIndex;
-    
-    public Chip8Machine(IDisplay display, IAudio audio, IClock clock, IInput input)
+    private Memory<byte> _displayPixels1;
+
+    public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
     {
-        _display = display;
+        _renderer = renderer;
         _audio = audio;
         _clock = clock;
         _input = input;
@@ -99,13 +100,15 @@ internal sealed class Chip8Machine : IChip8Machine
         return _stack[stackPointer];   
     }
 
-    internal ReadOnlySpan<byte> DisplayPixels => _displayPixels;
+    public Memory<byte> DisplayPixels => _displayPixels;
+    public int DisplayWidth => ScreenWidth;
+    public int DisplayHeight => ScreenHeight;
 
     internal void WriteMemory(int address, ReadOnlySpan<byte> data)
     {
         data.CopyTo(_memory.AsSpan(address));
     }
-
+    
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         Array.Clear(_memory);
@@ -166,7 +169,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 _soundTimer--;
             }
                 
-            _display.Draw(_displayPixels);
+            _renderer.Render(_displayPixels);
             _totalElapsedSeconds -= FrameTimeInSeconds;
             _instructionsExecuted = 0;
         }

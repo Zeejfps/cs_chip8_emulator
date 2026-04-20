@@ -5,7 +5,7 @@ using Chip8Emulator.Core;
 
 namespace Chip8Emulator.App.Cli;
 
-public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
+public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
 {
     private const int PixelWidth = 64;
     private const int PixelHeight = 32;
@@ -30,7 +30,7 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private int _lastWindowHeight = -1;
     private readonly string? _savedSttyState;
 
-    public AnsiConsoleDisplay()
+    public AnsiConsoleRenderer()
     {
         Console.OutputEncoding = Encoding.UTF8;
         EnableWindowsAnsi();
@@ -43,7 +43,7 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
         Console.Out.Flush();
     }
 
-    public void Draw(ReadOnlySpan<byte> pixels)
+    public void Render(ReadOnlySpan<byte> pixels)
     {
         var (width, height) = ReadWindowSize();
         var resized = width != _lastWindowWidth || height != _lastWindowHeight;

@@ -2,14 +2,14 @@ namespace Chip8Emulator.Core.Impl;
 
 internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
 {
-    private IDisplay? _display;
+    private IRenderer? _display;
     private IAudio? _audio;
     private IClock? _clock;
     private IInput? _input;
 
-    public IChip8MachineBuilder WithDisplay(IDisplay display)
+    public IChip8MachineBuilder WithDisplay(IRenderer renderer)
     {
-        _display = display;
+        _display = renderer;
         return this;
     }
 
