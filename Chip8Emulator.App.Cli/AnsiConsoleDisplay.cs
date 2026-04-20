@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Chip8Emulator.Core;
@@ -17,6 +18,8 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private const string EnterAltScreen = "\x1b[?1049h";
     private const string ExitAltScreen = "\x1b[?1049l";
     private const string ClearScreen = "\x1b[2J";
+    private const string DisableAltScroll = "\x1b[?1007l";
+    private const string RestoreAltScroll = "\x1b[?1007h";
 
     private const string TooSmallMessage = "Terminal too small \u2014 needs 64\u00d716";
 
@@ -25,12 +28,18 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private bool _hasRendered;
     private int _lastWindowWidth = -1;
     private int _lastWindowHeight = -1;
+    private readonly string? _savedSttyState;
 
     public AnsiConsoleDisplay()
     {
         Console.OutputEncoding = Encoding.UTF8;
         EnableWindowsAnsi();
-        Console.Write(EnterAltScreen + ClearScreen + HideCursor + CursorHome);
+        if (!OperatingSystem.IsWindows())
+        {
+            _savedSttyState = CaptureSttyState();
+            RunStty("-echo -icanon");
+        }
+        Console.Write(EnterAltScreen + DisableAltScroll + ClearScreen + HideCursor + CursorHome);
         Console.Out.Flush();
     }
 
@@ -108,8 +117,47 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
 
     public void Dispose()
     {
-        Console.Write(ResetAttrs + ShowCursor + ExitAltScreen);
+        Console.Write(ResetAttrs + ShowCursor + RestoreAltScroll + ExitAltScreen);
         Console.Out.Flush();
+        if (_savedSttyState is not null)
+        {
+            RunStty(_savedSttyState);
+        }
+    }
+
+    private static string? CaptureSttyState()
+    {
+        try
+        {
+            var psi = new ProcessStartInfo("stty", "-g")
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+            };
+            using var p = Process.Start(psi);
+            if (p is null) return null;
+            var output = p.StandardOutput.ReadToEnd().Trim();
+            p.WaitForExit();
+            return p.ExitCode == 0 && output.Length > 0 ? output : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void RunStty(string args)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo("stty", args) { UseShellExecute = false };
+            using var p = Process.Start(psi);
+            p?.WaitForExit();
+        }
+        catch
+        {
+            // best-effort; if stty isn't available we just live with echo
+        }
     }
 
     private static void EnableWindowsAnsi()

@@ -130,13 +130,13 @@ internal sealed class Chip8Machine : IChip8Machine
         {
             case 0:
                 if (ins == 0x00E0)
-                    ClearDisplay();
+                    ExecuteClearDisplayIns();
                 else if (ins == 0x00EE)
-                    ReturnFromSubroutine();
+                    ExecuteReturnFromSubroutineIns();
                 break;
             case 1:
                 var address = ExtractNnn(ins);
-                JumpToAddress(address);
+                ExecuteJumpToAddressIns(address);
                 break;
             case 2:
                 break;
@@ -147,24 +147,24 @@ internal sealed class Chip8Machine : IChip8Machine
             case 5:
                 break;
             case 6:
-                SetRegisterValue(ins);
+                ExecuteSetRegisterValueIns(ins);
                 break;
             case 7:
-                AddValueToRegister(ins);
+                ExecuteAddValueToRegisterIns(ins);
                 break;
             case 8:
                 break;
             case 9:
                 break;
             case 0xA:
-                SetIndexRegister(ins);
+                ExecuteSetIndexRegisterIns(ins);
                 break;
             case 0xB:
                 break;
             case 0xC:
                 break;
             case 0xD:
-                DrawToScreen(ins);
+                ExeuteDrawToScreenIns(ins);
                 break;
             case 0xE:
                 break;
@@ -174,7 +174,7 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void DrawToScreen(int ins)
+    public void ExeuteDrawToScreenIns(int ins)
     {
         //Console.WriteLine($"Draw to screen");
         var x = _vRegisters[ExtractX(ins)] % ScreenWidth;
@@ -213,7 +213,7 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void SetRegisterValue(int ins)
+    public void ExecuteSetRegisterValueIns(int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -222,7 +222,7 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void AddValueToRegister(int ins)
+    public void ExecuteAddValueToRegisterIns(int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -231,7 +231,7 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void SetIndexRegister(int ins)
+    public void ExecuteSetIndexRegisterIns(int ins)
     {
         var nnn = ExtractNnn(ins);
         //Console.WriteLine($"Set Index Register: {nnn:X}");
@@ -269,18 +269,18 @@ internal sealed class Chip8Machine : IChip8Machine
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void JumpToAddress(int address)
+    public void ExecuteJumpToAddressIns(int address)
     {
         //Console.WriteLine($"Jumping to address: {address:X}");
         _programCounter = address;
     }
 
-    public void ReturnFromSubroutine()
+    public void ExecuteReturnFromSubroutineIns()
     {
         throw new NotImplementedException();
     }
 
-    public void ClearDisplay()
+    public void ExecuteClearDisplayIns()
     {
         Array.Clear(_displayPixels);
     }

@@ -58,7 +58,7 @@ public class Chip8EmulatorTests
     {
         var emulator = CreateEmulator();
 
-        emulator.SetRegisterValue(instruction);
+        emulator.ExecuteSetRegisterValueIns(instruction);
 
         Assert.Equal(expected, emulator.ReadRegister(x));
     }
@@ -68,7 +68,7 @@ public class Chip8EmulatorTests
     {
         var emulator = CreateEmulator();
 
-        emulator.SetRegisterValue(0x6342);
+        emulator.ExecuteSetRegisterValueIns(0x6342);
 
         for (var i = 0; i < 16; i++)
         {
@@ -81,9 +81,9 @@ public class Chip8EmulatorTests
     public void AddValueToRegister_AddsNnToVx()
     {
         var emulator = CreateEmulator();
-        emulator.SetRegisterValue(0x6205);
+        emulator.ExecuteSetRegisterValueIns(0x6205);
 
-        emulator.AddValueToRegister(0x7203);
+        emulator.ExecuteAddValueToRegisterIns(0x7203);
 
         Assert.Equal(8, emulator.ReadRegister(2));
     }
@@ -92,9 +92,9 @@ public class Chip8EmulatorTests
     public void AddValueToRegister_WrapsOnByteOverflow()
     {
         var emulator = CreateEmulator();
-        emulator.SetRegisterValue(0x62FF);
+        emulator.ExecuteSetRegisterValueIns(0x62FF);
 
-        emulator.AddValueToRegister(0x7202);
+        emulator.ExecuteAddValueToRegisterIns(0x7202);
 
         Assert.Equal(0x01, emulator.ReadRegister(2));
     }
@@ -107,7 +107,7 @@ public class Chip8EmulatorTests
     {
         var emulator = CreateEmulator();
 
-        emulator.SetIndexRegister(instruction);
+        emulator.ExecuteSetIndexRegisterIns(instruction);
 
         Assert.Equal(expected, emulator.IndexRegister);
     }
@@ -120,7 +120,7 @@ public class Chip8EmulatorTests
     {
         var emulator = CreateEmulator();
 
-        emulator.JumpToAddress(address);
+        emulator.ExecuteJumpToAddressIns(address);
 
         Assert.Equal(address, emulator.ProgramCounter);
     }
@@ -129,12 +129,12 @@ public class Chip8EmulatorTests
     public void ClearDisplay_ZerosAllDisplayPixels()
     {
         var emulator = CreateEmulator();
-        emulator.SetIndexRegister(0xA000);
+        emulator.ExecuteSetIndexRegisterIns(0xA000);
         emulator.WriteMemory(0, [0xFF]);
-        emulator.DrawToScreen(0xD001);
+        emulator.ExeuteDrawToScreenIns(0xD001);
         Assert.Contains(emulator.DisplayPixels.ToArray(), p => p == 1);
 
-        emulator.ClearDisplay();
+        emulator.ExecuteClearDisplayIns();
 
         foreach (var p in emulator.DisplayPixels)
             Assert.Equal(0, p);
@@ -145,6 +145,6 @@ public class Chip8EmulatorTests
     {
         var emulator = CreateEmulator();
 
-        Assert.Throws<NotImplementedException>(() => emulator.ReturnFromSubroutine());
+        Assert.Throws<NotImplementedException>(() => emulator.ExecuteReturnFromSubroutineIns());
     }
 }
