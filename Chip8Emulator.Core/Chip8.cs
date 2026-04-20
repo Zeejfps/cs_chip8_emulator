@@ -1,6 +1,6 @@
 ﻿using Chip8Emulator.Core.Impl;
 
-namespace Chip8Emulator.Core.Api;
+namespace Chip8Emulator.Core;
 
 public static class Chip8
 {

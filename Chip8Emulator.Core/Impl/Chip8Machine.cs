@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Chip8Emulator.Core.Api;
 
 namespace Chip8Emulator.Core.Impl;
 
