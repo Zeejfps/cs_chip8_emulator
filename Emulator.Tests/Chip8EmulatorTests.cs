@@ -125,13 +125,18 @@ public class Chip8EmulatorTests
     }
 
     [Fact]
-    public void ClearDisplay_CallsDisplayClear()
+    public void ClearDisplay_ZerosAllDisplayPixels()
     {
-        var emulator = CreateEmulator(out var display, out _);
+        var emulator = CreateEmulator();
+        emulator.SetIndexRegister(0xA000);
+        emulator.WriteMemory(0, [0xFF]);
+        emulator.DrawToScreen(0xD001);
+        Assert.Contains(emulator.DisplayPixels.ToArray(), p => p == 1);
 
         emulator.ClearDisplay();
 
-        Assert.Equal(1, display.ClearCount);
+        foreach (var p in emulator.DisplayPixels)
+            Assert.Equal(0, p);
     }
 
     [Fact]

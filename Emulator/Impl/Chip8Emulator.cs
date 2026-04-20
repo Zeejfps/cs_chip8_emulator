@@ -64,6 +64,13 @@ internal sealed class Chip8Emulator : IChip8
         return _vRegisters[x];
     }
 
+    internal ReadOnlySpan<byte> DisplayPixels => _displayPixels;
+
+    internal void WriteMemory(int address, ReadOnlySpan<byte> data)
+    {
+        data.CopyTo(_memory.AsSpan(address));
+    }
+
     public void Execute(ReadOnlySpan<byte> program)
     {
         _startTime = Stopwatch.GetTimestamp();
