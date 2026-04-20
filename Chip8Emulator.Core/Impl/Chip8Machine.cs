@@ -29,7 +29,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private const int ScreenWidth = 64;
     private const int ScreenHeight = 32;
     private const double FrameTimeInSeconds = 1.0 / 60.0;
-    private const int InstructionsPerSecond = 700;
+    private const int InstructionsPerSecond = 1000;
     private const int InstructionsPerFrame = InstructionsPerSecond / 60;
     private const int InstructionSizeInBytes = 2;
     
