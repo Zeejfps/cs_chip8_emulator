@@ -38,6 +38,8 @@ try
         .WithInput(input)
         .Build();
 
+    display.Attach(machine);
+
     Console.WriteLine($"Loading ROM: {romPath}");
     var romData = File.ReadAllBytes(romPath);
 

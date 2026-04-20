@@ -23,6 +23,7 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
 
     private const string TooSmallMessage = "Terminal too small \u2014 needs 64\u00d716";
 
+    private IChip8Machine? _machine;
     private readonly byte[] _previousPixels = new byte[PixelWidth * PixelHeight];
     private readonly StringBuilder _frame = new(8 + (PixelWidth + 8) * CellHeight);
     private bool _hasRendered;
@@ -43,8 +44,14 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
         Console.Out.Flush();
     }
 
-    public void Render(ReadOnlySpan<byte> pixels)
+    public void Attach(IChip8Machine machine)
     {
+        _machine = machine;
+    }
+
+    public void Render()
+    {
+        var pixels = _machine!.DisplayPixels.Span;
         var (width, height) = ReadWindowSize();
         var resized = width != _lastWindowWidth || height != _lastWindowHeight;
         if (resized)

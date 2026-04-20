@@ -747,6 +747,7 @@ public class Chip8MachineTests
     public void Update_WhileWaitingForKey_AndKeyPressed_StoresKeyAndResumes()
     {
         var emulator = CreateEmulator(out var clock, out var input);
+        emulator.WriteMemory(0, [0x10, 0x00]);
         emulator.ExecuteWaitForKeyPress(0xF20A);
         input.QueueKeyPressEvent(0xA);
         clock.ElapsedTimeInSeconds = 1.0 / 60.0;

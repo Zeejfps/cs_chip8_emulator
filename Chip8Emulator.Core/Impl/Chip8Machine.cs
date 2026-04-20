@@ -168,7 +168,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 _soundTimer--;
             }
                 
-            _renderer.Render(_displayPixels);
+            _renderer.Render();
             _totalElapsedSeconds -= FrameTimeInSeconds;
             _instructionsExecuted = 0;
         }
