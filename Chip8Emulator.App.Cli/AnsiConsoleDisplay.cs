@@ -18,9 +18,13 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private const string ExitAltScreen = "\x1b[?1049l";
     private const string ClearScreen = "\x1b[2J";
 
+    private const string TooSmallMessage = "Terminal too small \u2014 needs 64\u00d716";
+
     private readonly byte[] _previousPixels = new byte[PixelWidth * PixelHeight];
     private readonly StringBuilder _frame = new(8 + (PixelWidth + 8) * CellHeight);
     private bool _hasRendered;
+    private int _lastWindowWidth = -1;
+    private int _lastWindowHeight = -1;
 
     public AnsiConsoleDisplay()
     {
@@ -32,7 +36,15 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
 
     public void Draw(ReadOnlySpan<byte> pixels)
     {
-        if (_hasRendered && pixels.SequenceEqual(_previousPixels))
+        var (width, height) = ReadWindowSize();
+        var resized = width != _lastWindowWidth || height != _lastWindowHeight;
+        if (resized)
+        {
+            _lastWindowWidth = width;
+            _lastWindowHeight = height;
+        }
+
+        if (_hasRendered && !resized && pixels.SequenceEqual(_previousPixels))
         {
             return;
         }
@@ -41,28 +53,57 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
         _hasRendered = true;
 
         _frame.Clear();
-
-        for (var row = 0; row < CellHeight; row++)
+        if (resized)
         {
-            _frame.Append("\x1b[").Append(row + 1).Append(";1H");
-            var topRowOffset = row * 2 * PixelWidth;
-            var bottomRowOffset = (row * 2 + 1) * PixelWidth;
-            for (var col = 0; col < PixelWidth; col++)
+            _frame.Append(ClearScreen);
+        }
+
+        if (width < PixelWidth || height < CellHeight)
+        {
+            var msgRow = Math.Max(1, height / 2);
+            var msgCol = Math.Max(1, (width - TooSmallMessage.Length) / 2 + 1);
+            _frame.Append("\x1b[").Append(msgRow).Append(';').Append(msgCol).Append('H');
+            _frame.Append(TooSmallMessage);
+        }
+        else
+        {
+            var offsetCol = (width - PixelWidth) / 2 + 1;
+            var offsetRow = (height - CellHeight) / 2 + 1;
+
+            for (var row = 0; row < CellHeight; row++)
             {
-                var top = pixels[topRowOffset + col] != 0;
-                var bottom = pixels[bottomRowOffset + col] != 0;
-                _frame.Append((top, bottom) switch
+                _frame.Append("\x1b[").Append(offsetRow + row).Append(';').Append(offsetCol).Append('H');
+                var topRowOffset = row * 2 * PixelWidth;
+                var bottomRowOffset = (row * 2 + 1) * PixelWidth;
+                for (var col = 0; col < PixelWidth; col++)
                 {
-                    (false, false) => ' ',
-                    (true, false) => '\u2580',
-                    (false, true) => '\u2584',
-                    (true, true) => '\u2588',
-                });
+                    var top = pixels[topRowOffset + col] != 0;
+                    var bottom = pixels[bottomRowOffset + col] != 0;
+                    _frame.Append((top, bottom) switch
+                    {
+                        (false, false) => ' ',
+                        (true, false) => '\u2580',
+                        (false, true) => '\u2584',
+                        (true, true) => '\u2588',
+                    });
+                }
             }
         }
 
         Console.Out.Write(_frame);
         Console.Out.Flush();
+    }
+
+    private static (int width, int height) ReadWindowSize()
+    {
+        try
+        {
+            return (Console.WindowWidth, Console.WindowHeight);
+        }
+        catch (IOException)
+        {
+            return (PixelWidth, CellHeight);
+        }
     }
 
     public void Dispose()
