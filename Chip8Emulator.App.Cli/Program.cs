@@ -32,7 +32,7 @@ try
 
     var clock = new StopwatchClock();
     var machine = Chip8.Builder()
-        .WithDisplay(display)
+        .WithRenderer(display)
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)

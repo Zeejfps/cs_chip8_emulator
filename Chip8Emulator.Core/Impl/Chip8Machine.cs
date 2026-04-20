@@ -54,7 +54,6 @@ internal sealed class Chip8Machine : IChip8Machine
     private int _instructionsExecuted;
     private bool _isWaitingForKeyPress;
     private int _keyRegisterIndex;
-    private Memory<byte> _displayPixels1;
 
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
     {

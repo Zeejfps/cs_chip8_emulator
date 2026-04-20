@@ -19,7 +19,7 @@ public class Chip8MachineBuilderTests
     {
         var builder = Chip8.Builder();
 
-        var result = builder.WithDisplay(new FakeRenderer());
+        var result = builder.WithRenderer(new FakeRenderer());
 
         Assert.Same(builder, result);
     }
@@ -58,7 +58,7 @@ public class Chip8MachineBuilderTests
     public void Build_ReturnsChip8Emulator()
     {
         var chip = Chip8.Builder()
-            .WithDisplay(new FakeRenderer())
+            .WithRenderer(new FakeRenderer())
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())
             .WithInput(new FakeInput())
