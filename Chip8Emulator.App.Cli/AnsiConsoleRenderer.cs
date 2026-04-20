@@ -51,7 +51,7 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
 
     public void Render()
     {
-        var pixels = _machine!.DisplayPixels.Span;
+        var pixels = _machine!.Display.Pixels.Span;
         var (width, height) = ReadWindowSize();
         var resized = width != _lastWindowWidth || height != _lastWindowHeight;
         if (resized)

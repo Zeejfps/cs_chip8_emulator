@@ -980,11 +980,11 @@ public class Chip8MachineTests
         emulator.ExecuteSetIndexRegisterIns(0xA000);
         emulator.WriteMemory(0, [0xFF]);
         emulator.ExeuteDrawToScreenIns(0xD001);
-        Assert.Contains(emulator.DisplayPixels.ToArray(), p => p == 1);
+        Assert.Contains(emulator.Pixels.ToArray(), p => p == 1);
 
         emulator.ExecuteClearDisplayIns();
 
-        foreach (var p in emulator.DisplayPixels.Span)
+        foreach (var p in emulator.Pixels.Span)
             Assert.Equal(0, p);
     }
 

@@ -12,12 +12,12 @@ public class DrawToScreenTests
         => new(new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput());
 
     private static byte PixelAt(Chip8Machine emulator, int x, int y)
-        => emulator.DisplayPixels.Span[y * ScreenWidth + x];
+        => emulator.Pixels.Span[y * ScreenWidth + x];
 
     private static int CountLitPixels(Chip8Machine emulator)
     {
         var count = 0;
-        foreach (var p in emulator.DisplayPixels.Span)
+        foreach (var p in emulator.Pixels.Span)
             if (p == 1) count++;
         return count;
     }

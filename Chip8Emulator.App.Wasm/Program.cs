@@ -24,7 +24,7 @@ public static partial class Interop
             .WithClock(_clock)
             .WithInput(_input)
             .Build();
-        _pixelsHandle = _machine.DisplayPixels.Pin();
+        _pixelsHandle = _machine.Display.Pixels.Pin();
     }
 
     [JSExport]
@@ -43,13 +43,13 @@ public static partial class Interop
     public static unsafe int GetPixelDataPtr() => (int)_pixelsHandle.Pointer;
 
     [JSExport]
-    public static int GetPixelDataLength() => _machine!.DisplayPixels.Length;
+    public static int GetPixelDataLength() => _machine!.Display.Pixels.Length;
 
     [JSExport]
-    public static int GetWidth() => _machine!.DisplayWidth;
+    public static int GetWidth() => _machine!.Display.Width;
 
     [JSExport]
-    public static int GetHeight() => _machine!.DisplayHeight;
+    public static int GetHeight() => _machine!.Display.Height;
 
     [JSExport]
     public static void SetKey(int key, bool pressed) => _input!.SetKey((byte)key, pressed);

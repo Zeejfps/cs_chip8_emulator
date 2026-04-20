@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Chip8Emulator.Core.Impl;
 
-internal sealed class Chip8Machine : IChip8Machine
+internal sealed class Chip8Machine : IChip8Machine, IDisplay
 {
     private const int FontBaseAddress = 0x050;
 
@@ -26,8 +26,8 @@ internal sealed class Chip8Machine : IChip8Machine
         0xF0, 0x80, 0xF0, 0x80, 0x80, // F              
     ];
     
-    private const int ScreenWidth = 64;
-    private const int ScreenHeight = 32;
+    private const int DisplayWidth = 64;
+    private const int DisplayHeight = 32;
     private const int InstructionsPerSecond = 1000;
     private const int InstructionsPerFrame = InstructionsPerSecond / 60;
     private const int InstructionSizeInBytes = 2;
@@ -40,7 +40,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private readonly byte[] _memory = new byte[4096];
     private readonly byte[] _vRegisters = new byte[16];
 
-    private readonly byte[] _displayPixels = new byte[ScreenWidth * ScreenHeight];
+    private readonly byte[] _displayPixels = new byte[DisplayWidth * DisplayHeight];
     private readonly int[] _stack = new int[16];
 
     private byte _delayTimer;
@@ -102,9 +102,10 @@ internal sealed class Chip8Machine : IChip8Machine
         return _stack[stackPointer];   
     }
 
-    public Memory<byte> DisplayPixels => _displayPixels;
-    public int DisplayWidth => ScreenWidth;
-    public int DisplayHeight => ScreenHeight;
+    public IDisplay Display => this;
+    public Memory<byte> Pixels => _displayPixels;
+    public int Width => DisplayWidth;
+    public int Height => DisplayHeight;
 
     internal void WriteMemory(int address, ReadOnlySpan<byte> data)
     {
@@ -466,24 +467,24 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExeuteDrawToScreenIns(int ins)
     {
         //Console.WriteLine($"Draw to screen");
-        var x = _vRegisters[ExtractX(ins)] % ScreenWidth;
-        var y = _vRegisters[ExtractY(ins)] % ScreenHeight;
+        var x = _vRegisters[ExtractX(ins)] % DisplayWidth;
+        var y = _vRegisters[ExtractY(ins)] % DisplayHeight;
         var spriteHeight = ExtractN(ins);
 
         byte collision = 0;
         for (var i = 0; i < spriteHeight; i++)
         {
             var dstY = y + i;
-            if (dstY >= ScreenHeight) break;
+            if (dstY >= DisplayHeight) break;
             
             var spritePixelsRow = _memory[_indexRegister + i];
             for (var bit = 0; bit < 8; bit++)
             {
                 var dstX = x + bit;
-                if (dstX >= ScreenWidth) break;
+                if (dstX >= DisplayWidth) break;
                 
                 var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
-                var dstIndex = dstY * ScreenWidth + dstX;
+                var dstIndex = dstY * DisplayWidth + dstX;
                 var before = _displayPixels[dstIndex];
                 collision |= (byte)(before & spritePixel);
                 _displayPixels[dstIndex] = (byte)(before ^ spritePixel);
