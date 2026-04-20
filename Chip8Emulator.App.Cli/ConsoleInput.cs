@@ -6,13 +6,13 @@ namespace Chip8Emulator.App.Cli;
 public sealed class ConsoleInput : IInput, IDisposable
 {
     private const long DecayMilliseconds = 150;
+    private const int NoPendingKey = -1;
 
     private readonly long[] _lastSeenTicks = new long[16];
-    private readonly ManualResetEventSlim _anyKeyPressed = new(false);
     private readonly Thread _readerThread;
     private volatile bool _stopping;
-    private volatile byte _lastChip8Key;
     private volatile bool _isCancelRequested;
+    private int _pendingKey = NoPendingKey;
 
     public ConsoleInput()
     {
@@ -34,11 +34,16 @@ public sealed class ConsoleInput : IInput, IDisposable
         return elapsedMs < DecayMilliseconds;
     }
 
-    public byte WaitForKeyPress()
+    public bool WasAnyKeyPressed(out byte key)
     {
-        _anyKeyPressed.Reset();
-        _anyKeyPressed.Wait();
-        return _lastChip8Key;
+        var pending = Interlocked.Exchange(ref _pendingKey, NoPendingKey);
+        if (pending >= 0)
+        {
+            key = (byte)pending;
+            return true;
+        }
+        key = 0;
+        return false;
     }
 
     private void ReaderLoop()
@@ -58,15 +63,13 @@ public sealed class ConsoleInput : IInput, IDisposable
             if (info.Key == ConsoleKey.Escape)
             {
                 _isCancelRequested = true;
-                _anyKeyPressed.Set();
                 return;
             }
 
             if (TryMap(info.Key, out var chip8Key))
             {
                 _lastSeenTicks[chip8Key] = Stopwatch.GetTimestamp();
-                _lastChip8Key = chip8Key;
-                _anyKeyPressed.Set();
+                Interlocked.Exchange(ref _pendingKey, chip8Key);
             }
         }
     }
@@ -99,7 +102,5 @@ public sealed class ConsoleInput : IInput, IDisposable
     public void Dispose()
     {
         _stopping = true;
-        _anyKeyPressed.Set();
-        _anyKeyPressed.Dispose();
     }
 }

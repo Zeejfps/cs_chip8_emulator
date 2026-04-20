@@ -52,6 +52,8 @@ internal sealed class Chip8Machine : IChip8Machine
     
     private double _totalElapsedSeconds;
     private int _instructionsExecuted;
+    private bool _isWaitingForKeyPress;
+    private int _keyRegisterIndex;
     
     public Chip8Machine(IDisplay display, IAudio audio, IClock clock, IInput input)
     {
@@ -67,6 +69,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public int StackPointer => _stackPointer;
     public byte DelayTimer => _delayTimer;
     public byte SoundTimer => _soundTimer;
+    public bool IsWaitingForKeyPress => _isWaitingForKeyPress;
     public ReadOnlySpan<byte> Memory => _memory;
     
     public byte ReadRegister(int x)
@@ -117,20 +120,27 @@ internal sealed class Chip8Machine : IChip8Machine
         {
             return;
         }
-        
-        if (_instructionsExecuted < InstructionsPerFrame)
+
+        if (_isWaitingForKeyPress)
         {
-            FetchDecodeExecute();
-            _instructionsExecuted++;
+            if (_input.WasAnyKeyPressed(out var key))
+            {
+                _vRegisters[_keyRegisterIndex] = key;
+                _isWaitingForKeyPress = false;
+            }
         }
         
+        if (!_isWaitingForKeyPress && _instructionsExecuted < InstructionsPerFrame)
+        {
+            FetchDecodeExecute();
+        }
+
         _totalElapsedSeconds += elapsedTimeInSeconds;
         while (_totalElapsedSeconds >= FrameTimeInSeconds)
         {
-            while (_instructionsExecuted < InstructionsPerFrame)
+            while (!_isWaitingForKeyPress && _instructionsExecuted < InstructionsPerFrame)
             {
                 FetchDecodeExecute();
-                _instructionsExecuted++;
             }
             
             if (_delayTimer > 0)
@@ -210,6 +220,8 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteTimerIns(ins);
                 break;
         }
+        
+        _instructionsExecuted++;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -296,8 +308,9 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteWaitForKeyPress(int ins)
     {
+        _isWaitingForKeyPress = true;
         var x = ExtractX(ins);
-        _vRegisters[x] = _input.WaitForKeyPress();
+        _keyRegisterIndex = x;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

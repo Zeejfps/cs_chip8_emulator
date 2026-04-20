@@ -16,6 +16,7 @@ public class Chip8MachineTests
 
     private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _, out _);
     private static Chip8Machine CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out _, out input);
+    private static Chip8Machine CreateEmulator(out FakeClock clock, out FakeInput input) => CreateEmulator(out _, out _, out clock, out input);
 
     [Fact]
     public void InitialState_IsZeroed()
@@ -714,25 +715,89 @@ public class Chip8MachineTests
     }
 
     [Fact]
-    public void WaitForKeyPress_StoresKeyFromInputIntoVx()
+    public void WaitForKeyPress_SetsIsWaitingForKeyPressFlag()
     {
-        var emulator = CreateEmulator(out var input);
-        input.NextKey = 0x7;
+        var emulator = CreateEmulator();
 
         emulator.ExecuteWaitForKeyPress(0xF20A);
 
-        Assert.Equal(0x7, emulator.ReadRegister(2));
+        Assert.True(emulator.IsWaitingForKeyPress);
+    }
+
+    [Fact]
+    public void WaitForKeyPress_DoesNotImmediatelyWriteToRegister()
+    {
+        var emulator = CreateEmulator();
+
+        emulator.ExecuteWaitForKeyPress(0xF20A);
+
+        Assert.Equal(0, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void Update_WhileWaitingForKey_AndNoKeyPressed_StaysWaiting()
+    {
+        var emulator = CreateEmulator(out var clock, out _);
+        emulator.ExecuteWaitForKeyPress(0xF20A);
+        clock.ElapsedTimeInSeconds = 1.0 / 60.0;
+
+        emulator.Update();
+
+        Assert.True(emulator.IsWaitingForKeyPress);
+        Assert.Equal(0, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void Update_WhileWaitingForKey_AndKeyPressed_StoresKeyAndResumes()
+    {
+        var emulator = CreateEmulator(out var clock, out var input);
+        emulator.ExecuteWaitForKeyPress(0xF20A);
+        input.QueueKeyPressEvent(0xA);
+        clock.ElapsedTimeInSeconds = 1.0 / 60.0;
+
+        emulator.Update();
+
+        Assert.False(emulator.IsWaitingForKeyPress);
+        Assert.Equal(0xA, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void Update_WhileWaitingForKey_DelayTimerStillTicks()
+    {
+        var emulator = CreateEmulator(out var clock, out _);
+        emulator.ExecuteSetRegisterValueIns(0x600A);
+        emulator.ExecuteSetDelayTimer(0xF015);
+        emulator.ExecuteWaitForKeyPress(0xF10A);
+        clock.ElapsedTimeInSeconds = 1.0 / 60.0;
+
+        emulator.Update();
+
+        Assert.Equal(9, emulator.DelayTimer);
+        Assert.True(emulator.IsWaitingForKeyPress);
+    }
+
+    [Fact]
+    public void Update_WhileWaitingForKey_SoundTimerStillTicks()
+    {
+        var emulator = CreateEmulator(out var clock, out _);
+        emulator.ExecuteSetRegisterValueIns(0x6005);
+        emulator.ExecuteSetSoundTimer(0xF018);
+        emulator.ExecuteWaitForKeyPress(0xF10A);
+        clock.ElapsedTimeInSeconds = 1.0 / 60.0;
+
+        emulator.Update();
+
+        Assert.Equal(4, emulator.SoundTimer);
     }
 
     [Fact]
     public void TimerIns_Dispatches0AToWaitForKeyPress()
     {
-        var emulator = CreateEmulator(out var input);
-        input.NextKey = 0xB;
+        var emulator = CreateEmulator();
 
         emulator.ExecuteTimerIns(0xF10A);
 
-        Assert.Equal(0xB, emulator.ReadRegister(1));
+        Assert.True(emulator.IsWaitingForKeyPress);
     }
 
     [Fact]
