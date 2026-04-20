@@ -15,6 +15,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private readonly IDisplay _display;
     private readonly IAudio _audio;
     private readonly IClock _clock;
+    private readonly IInput _input;
     
     private readonly byte[] _memory = new byte[4096];
     private readonly byte[] _vRegisters = new byte[16];
@@ -198,9 +199,46 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExeuteDrawToScreenIns(ins);
                 break;
             case 0xE:
+                ExecuteSkipNextInsIfKeyIsPressedOrReleased(ins);
                 break;
             case 0xF:
                 break;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSkipNextInsIfKeyIsPressedOrReleased(int ins)
+    {
+        var op = ins & 0x00FF;
+        if (op == 0x9E)
+        {
+            ExecuteSkipNextInsIfKeyIsPressed(ins);
+        }
+        else if (op == 0xA1)
+        {
+            ExecuteSkipNextInsIfKeyIsReleased(ins);
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSkipNextInsIfKeyIsPressed(int ins)
+    {
+        var x = ExtractX(ins);
+        var key = _vRegisters[x];
+        if (_input.IsKeyPressed(key))
+        {
+            _programCounter += InstructionSizeInBytes;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSkipNextInsIfKeyIsReleased(int ins)
+    {
+        var x = ExtractX(ins);
+        var key = _vRegisters[x];
+        if (!_input.IsKeyPressed(key))
+        {
+            _programCounter += InstructionSizeInBytes;
         }
     }
 
