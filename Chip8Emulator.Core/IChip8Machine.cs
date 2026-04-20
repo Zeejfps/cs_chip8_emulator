@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public interface IChip8Machine : IDisposable
+public interface IChip8Machine
 {
     Memory<byte> DisplayPixels { get; }
     int DisplayWidth { get; }

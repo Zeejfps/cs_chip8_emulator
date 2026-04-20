@@ -31,7 +31,7 @@ try
     var audio = new ConsoleBeepAudio();
 
     var clock = new StopwatchClock();
-    using var machine = Chip8.Builder()
+    var machine = Chip8.Builder()
         .WithRenderer(display)
         .WithAudio(audio)
         .WithClock(clock)

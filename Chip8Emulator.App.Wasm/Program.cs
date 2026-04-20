@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Runtime.InteropServices.JavaScript;
 using Chip8Emulator.App;
 using Chip8Emulator.App.Wasm;
@@ -8,9 +9,9 @@ await Task.CompletedTask;
 public static partial class Interop
 {
     private static IChip8Machine? _machine;
-    private static IDisplay? _display;
     private static BrowserInput? _input;
     private static StopwatchClock? _clock;
+    private static MemoryHandle _pixelsHandle;
 
     [JSExport]
     public static void Init()
@@ -23,7 +24,7 @@ public static partial class Interop
             .WithClock(_clock)
             .WithInput(_input)
             .Build();
-        _display = (IDisplay)_machine;
+        _pixelsHandle = _machine.DisplayPixels.Pin();
     }
 
     [JSExport]
@@ -39,16 +40,16 @@ public static partial class Interop
     }
 
     [JSExport]
-    public static int GetPixelDataPtr() => (int)_display!.PixelData;
+    public static unsafe int GetPixelDataPtr() => (int)_pixelsHandle.Pointer;
 
     [JSExport]
-    public static int GetPixelDataLength() => _display!.PixelDataLength;
+    public static int GetPixelDataLength() => _machine!.DisplayPixels.Length;
 
     [JSExport]
-    public static int GetWidth() => _display!.Width;
+    public static int GetWidth() => _machine!.DisplayWidth;
 
     [JSExport]
-    public static int GetHeight() => _display!.Height;
+    public static int GetHeight() => _machine!.DisplayHeight;
 
     [JSExport]
     public static void SetKey(int key, bool pressed) => _input!.SetKey((byte)key, pressed);
