@@ -1,6 +1,6 @@
-﻿using Emulator.Impl;
+﻿using Chip8Emulator.Core.Impl;
 
-namespace Emulator.Api;
+namespace Chip8Emulator.Core.Api;
 
 public static class Chip8
 {

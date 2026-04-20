@@ -1,20 +1,20 @@
-using Emulator.Impl;
-using Emulator.Tests.Fakes;
+using Chip8Emulator.Core.Impl;
+using Chip8Emulator.Core.Tests.Fakes;
 
-namespace Emulator.Tests;
+namespace Chip8Emulator.Core.Tests;
 
 public class DrawToScreenTests
 {
     private const int ScreenWidth = 64;
     private const int ScreenHeight = 32;
 
-    private static Chip8Emulator CreateEmulator()
+    private static Chip8Machine CreateEmulator()
         => new(new FakeDisplay(), new FakeAudio());
 
-    private static byte PixelAt(Chip8Emulator emulator, int x, int y)
+    private static byte PixelAt(Chip8Machine emulator, int x, int y)
         => emulator.DisplayPixels[y * ScreenWidth + x];
 
-    private static int CountLitPixels(Chip8Emulator emulator)
+    private static int CountLitPixels(Chip8Machine emulator)
     {
         var count = 0;
         foreach (var p in emulator.DisplayPixels)

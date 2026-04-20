@@ -1,6 +1,6 @@
-using Emulator.Api;
+using Chip8Emulator.Core.Api;
 
-namespace Emulator.Tests.Fakes;
+namespace Chip8Emulator.Core.Tests.Fakes;
 
 internal sealed class FakeAudio : IAudio
 {

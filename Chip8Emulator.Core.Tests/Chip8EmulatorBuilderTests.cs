@@ -1,8 +1,8 @@
-using Emulator.Api;
-using Emulator.Impl;
-using Emulator.Tests.Fakes;
+using Chip8Emulator.Core.Api;
+using Chip8Emulator.Core.Impl;
+using Chip8Emulator.Core.Tests.Fakes;
 
-namespace Emulator.Tests;
+namespace Chip8Emulator.Core.Tests;
 
 public class Chip8EmulatorBuilderTests
 {
@@ -55,6 +55,6 @@ public class Chip8EmulatorBuilderTests
             .Build();
 
         Assert.NotNull(chip);
-        Assert.IsType<Chip8Emulator>(chip);
+        Assert.IsType<Chip8Machine>(chip);
     }
 }

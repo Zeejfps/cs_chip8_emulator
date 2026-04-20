@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Emulator.Api;
+using Chip8Emulator.Core.Api;
 
-namespace Emulator.Impl;
+namespace Chip8Emulator.Core.Impl;
 
-internal sealed class Chip8Emulator : IChip8
+internal sealed class Chip8Machine : IChip8
 {
     private const int ScreenWidth = 64;
     private const int ScreenHeight = 32;
@@ -48,7 +48,7 @@ internal sealed class Chip8Emulator : IChip8
     private double _totalElapsedSeconds;
     private int _instructionsExecuted;
     
-    public Chip8Emulator(IDisplay display, IAudio audio)
+    public Chip8Machine(IDisplay display, IAudio audio)
     {
         _display = display;
         _audio = audio;

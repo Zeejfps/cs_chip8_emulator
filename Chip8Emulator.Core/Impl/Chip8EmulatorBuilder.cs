@@ -1,6 +1,6 @@
-using Emulator.Api;
+using Chip8Emulator.Core.Api;
 
-namespace Emulator.Impl;
+namespace Chip8Emulator.Core.Impl;
 
 internal sealed class Chip8EmulatorBuilder : IChip8Builder
 {
@@ -27,6 +27,6 @@ internal sealed class Chip8EmulatorBuilder : IChip8Builder
     public IChip8 Build()
     {
         // TODO: validate
-        return new Chip8Emulator(_display, _audio);
+        return new Chip8Machine(_display, _audio);
     }
 }

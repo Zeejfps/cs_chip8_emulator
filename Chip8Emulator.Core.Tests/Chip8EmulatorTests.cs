@@ -1,18 +1,18 @@
-using Emulator.Impl;
-using Emulator.Tests.Fakes;
+using Chip8Emulator.Core.Impl;
+using Chip8Emulator.Core.Tests.Fakes;
 
-namespace Emulator.Tests;
+namespace Chip8Emulator.Core.Tests;
 
 public class Chip8EmulatorTests
 {
-    private static Chip8Emulator CreateEmulator(out FakeDisplay display, out FakeAudio audio)
+    private static Chip8Machine CreateEmulator(out FakeDisplay display, out FakeAudio audio)
     {
         display = new FakeDisplay();
         audio = new FakeAudio();
-        return new Chip8Emulator(display, audio);
+        return new Chip8Machine(display, audio);
     }
 
-    private static Chip8Emulator CreateEmulator() => CreateEmulator(out _, out _);
+    private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _);
 
     [Fact]
     public void InitialState_IsZeroed()

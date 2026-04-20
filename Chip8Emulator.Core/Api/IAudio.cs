@@ -1,4 +1,4 @@
-namespace Emulator.Api;
+namespace Chip8Emulator.Core.Api;
 
 public interface IAudio
 {
