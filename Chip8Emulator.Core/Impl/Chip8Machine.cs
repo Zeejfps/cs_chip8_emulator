@@ -237,18 +237,45 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteLoadFontCharacter(ins);
                 break;
             case 0x33:
+                ExecuteStoreBcdInMemory(ins);
                 break;
             case 0x55:
                 ExecuteStoreRegisters(ins);
                 break;
             case 0x65:
+                ExecuteLoadRegisters(ins);
                 break;
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteStoreBcdInMemory(int ins)
+    {
+        var x = ExtractX(ins);
+        var bcd = _vRegisters[x];
+        _memory[_indexRegister] = (byte)(bcd / 100);
+        _memory[_indexRegister + 1] = (byte)((bcd / 10) % 10);
+        _memory[_indexRegister + 2] = (byte)(bcd % 10);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteLoadRegisters(int ins)
+    {
+        var x = ExtractX(ins);
+        for (var i = 0; i <= x; i++)
+        {
+            _vRegisters[i] = _memory[_indexRegister + i];
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteStoreRegisters(int ins)
     {
+        var x = ExtractX(ins);
+        for (var i = 0; i <= x; i++)
+        {
+            _memory[_indexRegister + i] = _vRegisters[i];
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

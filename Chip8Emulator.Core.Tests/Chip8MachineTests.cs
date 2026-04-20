@@ -759,6 +759,159 @@ public class Chip8MachineTests
     }
 
     [Fact]
+    public void StoreRegisters_WritesV0ThroughVxIntoMemoryAtI()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6011);
+        emulator.ExecuteSetRegisterValueIns(0x6122);
+        emulator.ExecuteSetRegisterValueIns(0x6233);
+        emulator.ExecuteSetRegisterValueIns(0x6344);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+
+        emulator.ExecuteStoreRegisters(0xF355);
+
+        Assert.Equal(0x11, emulator.Memory[0x300]);
+        Assert.Equal(0x22, emulator.Memory[0x301]);
+        Assert.Equal(0x33, emulator.Memory[0x302]);
+        Assert.Equal(0x44, emulator.Memory[0x303]);
+        Assert.Equal(0x00, emulator.Memory[0x304]);
+    }
+
+    [Fact]
+    public void StoreRegisters_V0Only_WritesSingleByte()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x60AB);
+        emulator.ExecuteSetRegisterValueIns(0x61CD);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+
+        emulator.ExecuteStoreRegisters(0xF055);
+
+        Assert.Equal(0xAB, emulator.Memory[0x300]);
+        Assert.Equal(0x00, emulator.Memory[0x301]);
+    }
+
+    [Fact]
+    public void LoadRegisters_ReadsMemoryAtIIntoV0ThroughVx()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.WriteMemory(0x300, [0x11, 0x22, 0x33, 0x44, 0xFF]);
+
+        emulator.ExecuteLoadRegisters(0xF365);
+
+        Assert.Equal(0x11, emulator.ReadRegister(0));
+        Assert.Equal(0x22, emulator.ReadRegister(1));
+        Assert.Equal(0x33, emulator.ReadRegister(2));
+        Assert.Equal(0x44, emulator.ReadRegister(3));
+        Assert.Equal(0x00, emulator.ReadRegister(4));
+    }
+
+    [Fact]
+    public void LoadRegisters_V0Only_ReadsSingleByte()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.WriteMemory(0x300, [0xAB, 0xCD]);
+
+        emulator.ExecuteLoadRegisters(0xF065);
+
+        Assert.Equal(0xAB, emulator.ReadRegister(0));
+        Assert.Equal(0x00, emulator.ReadRegister(1));
+    }
+
+    [Fact]
+    public void StoreThenLoad_RoundTripsRegisters()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6012);
+        emulator.ExecuteSetRegisterValueIns(0x6134);
+        emulator.ExecuteSetRegisterValueIns(0x6256);
+        emulator.ExecuteSetIndexRegisterIns(0xA200);
+        emulator.ExecuteStoreRegisters(0xF255);
+
+        emulator.ExecuteSetRegisterValueIns(0x6000);
+        emulator.ExecuteSetRegisterValueIns(0x6100);
+        emulator.ExecuteSetRegisterValueIns(0x6200);
+        emulator.ExecuteLoadRegisters(0xF265);
+
+        Assert.Equal(0x12, emulator.ReadRegister(0));
+        Assert.Equal(0x34, emulator.ReadRegister(1));
+        Assert.Equal(0x56, emulator.ReadRegister(2));
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches55ToStoreRegisters()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6099);
+        emulator.ExecuteSetIndexRegisterIns(0xA400);
+
+        emulator.ExecuteTimerIns(0xF055);
+
+        Assert.Equal(0x99, emulator.Memory[0x400]);
+    }
+
+    [Theory]
+    [InlineData(0, 0, 0, 0)]
+    [InlineData(7, 0, 0, 7)]
+    [InlineData(42, 0, 4, 2)]
+    [InlineData(100, 1, 0, 0)]
+    [InlineData(123, 1, 2, 3)]
+    [InlineData(255, 2, 5, 5)]
+    public void StoreBcdInMemory_WritesHundredsTensOnesToMemoryAtI(byte vx, byte hundreds, byte tens, byte ones)
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x6100 | vx);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+
+        emulator.ExecuteStoreBcdInMemory(0xF133);
+
+        Assert.Equal(hundreds, emulator.Memory[0x300]);
+        Assert.Equal(tens, emulator.Memory[0x301]);
+        Assert.Equal(ones, emulator.Memory[0x302]);
+    }
+
+    [Fact]
+    public void StoreBcdInMemory_DoesNotModifyRegisterOrIndex()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x617B);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+
+        emulator.ExecuteStoreBcdInMemory(0xF133);
+
+        Assert.Equal(0x7B, emulator.ReadRegister(1));
+        Assert.Equal(0x300, emulator.IndexRegister);
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches33ToStoreBcdInMemory()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetRegisterValueIns(0x61C8);
+        emulator.ExecuteSetIndexRegisterIns(0xA400);
+
+        emulator.ExecuteTimerIns(0xF133);
+
+        Assert.Equal(2, emulator.Memory[0x400]);
+        Assert.Equal(0, emulator.Memory[0x401]);
+        Assert.Equal(0, emulator.Memory[0x402]);
+    }
+
+    [Fact]
+    public void TimerIns_Dispatches65ToLoadRegisters()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteSetIndexRegisterIns(0xA400);
+        emulator.WriteMemory(0x400, [0x77]);
+
+        emulator.ExecuteTimerIns(0xF065);
+
+        Assert.Equal(0x77, emulator.ReadRegister(0));
+    }
+
+    [Fact]
     public void ClearDisplay_ZerosAllDisplayPixels()
     {
         var emulator = CreateEmulator();
