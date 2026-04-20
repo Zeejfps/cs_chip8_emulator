@@ -26,6 +26,7 @@ var machine = Chip8.Builder()
     .WithDisplay(display)
     .WithAudio(new ConsoleBeepAudio())
     .WithClock(clock)
+    .WithInput(new NoOpInput())
     .Build();
 
 Console.WriteLine($"Loading ROM: {romPath}");

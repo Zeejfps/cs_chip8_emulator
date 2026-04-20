@@ -5,15 +5,17 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
     private IDisplay? _display;
     private IAudio? _audio;
     private IClock? _clock;
-    
+    private IInput? _input;
+
     public IChip8MachineBuilder WithDisplay(IDisplay display)
     {
         _display = display;
         return this;
     }
 
-    public IChip8MachineBuilder WithInput()
+    public IChip8MachineBuilder WithInput(IInput input)
     {
+        _input = input;
         return this;
     }
 
@@ -32,6 +34,6 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
     public IChip8Machine Build()
     {
         // TODO: validate
-        return new Chip8Machine(_display, _audio, _clock);
+        return new Chip8Machine(_display, _audio, _clock, _input);
     }
 }

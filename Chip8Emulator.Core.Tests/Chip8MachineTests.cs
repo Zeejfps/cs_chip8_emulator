@@ -5,15 +5,17 @@ namespace Chip8Emulator.Core.Tests;
 
 public class Chip8MachineTests
 {
-    private static Chip8Machine CreateEmulator(out FakeDisplay display, out FakeAudio audio, out FakeClock clock)
+    private static Chip8Machine CreateEmulator(out FakeDisplay display, out FakeAudio audio, out FakeClock clock, out FakeInput input)
     {
         display = new FakeDisplay();
         audio = new FakeAudio();
         clock = new FakeClock();
-        return new Chip8Machine(display, audio, clock);
+        input = new FakeInput();
+        return new Chip8Machine(display, audio, clock, input);
     }
 
-    private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _);
+    private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _, out _);
+    private static Chip8Machine CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out _, out input);
 
     [Fact]
     public void InitialState_IsZeroed()
@@ -476,6 +478,96 @@ public class Chip8MachineTests
         emulator.ExecuteArithmeticOperationIns(instruction);
 
         Assert.Equal(expected, emulator.ReadRegister(1));
+    }
+
+    [Fact]
+    public void SkipIfKeyIsPressed_SkipsNextInstruction_WhenPressed()
+    {
+        var emulator = CreateEmulator(out var input);
+        emulator.ExecuteSetRegisterValueIns(0x6105);
+        input.Press(0x5);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfKeyIsPressed(0xE19E);
+
+        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfKeyIsPressed_DoesNotSkip_WhenNotPressed()
+    {
+        var emulator = CreateEmulator(out var input);
+        emulator.ExecuteSetRegisterValueIns(0x6105);
+        input.Press(0x3);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfKeyIsPressed(0xE19E);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfKeyIsReleased_SkipsNextInstruction_WhenNotPressed()
+    {
+        var emulator = CreateEmulator(out var input);
+        emulator.ExecuteSetRegisterValueIns(0x6105);
+        input.Press(0x3);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfKeyIsReleased(0xE1A1);
+
+        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfKeyIsReleased_DoesNotSkip_WhenPressed()
+    {
+        var emulator = CreateEmulator(out var input);
+        emulator.ExecuteSetRegisterValueIns(0x6105);
+        input.Press(0x5);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfKeyIsReleased(0xE1A1);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfKeyIsPressedOrReleased_Dispatches9EToIsPressed()
+    {
+        var emulator = CreateEmulator(out var input);
+        emulator.ExecuteSetRegisterValueIns(0x6107);
+        input.Press(0x7);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfKeyIsPressedOrReleased(0xE19E);
+
+        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfKeyIsPressedOrReleased_DispatchesA1ToIsReleased()
+    {
+        var emulator = CreateEmulator(out var input);
+        emulator.ExecuteSetRegisterValueIns(0x6107);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfKeyIsPressedOrReleased(0xE1A1);
+
+        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+    }
+
+    [Fact]
+    public void SkipIfKeyIsPressedOrReleased_UnknownSubOp_DoesNothing()
+    {
+        var emulator = CreateEmulator(out var input);
+        emulator.ExecuteSetRegisterValueIns(0x6107);
+        input.Press(0x7);
+        var pcBefore = emulator.ProgramCounter;
+
+        emulator.ExecuteSkipNextInsIfKeyIsPressedOrReleased(0xE100);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
     }
 
     [Fact]

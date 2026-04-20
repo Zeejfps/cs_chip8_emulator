@@ -39,7 +39,7 @@ public class Chip8MachineBuilderTests
     {
         var builder = Chip8.Builder();
 
-        var result = builder.WithInput();
+        var result = builder.WithInput(new FakeInput());
 
         Assert.Same(builder, result);
     }
@@ -61,7 +61,7 @@ public class Chip8MachineBuilderTests
             .WithDisplay(new FakeDisplay())
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())
-            .WithInput()
+            .WithInput(new FakeInput())
             .Build();
 
         Assert.NotNull(chip);

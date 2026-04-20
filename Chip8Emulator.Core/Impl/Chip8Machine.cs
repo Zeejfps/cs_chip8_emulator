@@ -51,11 +51,12 @@ internal sealed class Chip8Machine : IChip8Machine
     private double _totalElapsedSeconds;
     private int _instructionsExecuted;
     
-    public Chip8Machine(IDisplay display, IAudio audio, IClock clock)
+    public Chip8Machine(IDisplay display, IAudio audio, IClock clock, IInput input)
     {
         _display = display;
         _audio = audio;
         _clock = clock;
+        _input = input;
     }
     
     public int ProgramCounter => _programCounter;
