@@ -24,7 +24,7 @@ internal sealed class Chip8EmulatorBuilder : IChip8Builder
         return this;
     }
 
-    public IChip8 Build()
+    public IChip8Machine Build()
     {
         // TODO: validate
         return new Chip8Machine(_display, _audio);

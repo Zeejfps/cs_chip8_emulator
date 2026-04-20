@@ -4,7 +4,7 @@ using Chip8Emulator.Core.Api;
 
 namespace Chip8Emulator.Core.Impl;
 
-internal sealed class Chip8Machine : IChip8
+internal sealed class Chip8Machine : IChip8Machine
 {
     private const int ScreenWidth = 64;
     private const int ScreenHeight = 32;
@@ -71,17 +71,12 @@ internal sealed class Chip8Machine : IChip8
         data.CopyTo(_memory.AsSpan(address));
     }
 
-    public void Execute(ReadOnlySpan<byte> program)
+    public void LoadProgram(ReadOnlySpan<byte> program)
     {
-        _startTime = Stopwatch.GetTimestamp();
-        _totalElapsedSeconds = 0;
-        while (true)
-        {
-            Tick();
-        }
+        throw new NotImplementedException();
     }
 
-    public void Tick()
+    public void Update()
     {
         if (_instructionsExecuted < InstructionsPerSecond)
         {
