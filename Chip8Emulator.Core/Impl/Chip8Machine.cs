@@ -312,7 +312,45 @@ internal sealed class Chip8Machine : IChip8Machine
             case 4:
                 ExecuteAddValueToRegisterWithCarryIns(ins);
                 break;
+            case 5:
+                ExecuteVxSubVyIns(ins);
+                break;
+            case 6:
+                break;
+            case 7:
+                ExecuteVySubVxIns(ins);
+                break;
+            case 0xE:
+                break;
         }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteVxSubVyIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        var minuend = _vRegisters[x];
+        var subtrahend = _vRegisters[y];
+        _vRegisters[x] = Subtract(minuend, subtrahend);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteVySubVxIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        // NOTE(Zee): y first
+        var minuend = _vRegisters[y];
+        var subtrahend = _vRegisters[x];
+        _vRegisters[x] = Subtract(minuend, subtrahend);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private byte Subtract(int minuend, int subtrahend)
+    {
+        _vRegisters[0xF] = (byte)(minuend >= subtrahend ? 1 : 0);
+        return (byte)(minuend - subtrahend);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
