@@ -111,6 +111,15 @@ internal sealed class Chip8Machine : IChip8Machine
         Array.Clear(_memory);
         Console.WriteLine(program.Length);
         program.CopyTo(_memory.AsSpan(0x200));
+        _programCounter = 0x200;
+        _indexRegister = 0;
+        _stackPointer = 0;
+        _delayTimer = 0;
+        _soundTimer = 0;
+        _instructionsExecuted = 0;
+        _isWaitingForKeyPress = false;
+        _keyRegisterIndex = 0;
+        Array.Clear(_displayPixels);
     }
 
     public void Update()
@@ -174,6 +183,8 @@ internal sealed class Chip8Machine : IChip8Machine
                     ExecuteClearDisplayIns();
                 else if (ins == 0x00EE)
                     ExecuteReturnFromSubroutineIns();
+                else
+                    throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
                 break;
             case 1:
                 ExecuteJumpToAddressIns(ins);
@@ -219,6 +230,8 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0xF:
                 ExecuteTimerIns(ins);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
         }
         
         _instructionsExecuted++;
