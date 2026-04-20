@@ -2,6 +2,8 @@
 
 A CHIP-8 emulator written in C# / .NET 10, with three front-ends sharing a common core.
 
+Live demo: [chip8.builtbyzee.com](https://chip8.builtbyzee.com/)
+
 ## Projects
 
 - **`Chip8Emulator.Core`** — the interpreter (memory, registers, fetch/decode/execute, 60Hz timing).
