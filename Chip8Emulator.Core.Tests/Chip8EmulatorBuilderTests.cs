@@ -1,4 +1,3 @@
-using Chip8Emulator.Core.Api;
 using Chip8Emulator.Core.Impl;
 using Chip8Emulator.Core.Tests.Fakes;
 

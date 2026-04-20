@@ -1,5 +1,3 @@
-using Chip8Emulator.Core.Api;
-
 namespace Chip8Emulator.Core.Impl;
 
 internal sealed class Chip8EmulatorBuilder : IChip8Builder
