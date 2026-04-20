@@ -184,6 +184,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteArithmeticOperationIns(ins);
                 break;
             case 9:
+                ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(ins);
                 break;
             case 0xA:
                 ExecuteSetIndexRegisterIns(ins);
@@ -199,6 +200,17 @@ internal sealed class Chip8Machine : IChip8Machine
                 break;
             case 0xF:
                 break;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        if (_vRegisters[x] != _vRegisters[y])
+        {
+            _programCounter += InstructionSizeInBytes;
         }
     }
 
@@ -322,6 +334,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteVySubVxIns(ins);
                 break;
             case 0xE:
+                ExecuteShiftLeftIns(ins);
                 break;
         }
     }
@@ -337,6 +350,19 @@ internal sealed class Chip8Machine : IChip8Machine
         //}
         _vRegisters[0xF] = (byte)(value & 0x1);
         _vRegisters[x] = (byte)(value >> 1);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteShiftLeftIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var value = _vRegisters[x];
+        //var y = ExtractY(ins);
+        //if (option){
+        //    value = _vRegisters[y];
+        //}
+        _vRegisters[0xF] = (byte)((value >> 7) & 0x1);
+        _vRegisters[x] = (byte)(value << 1);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
