@@ -1,8 +1,9 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Chip8Emulator.Core.Impl;
 
-internal sealed class Chip8Machine : IChip8Machine
+internal sealed class Chip8Machine : IChip8Machine, IDisplay
 {
     private const int FontBaseAddress = 0x050;
 
@@ -36,12 +37,16 @@ internal sealed class Chip8Machine : IChip8Machine
     private readonly IAudio _audio;
     private readonly IClock _clock;
     private readonly IInput _input;
-    
+
     private readonly byte[] _memory = new byte[4096];
     private readonly byte[] _vRegisters = new byte[16];
 
     private readonly byte[] _displayPixels = new byte[ScreenWidth * ScreenHeight];
     private readonly int[] _stack = new int[16];
+
+    private GCHandle _displayPixelsHandle;
+    private readonly IntPtr _displayPixelsPtr;
+    private bool _disposed;
 
     private byte _delayTimer;
     private byte _soundTimer;
@@ -64,7 +69,24 @@ internal sealed class Chip8Machine : IChip8Machine
         _input = input;
         _ticksPerFrame = clock.Frequency / 60;
         _lastTimestamp = clock.Timestamp;
+        _displayPixelsHandle = GCHandle.Alloc(_displayPixels, GCHandleType.Pinned);
+        _displayPixelsPtr = _displayPixelsHandle.AddrOfPinnedObject();
         Font.CopyTo(_memory.AsSpan(FontBaseAddress));
+    }
+
+    public IntPtr PixelData => _displayPixelsPtr;
+    public int PixelDataLength => _displayPixels.Length;
+    public int Width => ScreenWidth;
+    public int Height => ScreenHeight;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        if (_displayPixelsHandle.IsAllocated)
+        {
+            _displayPixelsHandle.Free();
+        }
     }
     
     public int ProgramCounter => _programCounter;

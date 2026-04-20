@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chip8Emulator.App.Cli", "Ch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chip8Emulator.App.OpenGL", "Chip8Emulator.App.OpenGL\Chip8Emulator.App.OpenGL.csproj", "{18719A91-3D25-4799-A623-E5C87E80EBA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chip8Emulator.App.Wasm", "Chip8Emulator.App.Wasm\Chip8Emulator.App.Wasm.csproj", "{14012B58-F91B-484A-B97F-281182EB60B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -80,6 +82,18 @@ Global
 		{18719A91-3D25-4799-A623-E5C87E80EBA4}.Release|x64.Build.0 = Release|Any CPU
 		{18719A91-3D25-4799-A623-E5C87E80EBA4}.Release|x86.ActiveCfg = Release|Any CPU
 		{18719A91-3D25-4799-A623-E5C87E80EBA4}.Release|x86.Build.0 = Release|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Debug|x64.Build.0 = Debug|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Debug|x86.Build.0 = Debug|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Release|x64.ActiveCfg = Release|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Release|x64.Build.0 = Release|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Release|x86.ActiveCfg = Release|Any CPU
+		{14012B58-F91B-484A-B97F-281182EB60B3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

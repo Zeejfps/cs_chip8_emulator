@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CHIP-8 Emulator</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="module" src="./main.js"></script>
+</head>
+<body>
+  <main>
+    <h1>CHIP-8</h1>
+    <div class="controls">
+      <label class="file-label">
+        Load ROM
+        <input type="file" id="rom" accept=".ch8,.rom,.bin,application/octet-stream" />
+      </label>
+      <button id="restart" disabled>Restart</button>
+      <span id="status">Install wasm-tools and build to get started.</span>
+    </div>
+    <canvas id="screen" width="64" height="32"></canvas>
+    <details class="help">
+      <summary>Keyboard</summary>
+      <pre>
+CHIP-8 keypad         Your keyboard
+1 2 3 C               1 2 3 4
+4 5 6 D               Q W E R
+7 8 9 E               A S D F
+A 0 B F               Z X C V</pre>
+    </details>
+  </main>
+</body>
+</html>

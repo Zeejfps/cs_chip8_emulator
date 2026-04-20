@@ -15,7 +15,7 @@ public class Chip8MachineBuilderTests
     }
 
     [Fact]
-    public void WithDisplay_ReturnsSameBuilder()
+    public void WithRenderer_ReturnsSameBuilder()
     {
         var builder = Chip8.Builder();
 
