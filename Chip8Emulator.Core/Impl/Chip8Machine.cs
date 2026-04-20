@@ -10,6 +10,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private const double FrameTimeInSeconds = 1.0 / 60.0;
     private const int InstructionsPerSecond = 700;
     private const int InstructionsPerFrame = InstructionsPerSecond / 60;
+    private const int InstructionSizeInBytes = 2;
     
     private readonly IDisplay _display;
     private readonly IAudio _audio;
@@ -38,12 +39,12 @@ internal sealed class Chip8Machine : IChip8Machine
     ];
 
     private readonly byte[] _displayPixels = new byte[ScreenWidth * ScreenHeight];
-    
+    private readonly int[] _stack = new int[16];
+
     private byte _delayTimer;
     private byte _soundTimer;
     private int _programCounter;
     private int _indexRegister;
-    private byte[] _stack = new byte[16];
     private int _stackPointer;
     
     private double _totalElapsedSeconds;
@@ -67,17 +68,17 @@ internal sealed class Chip8Machine : IChip8Machine
         return _vRegisters[x];
     }
 
-    public byte PeekStack()
+    public int PeekStack()
     {
         return _stack[_stackPointer];
     }
 
-    public void PushStack(byte value)
+    public void PushStack(int value)
     {
         _stack[_stackPointer++] = value;
     }
 
-    public byte PopStack()
+    public int PopStack()
     {
         return _stack[_stackPointer--];   
     }
@@ -152,16 +153,19 @@ internal sealed class Chip8Machine : IChip8Machine
                     ExecuteReturnFromSubroutineIns();
                 break;
             case 1:
-                var address = ExtractNnn(ins);
-                ExecuteJumpToAddressIns(address);
+                ExecuteJumpToAddressIns(ins);
                 break;
             case 2:
-                break;
-            case 4:
+                ExecuteCallSubroutineIns(ins);
                 break;
             case 3:
+                ExecuteSkipNextInsIfRegisterValueEqualsValueIns(ins);
+                break;
+            case 4:
+                ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(ins);
                 break;
             case 5:
+                ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(ins);
                 break;
             case 6:
                 ExecuteSetRegisterValueIns(ins);
@@ -188,6 +192,47 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0xF:
                 break;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSkipNextInsIfRegisterValueEqualsValueIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var nn = ExtractNn(ins);
+        if (_vRegisters[x] == nn)
+        {
+            _programCounter += InstructionSizeInBytes;
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(int ins)
+    {
+        var x = ExtractX(ins);
+        var nn = ExtractNn(ins);
+        if (_vRegisters[x] != nn)
+        {
+            _programCounter += InstructionSizeInBytes;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        if (_vRegisters[x] == _vRegisters[y])
+        {
+            _programCounter += InstructionSizeInBytes;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void ExecuteCallSubroutineIns(int ins)
+    {
+        var address = ExtractNnn(ins);
+        PushStack((byte)_programCounter);
+        _programCounter = address;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -286,17 +331,21 @@ internal sealed class Chip8Machine : IChip8Machine
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteJumpToAddressIns(int address)
+    public void ExecuteJumpToAddressIns(int ins)
     {
+        var address = ExtractNnn(ins);
         //Console.WriteLine($"Jumping to address: {address:X}");
         _programCounter = address;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteReturnFromSubroutineIns()
     {
-        throw new NotImplementedException();
+        var address = PopStack();
+        _programCounter = address;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteClearDisplayIns()
     {
         Array.Clear(_displayPixels);
@@ -306,7 +355,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public int Fetch()
     {
         var ins = _memory[_programCounter] << 8 | _memory[_programCounter+1];
-        _programCounter += 2;
+        _programCounter += InstructionSizeInBytes;
         return ins;
     }
 }
