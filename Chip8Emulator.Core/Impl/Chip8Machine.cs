@@ -109,7 +109,6 @@ internal sealed class Chip8Machine : IChip8Machine
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         Array.Clear(_memory);
-        Console.WriteLine(program.Length);
         program.CopyTo(_memory.AsSpan(0x200));
         _programCounter = 0x200;
         _indexRegister = 0;
@@ -217,6 +216,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteSetIndexRegisterIns(ins);
                 break;
             case 0xB:
+                ExecuteJumpWithOffsetIns(ins);
                 break;
             case 0xC:
                 ExecuteGenerateRandomNumIns(ins);
@@ -270,6 +270,8 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0x65:
                 ExecuteLoadRegisters(ins);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
         }
     }
     
@@ -358,6 +360,10 @@ internal sealed class Chip8Machine : IChip8Machine
         else if (op == 0xA1)
         {
             ExecuteSkipNextInsIfKeyIsReleased(ins);
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
         }
     }
     
@@ -533,27 +539,21 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var x = ExtractX(ins);
         var value = _vRegisters[x];
-        //var y = ExtractY(ins);
-        //if (option){
-        //    value = _vRegisters[y];
-        //}
-        _vRegisters[0xF] = (byte)(value & 0x1);
+        var flag = (byte)(value & 0x1);
         _vRegisters[x] = (byte)(value >> 1);
+        _vRegisters[0xF] = flag;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteShiftLeftIns(int ins)
     {
         var x = ExtractX(ins);
         var value = _vRegisters[x];
-        //var y = ExtractY(ins);
-        //if (option){
-        //    value = _vRegisters[y];
-        //}
-        _vRegisters[0xF] = (byte)((value >> 7) & 0x1);
+        var flag = (byte)((value >> 7) & 0x1);
         _vRegisters[x] = (byte)(value << 1);
+        _vRegisters[0xF] = flag;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteVxSubVyIns(int ins)
     {
@@ -561,9 +561,11 @@ internal sealed class Chip8Machine : IChip8Machine
         var y = ExtractY(ins);
         var minuend = _vRegisters[x];
         var subtrahend = _vRegisters[y];
-        _vRegisters[x] = Subtract(minuend, subtrahend);
+        var flag = (byte)(minuend >= subtrahend ? 1 : 0);
+        _vRegisters[x] = (byte)(minuend - subtrahend);
+        _vRegisters[0xF] = flag;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteVySubVxIns(int ins)
     {
@@ -572,14 +574,9 @@ internal sealed class Chip8Machine : IChip8Machine
         // NOTE(Zee): y first
         var minuend = _vRegisters[y];
         var subtrahend = _vRegisters[x];
-        _vRegisters[x] = Subtract(minuend, subtrahend);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private byte Subtract(int minuend, int subtrahend)
-    {
-        _vRegisters[0xF] = (byte)(minuend >= subtrahend ? 1 : 0);
-        return (byte)(minuend - subtrahend);
+        var flag = (byte)(minuend >= subtrahend ? 1 : 0);
+        _vRegisters[x] = (byte)(minuend - subtrahend);
+        _vRegisters[0xF] = flag;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -589,8 +586,8 @@ internal sealed class Chip8Machine : IChip8Machine
         var y = ExtractY(ins);
         var sum = _vRegisters[x] + _vRegisters[y];
         var carry = (byte)(sum > 0xFF ? 1 : 0);
-        _vRegisters[0xF] = carry;
         _vRegisters[x] = (byte)sum;
+        _vRegisters[0xF] = carry;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -678,6 +675,13 @@ internal sealed class Chip8Machine : IChip8Machine
         var address = ExtractNnn(ins);
         //Console.WriteLine($"Jumping to address: {address:X}");
         _programCounter = address;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteJumpWithOffsetIns(int ins)
+    {
+        var address = ExtractNnn(ins);
+        _programCounter = address + _vRegisters[0];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
