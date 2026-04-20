@@ -14,16 +14,20 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private const string HideCursor = "\x1b[?25l";
     private const string ShowCursor = "\x1b[?25h";
     private const string ResetAttrs = "\x1b[0m";
+    private const string EnterAltScreen = "\x1b[?1049h";
+    private const string ExitAltScreen = "\x1b[?1049l";
+    private const string ClearScreen = "\x1b[2J";
 
     private readonly byte[] _previousPixels = new byte[PixelWidth * PixelHeight];
-    private readonly StringBuilder _frame = new(CursorHome.Length + (PixelWidth + 1) * CellHeight);
+    private readonly StringBuilder _frame = new(8 + (PixelWidth + 8) * CellHeight);
     private bool _hasRendered;
 
     public AnsiConsoleDisplay()
     {
         Console.OutputEncoding = Encoding.UTF8;
         EnableWindowsAnsi();
-        Console.Write(HideCursor + CursorHome);
+        Console.Write(EnterAltScreen + ClearScreen + HideCursor + CursorHome);
+        Console.Out.Flush();
     }
 
     public void Draw(ReadOnlySpan<byte> pixels)
@@ -37,10 +41,10 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
         _hasRendered = true;
 
         _frame.Clear();
-        _frame.Append(CursorHome);
 
         for (var row = 0; row < CellHeight; row++)
         {
+            _frame.Append("\x1b[").Append(row + 1).Append(";1H");
             var topRowOffset = row * 2 * PixelWidth;
             var bottomRowOffset = (row * 2 + 1) * PixelWidth;
             for (var col = 0; col < PixelWidth; col++)
@@ -55,7 +59,6 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
                     (true, true) => '\u2588',
                 });
             }
-            _frame.Append('\n');
         }
 
         Console.Out.Write(_frame);
@@ -64,7 +67,8 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
 
     public void Dispose()
     {
-        Console.Write($"\x1b[{CellHeight + 1};1H{ResetAttrs}{ShowCursor}");
+        Console.Write(ResetAttrs + ShowCursor + ExitAltScreen);
+        Console.Out.Flush();
     }
 
     private static void EnableWindowsAnsi()
