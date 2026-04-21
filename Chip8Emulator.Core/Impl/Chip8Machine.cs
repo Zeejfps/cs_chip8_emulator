@@ -7,6 +7,9 @@ internal sealed class Chip8Machine : IChip8Machine
     private const int LowResFontBaseAddress = 0x050;
     private const int HighResFontBaseAddress = 0x0A0;
 
+    private const int LowRestFontCharWidth = 5;
+    private const int HighRestFontCharWidth = 10;
+    
     private static ReadOnlySpan<byte> LowResFont =>             
     [
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0                
@@ -356,7 +359,10 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteAddVxToI(ins);
                 break;
             case 0x29:
-                ExecuteLoadFontCharacter(ins);
+                ExecuteLoadLowResFontCharacter(ins);
+                break;
+            case 0x30:
+                ExecuteLoadHighResFontCharacter(ins);
                 break;
             case 0x33:
                 ExecuteStoreBcdInMemory(ins);
@@ -403,11 +409,19 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteLoadFontCharacter(int ins)
+    public void ExecuteLoadLowResFontCharacter(int ins)
     {
         var x = ExtractX(ins);
         var value = _vRegisters[x];
-        _indexRegister = value * 5 + LowResFontBaseAddress;
+        _indexRegister = value * LowRestFontCharWidth + LowResFontBaseAddress;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteLoadHighResFontCharacter(int ins)
+    {
+        var x = ExtractX(ins);
+        var value = _vRegisters[x];
+        _indexRegister = value * HighRestFontCharWidth + HighResFontBaseAddress;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

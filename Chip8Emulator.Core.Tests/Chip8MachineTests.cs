@@ -693,7 +693,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6100 | vx);
 
-        emulator.ExecuteLoadFontCharacter(0xF129);
+        emulator.ExecuteLoadLowResFontCharacter(0xF129);
 
         Assert.Equal(expectedIndex, emulator.IndexRegister);
     }
@@ -704,7 +704,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6100);
 
-        emulator.ExecuteLoadFontCharacter(0xF129);
+        emulator.ExecuteLoadLowResFontCharacter(0xF129);
 
         var sprite = emulator.Memory.Slice(emulator.IndexRegister, 5);
         Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, sprite.ToArray());
