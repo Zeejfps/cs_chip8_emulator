@@ -244,7 +244,7 @@ stepBtn.addEventListener('click', () => {
   renderPixels();
 });
 
-const IPS_MIN = 500;
+const IPS_MIN = 400;
 const IPS_MAX = 1500;
 
 function applyIps(raw) {
