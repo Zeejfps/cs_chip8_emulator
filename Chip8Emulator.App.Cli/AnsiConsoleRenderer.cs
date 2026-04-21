@@ -7,10 +7,6 @@ namespace Chip8Emulator.App.Cli;
 
 public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
 {
-    private const int PixelWidth = 64;
-    private const int PixelHeight = 32;
-    private const int CellHeight = PixelHeight / 2;
-
     private const string CursorHome = "\x1b[H";
     private const string HideCursor = "\x1b[?25l";
     private const string ShowCursor = "\x1b[?25h";
@@ -21,14 +17,14 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
     private const string DisableAltScroll = "\x1b[?1007l";
     private const string RestoreAltScroll = "\x1b[?1007h";
 
-    private const string TooSmallMessage = "Terminal too small \u2014 needs 64\u00d716";
-
     private IChip8Machine? _machine;
     private byte[] _previousPixels;
-    private readonly StringBuilder _frame = new(8 + (PixelWidth + 8) * CellHeight);
+    private readonly StringBuilder _frame = new(8192);
     private bool _hasRendered;
     private int _lastWindowWidth = -1;
     private int _lastWindowHeight = -1;
+    private int _lastPixelWidth = -1;
+    private int _lastPixelHeight = -1;
     private readonly string? _savedSttyState;
 
     public AnsiConsoleRenderer()
@@ -52,50 +48,64 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
 
     public void Render()
     {
-        var pixels = _machine!.Display.Pixels.Span;
-        var (width, height) = ReadWindowSize();
-        var resized = width != _lastWindowWidth || height != _lastWindowHeight;
-        if (resized)
+        var display = _machine!.Display;
+        var pixels = display.Pixels.Span;
+        var pixelWidth = display.Width;
+        var pixelHeight = display.Height;
+        var cellHeight = (pixelHeight + 1) / 2;
+        var activeLength = pixelWidth * pixelHeight;
+        var activePixels = pixels[..activeLength];
+        var previousActive = _previousPixels.AsSpan(0, activeLength);
+
+        var (windowWidth, windowHeight) = ReadWindowSize();
+        var windowResized = windowWidth != _lastWindowWidth || windowHeight != _lastWindowHeight;
+        var modeChanged = pixelWidth != _lastPixelWidth || pixelHeight != _lastPixelHeight;
+        if (windowResized || modeChanged)
         {
-            _lastWindowWidth = width;
-            _lastWindowHeight = height;
+            _lastWindowWidth = windowWidth;
+            _lastWindowHeight = windowHeight;
+            _lastPixelWidth = pixelWidth;
+            _lastPixelHeight = pixelHeight;
         }
 
-        if (_hasRendered && !resized && pixels.SequenceEqual(_previousPixels))
+        if (_hasRendered && !windowResized && !modeChanged && activePixels.SequenceEqual(previousActive))
         {
             return;
         }
 
-        pixels.CopyTo(_previousPixels);
+        activePixels.CopyTo(previousActive);
         _hasRendered = true;
 
         _frame.Clear();
-        if (resized)
+        if (windowResized || modeChanged)
         {
             _frame.Append(ClearScreen);
         }
 
-        if (width < PixelWidth || height < CellHeight)
+        if (windowWidth < pixelWidth || windowHeight < cellHeight)
         {
-            var msgRow = Math.Max(1, height / 2);
-            var msgCol = Math.Max(1, (width - TooSmallMessage.Length) / 2 + 1);
+            var message = $"Terminal too small \u2014 needs {pixelWidth}\u00d7{cellHeight}";
+            var msgRow = Math.Max(1, windowHeight / 2);
+            var msgCol = Math.Max(1, (windowWidth - message.Length) / 2 + 1);
             _frame.Append("\x1b[").Append(msgRow).Append(';').Append(msgCol).Append('H');
-            _frame.Append(TooSmallMessage);
+            _frame.Append(message);
         }
         else
         {
-            var offsetCol = (width - PixelWidth) / 2 + 1;
-            var offsetRow = (height - CellHeight) / 2 + 1;
+            var offsetCol = (windowWidth - pixelWidth) / 2 + 1;
+            var offsetRow = (windowHeight - cellHeight) / 2 + 1;
 
-            for (var row = 0; row < CellHeight; row++)
+            for (var row = 0; row < cellHeight; row++)
             {
                 _frame.Append("\x1b[").Append(offsetRow + row).Append(';').Append(offsetCol).Append('H');
-                var topRowOffset = row * 2 * PixelWidth;
-                var bottomRowOffset = (row * 2 + 1) * PixelWidth;
-                for (var col = 0; col < PixelWidth; col++)
+                var topRowOffset = row * 2 * pixelWidth;
+                var bottomRowIndex = row * 2 + 1;
+                var bottomRowOffset = bottomRowIndex * pixelWidth;
+                var hasBottom = bottomRowIndex < pixelHeight;
+                for (var col = 0; col < pixelWidth; col++)
                 {
                     var top = pixels[topRowOffset + col] != 0;
-                    var bottom = pixels[bottomRowOffset + col] != 0;
+                    var bottom = hasBottom && pixels[bottomRowOffset + col] != 0;
                     _frame.Append((top, bottom) switch
                     {
                         (false, false) => ' ',
@@ -119,7 +129,7 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
         }
         catch (IOException)
         {
-            return (PixelWidth, CellHeight);
+            return (0, 0);
         }
     }
 

@@ -63,18 +63,25 @@ const api = exports.Interop;
 
 api.Init();
 
-const width = api.GetWidth();
-const height = api.GetHeight();
-const pixelCount = api.GetPixelDataLength();
 const pixelPtr = api.GetPixelDataPtr();
+let width = 0;
+let height = 0;
+let imageData = null;
+let rgba = null;
 
-canvas.width = width;
-canvas.height = height;
-const imageData = ctx2d.createImageData(width, height);
-const rgba = imageData.data;
-for (let i = 0; i < pixelCount; i++) {
-  rgba[i * 4 + 3] = 255;
+function resize(w, h) {
+  width = w;
+  height = h;
+  canvas.width = w;
+  canvas.height = h;
+  imageData = ctx2d.createImageData(w, h);
+  rgba = imageData.data;
+  for (let i = 0; i < w * h; i++) {
+    rgba[i * 4 + 3] = 255;
+  }
 }
+
+resize(api.GetWidth(), api.GetHeight());
 
 let lastRomBytes = null;
 let running = false;
@@ -122,6 +129,13 @@ window.addEventListener('keyup', (e) => {
 function frame() {
   api.Update();
 
+  const curW = api.GetWidth();
+  const curH = api.GetHeight();
+  if (curW !== width || curH !== height) {
+    resize(curW, curH);
+  }
+
+  const pixelCount = width * height;
   const view = runtime.localHeapViewU8().subarray(pixelPtr, pixelPtr + pixelCount);
   for (let i = 0; i < pixelCount; i++) {
     const on = view[i] !== 0;
