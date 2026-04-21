@@ -33,9 +33,7 @@ internal sealed class Display : IDisplay
     {
         if (IsHighRes)
         {
-            IsHighRes = false;
-            Width = LowRestWidth;
-            Height = LowRestHeight;
+            DisableHighResMode();
         }
         else
         {
