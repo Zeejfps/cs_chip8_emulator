@@ -272,7 +272,7 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void ExecuteZeroBaseIns(int ins)
+    public void ExecuteZeroBaseIns(int ins)
     {
         var x = ExtractY(ins);
         var n = ExtractN(ins);
