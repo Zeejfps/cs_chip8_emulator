@@ -99,7 +99,7 @@ internal sealed class Chip8Machine : IChip8Machine
         Debugger = new Chip8MachineDebugger(this);
     }
 
-    public IDebugger Debugger { get; }
+    public IMachineDebugger Debugger { get; }
     
     public int ProgramCounter => _programCounter;
 
@@ -263,21 +263,26 @@ internal sealed class Chip8Machine : IChip8Machine
 
         while (_frameAcc >= _ticksPerFrame)
         {
-            if (_delayTimer > 0)
-            {
-                _delayTimer--;
-            }
-
-            if (_soundTimer > 0)
-            {
-                _audio.Beep();
-                _soundTimer--;
-            }
-
-            _renderer.Render();
-            _frameAcc -= _ticksPerFrame;
-            _waitForVBlank = false;
+            StepFrame();
         }
+    }
+
+    private void StepFrame()
+    {
+        if (_delayTimer > 0)
+        {
+            _delayTimer--;
+        }
+
+        if (_soundTimer > 0)
+        {
+            _audio.Beep();
+            _soundTimer--;
+        }
+
+        _renderer.Render();
+        _frameAcc -= _ticksPerFrame;
+        _waitForVBlank = false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -935,16 +940,29 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public int Fetch()
+    private int Fetch()
     {
         var ins = _memory[_programCounter] << 8 | _memory[_programCounter+1];
         _programCounter += InstructionSizeInBytes;
         return ins;
     }
 
-    sealed class Chip8MachineDebugger(Chip8Machine machine) : IDebugger
+    sealed class Chip8MachineDebugger(Chip8Machine machine) : IMachineDebugger
     {
         public ReadOnlySpan<byte> Memory => machine._memory;
+        public ReadOnlySpan<byte> Registers => machine._vRegisters;
+        public ReadOnlySpan<int> Stack => machine._stack;
         public int ProgramCounter => machine._programCounter;
+        public int IndexRegister => machine._indexRegister;
+        public int StackPointer => machine._stackPointer;
+        public byte DelayTimer => machine._delayTimer;
+        public byte SoundTimer => machine._soundTimer;
+        public bool IsWaitingForKeyPress => machine._isWaitingForKeyPress;
+        public bool IsWaitingForVBlank => machine._waitForVBlank;
+
+        public void StepInstruction()
+        {
+            machine.FetchDecodeExecute();
+        }
     }
 }
