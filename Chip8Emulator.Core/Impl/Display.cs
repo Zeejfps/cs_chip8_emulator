@@ -39,14 +39,26 @@ internal sealed class Display : IDisplay
         }
         else
         {
-            IsHighRes = true;
-            Width = HighRestWidth;
-            Height = HighRestHeight;
+            EnableHighResMode();
         }
     }
     
     public void Clear()
     {
         Array.Clear(_pixels);
+    }
+
+    public void EnableHighResMode()
+    {
+        IsHighRes = true;
+        Width = HighRestWidth;
+        Height = HighRestHeight;
+    }
+    
+    public void DisableHighResMode()
+    {
+        IsHighRes = false;
+        Width = LowRestWidth;
+        Height = LowRestHeight;
     }
 }

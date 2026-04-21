@@ -195,6 +195,8 @@ internal sealed class Chip8Machine : IChip8Machine
                     ExecuteReturnFromSubroutineIns();
                 else if (ins == 0x00FF)
                     ExecuteEnableHiresModeIns();
+                else if (ins == 0x00FE)
+                    ExecuteDisableHiresModeIns();
                 else
                     throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
                 break;
@@ -253,7 +255,13 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private void ExecuteEnableHiresModeIns()
     {
-        
+        _display.EnableHighResMode();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void ExecuteDisableHiresModeIns()
+    {
+        _display.DisableHighResMode();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
