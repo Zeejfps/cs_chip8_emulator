@@ -1,18 +1,33 @@
-using Chip8Emulator.Core.Impl;
+using System.Runtime.CompilerServices;
 
 namespace Chip8Emulator.Core;
 
 public static class Chip8Disassembler
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static int ExtractNnn(int ins) => ins & 0x0FFF;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static byte ExtractNn(int ins) => (byte)(ins & 0x00FF);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static int ExtractN(int ins) => ins & 0x000F;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static int ExtractX(int ins) => (ins & 0x0F00) >> 8;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static int ExtractY(int ins) => (ins & 0x00F0) >> 4;
+
     public static string Disassemble(int ins)
     {
         ins &= 0xFFFF;
         var opcode = (ins & 0xF000) >> 12;
-        var x = Chip8Machine.ExtractX(ins);
-        var y = Chip8Machine.ExtractY(ins);
-        var n = Chip8Machine.ExtractN(ins);
-        var nn = Chip8Machine.ExtractNn(ins);
-        var nnn = Chip8Machine.ExtractNnn(ins);
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        var n = ExtractN(ins);
+        var nn = ExtractNn(ins);
+        var nnn = ExtractNnn(ins);
 
         switch (opcode)
         {

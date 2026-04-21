@@ -1,5 +1,3 @@
-using Chip8Emulator.Core.Impl;
-
 namespace Chip8Emulator.Core.Tests;
 
 public class InstructionExtractionTests
@@ -11,7 +9,7 @@ public class InstructionExtractionTests
     [InlineData(0xFFFF, 0xFFF)]
     public void ExtractNnn_ReturnsLowerTwelveBits(int ins, int expected)
     {
-        Assert.Equal(expected, Chip8Machine.ExtractNnn(ins));
+        Assert.Equal(expected, Chip8Disassembler.ExtractNnn(ins));
     }
 
     [Theory]
@@ -21,7 +19,7 @@ public class InstructionExtractionTests
     [InlineData(0xFF00, 0x00)]
     public void ExtractNn_ReturnsLowerByte(int ins, byte expected)
     {
-        Assert.Equal(expected, Chip8Machine.ExtractNn(ins));
+        Assert.Equal(expected, Chip8Disassembler.ExtractNn(ins));
     }
 
     [Theory]
@@ -31,7 +29,7 @@ public class InstructionExtractionTests
     [InlineData(0xFFF0, 0x0)]
     public void ExtractN_ReturnsLowestNibble(int ins, int expected)
     {
-        Assert.Equal(expected, Chip8Machine.ExtractN(ins));
+        Assert.Equal(expected, Chip8Disassembler.ExtractN(ins));
     }
 
     [Theory]
@@ -41,7 +39,7 @@ public class InstructionExtractionTests
     [InlineData(0xF0FF, 0x0)]
     public void ExtractX_ReturnsSecondNibble(int ins, int expected)
     {
-        Assert.Equal(expected, Chip8Machine.ExtractX(ins));
+        Assert.Equal(expected, Chip8Disassembler.ExtractX(ins));
     }
 
     [Theory]
@@ -51,6 +49,6 @@ public class InstructionExtractionTests
     [InlineData(0xFF0F, 0x0)]
     public void ExtractY_ReturnsThirdNibble(int ins, int expected)
     {
-        Assert.Equal(expected, Chip8Machine.ExtractY(ins));
+        Assert.Equal(expected, Chip8Disassembler.ExtractY(ins));
     }
 }

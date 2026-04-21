@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using static Chip8Emulator.Core.Chip8Disassembler;
 
 namespace Chip8Emulator.Core.Impl;
 
@@ -833,36 +834,6 @@ internal sealed class Chip8Machine : IChip8Machine
         _indexRegister = nnn;   
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static int ExtractNnn(int ins)
-    {
-        return ins & 0x0FFF;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static byte ExtractNn(int ins)
-    {
-        return (byte)(ins & 0x00FF);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static int ExtractN(int ins)
-    {
-        return ins & 0x000F;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static int ExtractX(int ins)
-    {
-        return (ins & 0x0F00) >> 8;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static int ExtractY(int ins)
-    {
-        return (ins & 0x00F0) >> 4;
-    }
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteJumpToAddressIns(int ins)
     {
