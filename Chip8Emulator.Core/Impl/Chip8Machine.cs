@@ -189,16 +189,7 @@ internal sealed class Chip8Machine : IChip8Machine
         switch (opcode)
         {
             case 0:
-                if (ins == 0x00E0)
-                    ExecuteClearDisplayIns();
-                else if (ins == 0x00EE)
-                    ExecuteReturnFromSubroutineIns();
-                else if (ins == 0x00FF)
-                    ExecuteEnableHiresModeIns();
-                else if (ins == 0x00FE)
-                    ExecuteDisableHiresModeIns();
-                else
-                    throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
+                ExecuteZeroBaseIns(ins);
                 break;
             case 1:
                 ExecuteJumpToAddressIns(ins);
@@ -250,6 +241,60 @@ internal sealed class Chip8Machine : IChip8Machine
         }
         
         _instructionsExecuted++;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void ExecuteZeroBaseIns(int ins)
+    {
+        var x = ExtractY(ins);
+        var n = ExtractN(ins);
+
+        if (x == 0xF)
+        {
+            if (n == 0xF)
+            {
+                ExecuteEnableHiresModeIns();
+            }
+            else if (n == 0xE)
+            {
+                ExecuteDisableHiresModeIns();
+            }
+            else if (n == 0xB)
+            {
+                _display.ScrollRight(4);
+            }
+            else if (n == 0xC)
+            {
+                _display.ScrollLeft(4);
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
+            }
+        }
+        else if (x == 0xE)
+        {
+            if (n == 0x0)
+            {
+                ExecuteClearDisplayIns();
+            }
+            else if (n == 0xE)
+            {
+                ExecuteReturnFromSubroutineIns();
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
+            }
+        }
+        else if (x == 0xC)
+        {
+            _display.ScrollDown(n);
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
