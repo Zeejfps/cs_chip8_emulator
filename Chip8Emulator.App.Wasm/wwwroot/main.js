@@ -104,13 +104,14 @@ function readInsWord(addr) {
 function formatInsLine(marker, addr, word) {
   const a = addr.toString(16).toUpperCase().padStart(4, '0');
   const w = word.toString(16).toUpperCase().padStart(4, '0');
-  return `${marker} 0x${a}  ${w}`;
+  const mnem = api.DisassembleInstruction(word);
+  return `${marker} 0x${a}  ${w}  ${mnem}`;
 }
 
 function renderDisasm() {
   const pc = api.GetProgramCounter();
   const lines = [];
-  lines.push(prevInsLine ?? '                ');
+  lines.push(prevInsLine ?? '                              ');
   for (let i = 0; i < 5; i++) {
     const addr = pc + i * 2;
     const word = readInsWord(addr);

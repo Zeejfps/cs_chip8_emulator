@@ -61,6 +61,9 @@ public static partial class Interop
     public static int GetMemoryByte(int address) => _machine!.Memory[address];
 
     [JSExport]
+    public static string DisassembleInstruction(int ins) => Chip8Disassembler.Disassemble(ins);
+
+    [JSExport]
     public static unsafe int GetPixelDataPtr() => (int)_pixelsHandle.Pointer;
 
     [JSExport]
