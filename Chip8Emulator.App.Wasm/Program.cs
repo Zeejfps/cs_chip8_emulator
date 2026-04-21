@@ -117,4 +117,10 @@ public static partial class Interop
 
     [JSExport]
     public static void SetSpritesWrap(bool value) => _machine!.SpritesWrap = value;
+
+    [JSExport]
+    public static bool GetDisplayWait() => _machine!.DisplayWait;
+
+    [JSExport]
+    public static void SetDisplayWait(bool value) => _machine!.DisplayWait = value;
 }

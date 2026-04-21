@@ -123,7 +123,8 @@ internal sealed class Chip8Machine : IChip8Machine
     public bool LoadStoreIncrementsI { get; set; } = false;
     public bool LogicResetsVf { get; set; } = false;
     public bool SpritesWrap { get; set; } = false;
-    
+    public bool DisplayWait { get; set; } = false;
+
     public byte ReadRegister(int x)
     {
         return _vRegisters[x];

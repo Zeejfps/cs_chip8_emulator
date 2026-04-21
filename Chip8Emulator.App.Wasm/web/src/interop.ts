@@ -30,4 +30,6 @@ export interface InteropExports {
   SetLogicResetsVf(value: boolean): void;
   GetSpritesWrap(): boolean;
   SetSpritesWrap(value: boolean): void;
+  GetDisplayWait(): boolean;
+  SetDisplayWait(value: boolean): void;
 }

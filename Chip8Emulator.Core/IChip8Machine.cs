@@ -11,6 +11,7 @@ public interface IChip8Machine
     bool LoadStoreIncrementsI { get; set; }
     bool LogicResetsVf { get; set; }
     bool SpritesWrap { get; set; }
+    bool DisplayWait { get; set; }
     void LoadProgram(ReadOnlySpan<byte> program);
     void Update();
 }

@@ -203,6 +203,11 @@ export class AppUi {
   }
 
   private wireIps(): void {
+    this.ipsRange.min = String(IPS_MIN);
+    this.ipsRange.max = String(IPS_MAX);
+    this.ipsNumber.min = String(IPS_MIN);
+    this.ipsNumber.max = String(IPS_MAX);
+
     const applyIps = (raw: number): void => {
       let ips = Number.isFinite(raw) ? Math.round(raw) : this.api.GetInstructionsPerSecond();
       if (ips < IPS_MIN) ips = IPS_MIN;

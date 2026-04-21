@@ -6,15 +6,16 @@ interface QuirkFlags {
   lsIncI: boolean;
   logicVf: boolean;
   wrap: boolean;
+  dispWait: boolean;
 }
 
 type PresetName = 'cosmac' | 'chip48' | 'schip' | 'xochip';
 
 const QUIRK_PRESETS: Record<PresetName, QuirkFlags> = {
-  cosmac: { shiftVy: true,  jumpVx: false, lsIncI: true,  logicVf: true,  wrap: false },
-  chip48: { shiftVy: false, jumpVx: true,  lsIncI: false, logicVf: false, wrap: false },
-  schip:  { shiftVy: false, jumpVx: true,  lsIncI: false, logicVf: false, wrap: false },
-  xochip: { shiftVy: false, jumpVx: false, lsIncI: true,  logicVf: false, wrap: true  },
+  cosmac: { shiftVy: true,  jumpVx: false, lsIncI: true,  logicVf: true,  wrap: false, dispWait: true  },
+  chip48: { shiftVy: false, jumpVx: true,  lsIncI: false, logicVf: false, wrap: false, dispWait: false },
+  schip:  { shiftVy: false, jumpVx: true,  lsIncI: false, logicVf: false, wrap: false, dispWait: false },
+  xochip: { shiftVy: false, jumpVx: false, lsIncI: true,  logicVf: false, wrap: true,  dispWait: false },
 };
 
 export function initQuirks(api: InteropExports): void {
@@ -24,6 +25,7 @@ export function initQuirks(api: InteropExports): void {
   const lsIncI = document.getElementById('q-ls-inc-i') as HTMLInputElement;
   const logicVf = document.getElementById('q-logic-vf') as HTMLInputElement;
   const wrap = document.getElementById('q-wrap') as HTMLInputElement;
+  const dispWait = document.getElementById('q-disp-wait') as HTMLInputElement;
 
   function currentQuirks(): QuirkFlags {
     return {
@@ -32,13 +34,14 @@ export function initQuirks(api: InteropExports): void {
       lsIncI: lsIncI.checked,
       logicVf: logicVf.checked,
       wrap: wrap.checked,
+      dispWait: dispWait.checked,
     };
   }
 
   function matchingPresetName(q: QuirkFlags): PresetName | 'custom' {
     for (const name of Object.keys(QUIRK_PRESETS) as PresetName[]) {
       const p = QUIRK_PRESETS[name];
-      if (p.shiftVy === q.shiftVy && p.jumpVx === q.jumpVx && p.lsIncI === q.lsIncI && p.logicVf === q.logicVf && p.wrap === q.wrap) {
+      if (p.shiftVy === q.shiftVy && p.jumpVx === q.jumpVx && p.lsIncI === q.lsIncI && p.logicVf === q.logicVf && p.wrap === q.wrap && p.dispWait === q.dispWait) {
         return name;
       }
     }
@@ -56,6 +59,7 @@ export function initQuirks(api: InteropExports): void {
     api.SetLoadStoreIncrementsI(q.lsIncI);
     api.SetLogicResetsVf(q.logicVf);
     api.SetSpritesWrap(q.wrap);
+    api.SetDisplayWait(q.dispWait);
   }
 
   function applyPreset(name: PresetName): void {
@@ -65,6 +69,7 @@ export function initQuirks(api: InteropExports): void {
     lsIncI.checked = p.lsIncI;
     logicVf.checked = p.logicVf;
     wrap.checked = p.wrap;
+    dispWait.checked = p.dispWait;
     selectPresetRadio(name);
     pushQuirksToCore();
   }
@@ -79,7 +84,7 @@ export function initQuirks(api: InteropExports): void {
       if (r.checked && r.value !== 'custom') applyPreset(r.value as PresetName);
     });
   }
-  for (const cb of [shiftVy, jumpVx, lsIncI, logicVf, wrap]) {
+  for (const cb of [shiftVy, jumpVx, lsIncI, logicVf, wrap, dispWait]) {
     cb.addEventListener('change', onQuirkCheckboxChanged);
   }
 
@@ -88,5 +93,6 @@ export function initQuirks(api: InteropExports): void {
   lsIncI.checked = api.GetLoadStoreIncrementsI();
   logicVf.checked = api.GetLogicResetsVf();
   wrap.checked = api.GetSpritesWrap();
+  dispWait.checked = api.GetDisplayWait();
   selectPresetRadio(matchingPresetName(currentQuirks()));
 }
