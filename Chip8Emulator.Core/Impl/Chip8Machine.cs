@@ -348,10 +348,6 @@ internal sealed class Chip8Machine : IChip8Machine
             {
                 _display.ScrollLeft(4);
             }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
-            }
         }
         else if (x == 0xE)
         {
@@ -363,19 +359,12 @@ internal sealed class Chip8Machine : IChip8Machine
             {
                 ExecuteReturnFromSubroutineIns();
             }
-            else
-            {
-                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
-            }
         }
         else if (x == 0xC)
         {
             _display.ScrollDown(n);
         }
-        else
-        {
-            throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
-        }
+        // Any other 0NNN is SYS (machine-code call) and is a no-op on modern emulators.
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -426,11 +415,10 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0x65:
                 ExecuteLoadRegisters(ins);
                 break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
+            // Unknown FXnn: no-op so extended-variant ROMs don't halt.
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteStoreBcdInMemory(int ins)
     {
@@ -525,10 +513,7 @@ internal sealed class Chip8Machine : IChip8Machine
         {
             ExecuteSkipNextInsIfKeyIsReleased(ins);
         }
-        else
-        {
-            throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
-        }
+        // Unknown EXnn: no-op.
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -744,8 +729,7 @@ internal sealed class Chip8Machine : IChip8Machine
             case 0xE:
                 ExecuteShiftLeftIns(ins);
                 break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
+            // Unknown 8XYn: no-op.
         }
     }
 

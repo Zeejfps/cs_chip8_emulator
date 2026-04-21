@@ -570,14 +570,16 @@ public class Chip8MachineTests
     }
 
     [Fact]
-    public void SkipIfKeyIsPressedOrReleased_UnknownSubOp_Throws()
+    public void SkipIfKeyIsPressedOrReleased_UnknownSubOp_IsNoOp()
     {
         var emulator = CreateEmulator(out var input);
         emulator.ExecuteSetRegisterValueIns(0x6107);
         input.Press(0x7);
+        var pcBefore = emulator.ProgramCounter;
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            emulator.ExecuteSkipNextInsIfKeyIsPressedOrReleased(0xE100));
+        emulator.ExecuteSkipNextInsIfKeyIsPressedOrReleased(0xE100);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
     }
 
     [Fact]
@@ -649,13 +651,15 @@ public class Chip8MachineTests
     }
 
     [Fact]
-    public void TimerIns_UnknownSubOp_Throws()
+    public void TimerIns_UnknownSubOp_IsNoOp()
     {
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x61AA);
+        var pcBefore = emulator.ProgramCounter;
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            emulator.ExecuteTimerIns(0xF100));
+        emulator.ExecuteTimerIns(0xF100);
+
+        Assert.Equal(pcBefore, emulator.ProgramCounter);
     }
 
     [Fact]
