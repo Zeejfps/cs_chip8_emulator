@@ -749,13 +749,14 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteShiftRightIns(int ins)
     {
         var x = ExtractX(ins);
+        var value = _vRegisters[x];
+        
         if (ShiftUsesVy)
         {
             var y = ExtractY(ins);
-            _vRegisters[x] = _vRegisters[y];
+            value = _vRegisters[y];
         }
         
-        var value = _vRegisters[x];
         var flag = (byte)(value & 0x1);
         _vRegisters[x] = (byte)(value >> 1);
         _vRegisters[0xF] = flag;
@@ -766,6 +767,13 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var x = ExtractX(ins);
         var value = _vRegisters[x];
+        
+        if (ShiftUsesVy)
+        {
+            var y = ExtractY(ins);
+            value = _vRegisters[y];
+        }
+        
         var flag = (byte)((value >> 7) & 0x1);
         _vRegisters[x] = (byte)(value << 1);
         _vRegisters[0xF] = flag;
