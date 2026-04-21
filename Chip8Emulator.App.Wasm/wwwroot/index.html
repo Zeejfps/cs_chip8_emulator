@@ -27,6 +27,22 @@
       <input type="number" id="ips-number" min="500" max="1500" step="100" value="1000" />
       <span class="unit">IPS</span>
     </div>
+    <fieldset class="quirks-controls">
+      <legend>Quirks</legend>
+      <div class="preset-row">
+        <label><input type="radio" name="quirk-preset" value="cosmac" /> COSMAC VIP</label>
+        <label><input type="radio" name="quirk-preset" value="chip48" checked /> CHIP-48</label>
+        <label><input type="radio" name="quirk-preset" value="schip" /> SUPER-CHIP 1.1</label>
+        <label><input type="radio" name="quirk-preset" value="xochip" /> XO-CHIP</label>
+        <label><input type="radio" name="quirk-preset" value="custom" /> Custom</label>
+      </div>
+      <div class="quirk-toggles">
+        <label><input type="checkbox" id="q-shift-vy" /> Shift <code>8XY6/8XYE</code> uses VY</label>
+        <label><input type="checkbox" id="q-jump-vx" checked /> Jump <code>BNNN</code> uses VX</label>
+        <label><input type="checkbox" id="q-ls-inc-i" /> Load/Store <code>FX55/FX65</code> increments I</label>
+        <label><input type="checkbox" id="q-logic-vf" /> Logic <code>8XY1/2/3</code> resets VF</label>
+      </div>
+    </fieldset>
     <pre id="disasm" class="disasm" aria-label="Upcoming instructions"></pre>
     <details class="help">
       <summary>Keyboard</summary>

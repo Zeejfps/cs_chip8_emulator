@@ -48,6 +48,11 @@ const ctx2d = canvas.getContext('2d');
 const disasmEl = document.getElementById('disasm');
 const ipsRange = document.getElementById('ips-range');
 const ipsNumber = document.getElementById('ips-number');
+const quirkPresetRadios = document.querySelectorAll('input[name="quirk-preset"]');
+const quirkShiftVy = document.getElementById('q-shift-vy');
+const quirkJumpVx = document.getElementById('q-jump-vx');
+const quirkLsIncI = document.getElementById('q-ls-inc-i');
+const quirkLogicVf = document.getElementById('q-logic-vf');
 
 status.textContent = 'Loading runtime...';
 
@@ -253,6 +258,76 @@ function applyIps(raw) {
 
 ipsRange.addEventListener('input', () => applyIps(Number(ipsRange.value)));
 ipsNumber.addEventListener('change', () => applyIps(Number(ipsNumber.value)));
+
+const QUIRK_PRESETS = {
+  cosmac: { shiftVy: true,  jumpVx: false, lsIncI: true,  logicVf: true  },
+  chip48: { shiftVy: false, jumpVx: true,  lsIncI: false, logicVf: false },
+  schip:  { shiftVy: false, jumpVx: true,  lsIncI: false, logicVf: false },
+  xochip: { shiftVy: false, jumpVx: false, lsIncI: true,  logicVf: false },
+};
+
+function currentQuirks() {
+  return {
+    shiftVy: quirkShiftVy.checked,
+    jumpVx: quirkJumpVx.checked,
+    lsIncI: quirkLsIncI.checked,
+    logicVf: quirkLogicVf.checked,
+  };
+}
+
+function matchingPresetName(q) {
+  for (const name of Object.keys(QUIRK_PRESETS)) {
+    const p = QUIRK_PRESETS[name];
+    if (p.shiftVy === q.shiftVy && p.jumpVx === q.jumpVx && p.lsIncI === q.lsIncI && p.logicVf === q.logicVf) {
+      return name;
+    }
+  }
+  return 'custom';
+}
+
+function selectPresetRadio(name) {
+  for (const r of quirkPresetRadios) r.checked = (r.value === name);
+}
+
+function pushQuirksToCore() {
+  const q = currentQuirks();
+  api.SetShiftUsesVy(q.shiftVy);
+  api.SetJumpUsesVx(q.jumpVx);
+  api.SetLoadStoreIncrementsI(q.lsIncI);
+  api.SetLogicResetsVf(q.logicVf);
+}
+
+function applyPreset(name) {
+  const p = QUIRK_PRESETS[name];
+  if (!p) return;
+  quirkShiftVy.checked = p.shiftVy;
+  quirkJumpVx.checked = p.jumpVx;
+  quirkLsIncI.checked = p.lsIncI;
+  quirkLogicVf.checked = p.logicVf;
+  selectPresetRadio(name);
+  pushQuirksToCore();
+}
+
+function onQuirkCheckboxChanged() {
+  selectPresetRadio(matchingPresetName(currentQuirks()));
+  pushQuirksToCore();
+}
+
+for (const r of quirkPresetRadios) {
+  r.addEventListener('change', () => {
+    if (r.checked && r.value !== 'custom') applyPreset(r.value);
+  });
+}
+for (const cb of [quirkShiftVy, quirkJumpVx, quirkLsIncI, quirkLogicVf]) {
+  cb.addEventListener('change', onQuirkCheckboxChanged);
+}
+
+// Initial sync: reflect the core's defaults into the UI.
+quirkShiftVy.checked = api.GetShiftUsesVy();
+quirkJumpVx.checked = api.GetJumpUsesVx();
+quirkLsIncI.checked = api.GetLoadStoreIncrementsI();
+quirkLogicVf.checked = api.GetLogicResetsVf();
+selectPresetRadio(matchingPresetName(currentQuirks()));
 
 const tracked = new Set();
 window.addEventListener('keydown', (e) => {

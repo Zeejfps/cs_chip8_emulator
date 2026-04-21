@@ -87,4 +87,28 @@ public static partial class Interop
         _machine!.InstructionsPerSecond = ips;
         _ticksPerInstruction = _clock!.Frequency / ips;
     }
+
+    [JSExport]
+    public static bool GetShiftUsesVy() => _machine!.ShiftUsesVy;
+
+    [JSExport]
+    public static void SetShiftUsesVy(bool value) => _machine!.ShiftUsesVy = value;
+
+    [JSExport]
+    public static bool GetJumpUsesVx() => _machine!.JumpUsesVx;
+
+    [JSExport]
+    public static void SetJumpUsesVx(bool value) => _machine!.JumpUsesVx = value;
+
+    [JSExport]
+    public static bool GetLoadStoreIncrementsI() => _machine!.LoadStoreIncrementsI;
+
+    [JSExport]
+    public static void SetLoadStoreIncrementsI(bool value) => _machine!.LoadStoreIncrementsI = value;
+
+    [JSExport]
+    public static bool GetLogicResetsVf() => _machine!.LogicResetsVf;
+
+    [JSExport]
+    public static void SetLogicResetsVf(bool value) => _machine!.LogicResetsVf = value;
 }

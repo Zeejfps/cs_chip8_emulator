@@ -117,6 +117,11 @@ internal sealed class Chip8Machine : IChip8Machine
     public byte SoundTimer => _soundTimer;
     public bool IsWaitingForKeyPress => _isWaitingForKeyPress;
     public ReadOnlySpan<byte> Memory => _memory;
+
+    public bool ShiftUsesVy { get; set; } = false;
+    public bool JumpUsesVx { get; set; } = true;
+    public bool LoadStoreIncrementsI { get; set; } = false;
+    public bool LogicResetsVf { get; set; } = false;
     
     public byte ReadRegister(int x)
     {
