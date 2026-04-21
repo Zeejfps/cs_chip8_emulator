@@ -141,20 +141,25 @@ internal sealed class Chip8Machine : IChip8Machine
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         ResetMemory();
-        program.CopyTo(_memory.AsSpan(0x200));
-        _programCounter = 0x200;
-        _indexRegister = 0;
-        _isWaitingForKeyPress = false;
-        _keyRegisterIndex = 0;
-        _instructionAcc = 0;
-        _frameAcc = 0;
-        _lastTimestamp = _clock.Timestamp;
+        ResetClock();
         ResetTimers();
         ResetDisplay();
         ResetRegisters();
         ResetStack();
+        _indexRegister = 0;
+        _isWaitingForKeyPress = false;
+        _keyRegisterIndex = 0;
+        program.CopyTo(_memory.AsSpan(0x200));
+        _programCounter = 0x200;
     }
 
+    private void ResetClock()
+    {
+        _instructionAcc = 0;
+        _frameAcc = 0;
+        _lastTimestamp = _clock.Timestamp;
+    }
+    
     private void ResetTimers()
     {
         _delayTimer = 0;
