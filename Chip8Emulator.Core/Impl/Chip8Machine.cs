@@ -813,6 +813,11 @@ internal sealed class Chip8Machine : IChip8Machine
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         _vRegisters[x] |= _vRegisters[y];
+
+        if (LogicResetsVf)
+        {
+            _vRegisters[0xF] = 0;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -821,6 +826,11 @@ internal sealed class Chip8Machine : IChip8Machine
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         _vRegisters[x] &= _vRegisters[y]; 
+        
+        if (LogicResetsVf)
+        {
+            _vRegisters[0xF] = 0;
+        }
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -837,6 +847,11 @@ internal sealed class Chip8Machine : IChip8Machine
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         _vRegisters[x] ^= _vRegisters[y];  
+        
+        if (LogicResetsVf)
+        {
+            _vRegisters[0xF] = 0;
+        }
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
