@@ -29,79 +29,68 @@ public static class Chip8Disassembler
         var nn = ExtractNn(ins);
         var nnn = ExtractNnn(ins);
 
-        switch (opcode)
+        return opcode switch
         {
-            case 0x0:
-                return DisassembleZeroBase(ins, y, n);
-            case 0x1:
-                return $"JP   0x{nnn:X3}";
-            case 0x2:
-                return $"CALL 0x{nnn:X3}";
-            case 0x3:
-                return $"SE   V{x:X}, 0x{nn:X2}";
-            case 0x4:
-                return $"SNE  V{x:X}, 0x{nn:X2}";
-            case 0x5:
-                return n == 0 ? $"SE   V{x:X}, V{y:X}" : Unknown(ins);
-            case 0x6:
-                return $"LD   V{x:X}, 0x{nn:X2}";
-            case 0x7:
-                return $"ADD  V{x:X}, 0x{nn:X2}";
-            case 0x8:
-                return DisassembleArithmetic(ins, x, y, n);
-            case 0x9:
-                return n == 0 ? $"SNE  V{x:X}, V{y:X}" : Unknown(ins);
-            case 0xA:
-                return $"LD   I, 0x{nnn:X3}";
-            case 0xB:
-                return $"JP   V0, 0x{nnn:X3}";
-            case 0xC:
-                return $"RND  V{x:X}, 0x{nn:X2}";
-            case 0xD:
-                return $"DRW  V{x:X}, V{y:X}, {n}";
-            case 0xE:
-                return DisassembleKey(ins, x, nn);
-            case 0xF:
-                return DisassembleTimer(ins, x, nn);
-            default:
-                return Unknown(ins);
-        }
+            0x0 => DisassembleZeroBase(ins, y, n),
+            0x1 => $"JP   0x{nnn:X3}",
+            0x2 => $"CALL 0x{nnn:X3}",
+            0x3 => $"SE   V{x:X}, 0x{nn:X2}",
+            0x4 => $"SNE  V{x:X}, 0x{nn:X2}",
+            0x5 => n == 0 ? $"SE   V{x:X}, V{y:X}" : DisassembleUnknown(ins),
+            0x6 => $"LD   V{x:X}, 0x{nn:X2}",
+            0x7 => $"ADD  V{x:X}, 0x{nn:X2}",
+            0x8 => DisassembleArithmetic(ins, x, y, n),
+            0x9 => n == 0 ? $"SNE  V{x:X}, V{y:X}" : DisassembleUnknown(ins),
+            0xA => $"LD   I, 0x{nnn:X3}",
+            0xB => $"JP   V0, 0x{nnn:X3}",
+            0xC => $"RND  V{x:X}, 0x{nn:X2}",
+            0xD => $"DRW  V{x:X}, V{y:X}, {n}",
+            0xE => DisassembleKey(ins, x, nn),
+            0xF => DisassembleTimer(ins, x, nn),
+            _ => DisassembleUnknown(ins)
+        };
     }
 
     private static string DisassembleZeroBase(int ins, int y, int n)
     {
-        if (y == 0xE && n == 0x0) return "CLS";
-        if (y == 0xE && n == 0xE) return "RET";
-        if (y == 0xF && n == 0xF) return "HIGH";
-        if (y == 0xF && n == 0xE) return "LOW";
-        if (y == 0xF && n == 0xB) return "SCR";
-        if (y == 0xF && n == 0xC) return "SCL";
-        if (y == 0xC) return $"SCD  {n}";
-        return Unknown(ins);
+        return y switch
+        {
+            0xE when n == 0x0 => "CLS",
+            0xE when n == 0xE => "RET",
+            0xF when n == 0xF => "HIGH",
+            0xF when n == 0xE => "LOW",
+            0xF when n == 0xB => "SCR",
+            0xF when n == 0xC => "SCL",
+            0xC => $"SCD  {n}",
+            _ => DisassembleUnknown(ins)
+        };
     }
 
     private static string DisassembleArithmetic(int ins, int x, int y, int n)
     {
-        switch (n)
+        return n switch
         {
-            case 0x0: return $"LD   V{x:X}, V{y:X}";
-            case 0x1: return $"OR   V{x:X}, V{y:X}";
-            case 0x2: return $"AND  V{x:X}, V{y:X}";
-            case 0x3: return $"XOR  V{x:X}, V{y:X}";
-            case 0x4: return $"ADD  V{x:X}, V{y:X}";
-            case 0x5: return $"SUB  V{x:X}, V{y:X}";
-            case 0x6: return $"SHR  V{x:X}";
-            case 0x7: return $"SUBN V{x:X}, V{y:X}";
-            case 0xE: return $"SHL  V{x:X}";
-            default: return Unknown(ins);
-        }
+            0x0 => $"LD   V{x:X}, V{y:X}",
+            0x1 => $"OR   V{x:X}, V{y:X}",
+            0x2 => $"AND  V{x:X}, V{y:X}",
+            0x3 => $"XOR  V{x:X}, V{y:X}",
+            0x4 => $"ADD  V{x:X}, V{y:X}",
+            0x5 => $"SUB  V{x:X}, V{y:X}",
+            0x6 => $"SHR  V{x:X}",
+            0x7 => $"SUBN V{x:X}, V{y:X}",
+            0xE => $"SHL  V{x:X}",
+            _ => DisassembleUnknown(ins)
+        };
     }
 
     private static string DisassembleKey(int ins, int x, byte nn)
     {
-        if (nn == 0x9E) return $"SKP  V{x:X}";
-        if (nn == 0xA1) return $"SKNP V{x:X}";
-        return Unknown(ins);
+        return nn switch
+        {
+            0x9E => $"SKP  V{x:X}",
+            0xA1 => $"SKNP V{x:X}",
+            _ => DisassembleUnknown(ins)
+        };
     }
 
     private static string DisassembleTimer(int ins, int x, byte nn)
@@ -118,9 +107,9 @@ public static class Chip8Disassembler
             case 0x33: return $"LD   B, V{x:X}";
             case 0x55: return $"LD   [I], V{x:X}";
             case 0x65: return $"LD   V{x:X}, [I]";
-            default: return Unknown(ins);
+            default: return DisassembleUnknown(ins);
         }
     }
 
-    private static string Unknown(int ins) => $"DW   0x{ins:X4}";
+    private static string DisassembleUnknown(int ins) => $"DW   0x{ins:X4}";
 }
