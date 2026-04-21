@@ -5,7 +5,7 @@ public interface IChip8Machine
     ReadOnlySpan<byte> Memory { get; }
     IDisplay Display { get; }
     int ProgramCounter { get; }
-    int InstructionsPerSecond { get; }
+    int InstructionsPerSecond { get; set; }
     void LoadProgram(ReadOnlySpan<byte> program);
     void Update();
 }

@@ -46,6 +46,8 @@ const romInput = document.getElementById('rom');
 const canvas = document.getElementById('screen');
 const ctx2d = canvas.getContext('2d');
 const disasmEl = document.getElementById('disasm');
+const ipsRange = document.getElementById('ips-range');
+const ipsNumber = document.getElementById('ips-number');
 
 status.textContent = 'Loading runtime...';
 
@@ -236,6 +238,21 @@ stepBtn.addEventListener('click', () => {
   renderDisasm();
   renderPixels();
 });
+
+const IPS_MIN = 500;
+const IPS_MAX = 1500;
+
+function applyIps(raw) {
+  let ips = Number.isFinite(raw) ? Math.round(raw) : api.GetInstructionsPerSecond();
+  if (ips < IPS_MIN) ips = IPS_MIN;
+  if (ips > IPS_MAX) ips = IPS_MAX;
+  ipsRange.value = String(ips);
+  ipsNumber.value = String(ips);
+  api.SetInstructionsPerSecond(ips);
+}
+
+ipsRange.addEventListener('input', () => applyIps(Number(ipsRange.value)));
+ipsNumber.addEventListener('change', () => applyIps(Number(ipsNumber.value)));
 
 const tracked = new Set();
 window.addEventListener('keydown', (e) => {

@@ -54,8 +54,9 @@ internal sealed class Chip8Machine : IChip8Machine
         0x3C, 0x7E, 0xC3, 0xC3, 0x7F, 0x3F, 0x03, 0x03, 0x3E, 0x7C
     ];
     
-    private const int InstructionsPerSecondConst = 1000;
     private const int InstructionSizeInBytes = 2;
+
+    private int _instructionsPerSecond = 1000;
     
     private readonly IRenderer _renderer;
     private readonly IAudio _audio;
@@ -76,7 +77,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private int _stackPointer;
 
     private readonly long _ticksPerFrame;
-    private readonly long _ticksPerInstruction;
+    private long _ticksPerInstruction;
     private long _lastTimestamp;
     private long _instructionAcc;
     private long _frameAcc;
@@ -90,14 +91,26 @@ internal sealed class Chip8Machine : IChip8Machine
         _clock = clock;
         _input = input;
         _ticksPerFrame = clock.Frequency / 60;
-        _ticksPerInstruction = clock.Frequency / InstructionsPerSecondConst;
+        _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
         LowResFont.CopyTo(_memory.AsSpan(LowResFontBaseAddress));
         HighResFont.CopyTo(_memory.AsSpan(HighResFontBaseAddress));
     }
 
     public int ProgramCounter => _programCounter;
-    public int InstructionsPerSecond => InstructionsPerSecondConst;
+
+    public int InstructionsPerSecond
+    {
+        get => _instructionsPerSecond;
+        set
+        {
+            if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
+            _instructionsPerSecond = value;
+            _ticksPerInstruction = _clock.Frequency / value;
+            _instructionAcc = 0;
+        }
+    }
+
     public int IndexRegister => _indexRegister;
     public int StackPointer => _stackPointer;
     public byte DelayTimer => _delayTimer;

@@ -21,6 +21,12 @@
       <span id="status">Install wasm-tools and build to get started.</span>
     </div>
     <canvas id="screen" width="64" height="32"></canvas>
+    <div class="speed-control">
+      <label for="ips-range">Speed</label>
+      <input type="range" id="ips-range" min="500" max="1500" step="100" value="1000" />
+      <input type="number" id="ips-number" min="500" max="1500" step="100" value="1000" />
+      <span class="unit">IPS</span>
+    </div>
     <pre id="disasm" class="disasm" aria-label="Upcoming instructions"></pre>
     <details class="help">
       <summary>Keyboard</summary>

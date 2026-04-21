@@ -77,4 +77,14 @@ public static partial class Interop
 
     [JSExport]
     public static void SetKey(int key, bool pressed) => _input!.SetKey((byte)key, pressed);
+
+    [JSExport]
+    public static int GetInstructionsPerSecond() => _machine!.InstructionsPerSecond;
+
+    [JSExport]
+    public static void SetInstructionsPerSecond(int ips)
+    {
+        _machine!.InstructionsPerSecond = ips;
+        _ticksPerInstruction = _clock!.Frequency / ips;
+    }
 }
