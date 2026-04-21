@@ -622,7 +622,10 @@ internal sealed class Chip8Machine : IChip8Machine
 
         if (n == 0)
         {
-            DrawHighResSprite(x, y);
+            if (_display.IsHighRes)
+                DrawHighResSprite(x, y);
+            else
+                DrawLowResSprite(x, y, n);
         }
         else
         {
