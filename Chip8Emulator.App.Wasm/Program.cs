@@ -111,4 +111,10 @@ public static partial class Interop
 
     [JSExport]
     public static void SetLogicResetsVf(bool value) => _machine!.LogicResetsVf = value;
+
+    [JSExport]
+    public static bool GetSpritesWrap() => _machine!.SpritesWrap;
+
+    [JSExport]
+    public static void SetSpritesWrap(bool value) => _machine!.SpritesWrap = value;
 }

@@ -28,4 +28,6 @@ export interface InteropExports {
   SetLoadStoreIncrementsI(value: boolean): void;
   GetLogicResetsVf(): boolean;
   SetLogicResetsVf(value: boolean): void;
+  GetSpritesWrap(): boolean;
+  SetSpritesWrap(value: boolean): void;
 }

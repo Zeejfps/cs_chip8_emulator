@@ -10,6 +10,7 @@ public interface IChip8Machine
     bool JumpUsesVx { get; set; }
     bool LoadStoreIncrementsI { get; set; }
     bool LogicResetsVf { get; set; }
+    bool SpritesWrap { get; set; }
     void LoadProgram(ReadOnlySpan<byte> program);
     void Update();
 }

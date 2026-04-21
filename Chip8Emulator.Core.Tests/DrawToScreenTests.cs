@@ -194,6 +194,103 @@ public class DrawToScreenTests
     }
 
     [Fact]
+    public void WrapsAtRightEdgeWhenSpritesWrapIsOn()
+    {
+        var emulator = CreateEmulator();
+        emulator.SpritesWrap = true;
+        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExecuteSetRegisterValueIns(0x623C); // V2 = 60 -> bits 0..3 at x=60..63, bits 4..7 wrap to x=0..3
+        emulator.ExecuteSetRegisterValueIns(0x6300); // V3 = 0
+
+        emulator.ExeuteDrawToScreenIns(0xD231);
+
+        for (var x = 60; x < ScreenWidth; x++)
+            Assert.Equal(1, PixelAt(emulator, x, 0));
+        for (var x = 0; x < 4; x++)
+            Assert.Equal(1, PixelAt(emulator, x, 0));
+        Assert.Equal(8, CountLitPixels(emulator));
+    }
+
+    [Fact]
+    public void WrapsAtBottomEdgeWhenSpritesWrapIsOn()
+    {
+        var emulator = CreateEmulator();
+        emulator.SpritesWrap = true;
+        emulator.WriteMemory(0x300, [0x80, 0x80, 0x80, 0x80]);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExecuteSetRegisterValueIns(0x6200); // V2 = 0
+        emulator.ExecuteSetRegisterValueIns(0x631E); // V3 = 30 -> rows at y=30,31, then wrap to y=0,1
+
+        emulator.ExeuteDrawToScreenIns(0xD234);
+
+        Assert.Equal(1, PixelAt(emulator, 0, 30));
+        Assert.Equal(1, PixelAt(emulator, 0, 31));
+        Assert.Equal(1, PixelAt(emulator, 0, 0));
+        Assert.Equal(1, PixelAt(emulator, 0, 1));
+        Assert.Equal(4, CountLitPixels(emulator));
+    }
+
+    [Fact]
+    public void WrapsAtBothEdgesSimultaneouslyWhenSpritesWrapIsOn()
+    {
+        var emulator = CreateEmulator();
+        emulator.SpritesWrap = true;
+        emulator.WriteMemory(0x300, [0b11000000, 0b11000000]); // 2x2 block in top-left of sprite
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExecuteSetRegisterValueIns(0x623F); // V2 = 63 -> x=63, then wrap to 0
+        emulator.ExecuteSetRegisterValueIns(0x631F); // V3 = 31 -> y=31, then wrap to 0
+
+        emulator.ExeuteDrawToScreenIns(0xD232);
+
+        Assert.Equal(1, PixelAt(emulator, 63, 31));
+        Assert.Equal(1, PixelAt(emulator, 0, 31));
+        Assert.Equal(1, PixelAt(emulator, 63, 0));
+        Assert.Equal(1, PixelAt(emulator, 0, 0));
+        Assert.Equal(4, CountLitPixels(emulator));
+    }
+
+    [Fact]
+    public void WrappedPixelSetsCollisionVf()
+    {
+        var emulator = CreateEmulator();
+        emulator.SpritesWrap = true;
+        emulator.WriteMemory(0x300, [0x80]); // single lit pixel at sprite x=0
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+
+        // First draw: lights pixel at (0,0)
+        emulator.ExeuteDrawToScreenIns(0xD001);
+        Assert.Equal(0, emulator.ReadRegister(0xF));
+
+        // Second draw from x=64: wraps to x=0 -> collides with (0,0)
+        emulator.ExecuteSetRegisterValueIns(0x6240); // V2 = 64 -> wraps to 0
+        emulator.ExecuteSetRegisterValueIns(0x6300);
+        emulator.ExeuteDrawToScreenIns(0xD231);
+
+        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(0, CountLitPixels(emulator)); // XOR erased it
+    }
+
+    [Fact]
+    public void SpritesWrapDefaultsToFalseAndClipsAtRightEdge()
+    {
+        var emulator = CreateEmulator();
+        Assert.False(emulator.SpritesWrap);
+
+        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExecuteSetRegisterValueIns(0x623C); // V2 = 60
+        emulator.ExecuteSetRegisterValueIns(0x6300);
+
+        emulator.ExeuteDrawToScreenIns(0xD231);
+
+        // Only 4 pixels fit; bits 4..7 should NOT wrap to x=0..3
+        for (var x = 0; x < 4; x++)
+            Assert.Equal(0, PixelAt(emulator, x, 0));
+        Assert.Equal(4, CountLitPixels(emulator));
+    }
+
+    [Fact]
     public void ReadsSpriteFromIndexRegister()
     {
         var emulator = CreateEmulator();

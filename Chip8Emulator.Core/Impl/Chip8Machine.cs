@@ -122,6 +122,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public bool JumpUsesVx { get; set; } = true;
     public bool LoadStoreIncrementsI { get; set; } = false;
     public bool LogicResetsVf { get; set; } = false;
+    public bool SpritesWrap { get; set; } = false;
     
     public byte ReadRegister(int x)
     {
@@ -636,7 +637,8 @@ internal sealed class Chip8Machine : IChip8Machine
         for (var i = 0; i < 16; i++)
         {
             var dstY = y + i;
-            if (dstY >= Display.Height) break;
+            if (SpritesWrap) dstY %= Display.Height;
+            else if (dstY >= Display.Height) break;
 
             var offset = i * 2;
             var spritePixelsRow = (ushort)(_memory[_indexRegister + offset] << 8 |
@@ -644,7 +646,8 @@ internal sealed class Chip8Machine : IChip8Machine
             for (var bit = 0; bit < 16; bit++)
             {
                 var dstX = x + bit;
-                if (dstX >= Display.Width) break;
+                if (SpritesWrap) dstX %= Display.Width;
+                else if (dstX >= Display.Width) break;
 
                 var spritePixel = (byte)((spritePixelsRow >> (15 - bit)) & 1);
                 var dstIndex = dstY * Display.Width + dstX;
@@ -672,13 +675,15 @@ internal sealed class Chip8Machine : IChip8Machine
         for (var y = 0; y < height; y++)
         {
             var dstY = sy + y;
-            if (dstY >= Display.Height) break;
+            if (SpritesWrap) dstY %= Display.Height;
+            else if (dstY >= Display.Height) break;
             
             var spritePixelsRow = _memory[_indexRegister + y];
             for (var bit = 0; bit < 8; bit++)
             {
                 var dstX = sx + bit;
-                if (dstX >= Display.Width) break;
+                if (SpritesWrap) dstX %= Display.Width;
+                else if (dstX >= Display.Width) break;
 
                 var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
                 var dstIndex = dstY * Display.Width + dstX;
