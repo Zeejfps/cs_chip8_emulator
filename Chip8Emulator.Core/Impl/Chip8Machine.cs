@@ -69,12 +69,12 @@ internal sealed class Chip8Machine : IChip8Machine
     private readonly byte[] _vRegisters = new byte[16];
 
     private readonly int[] _stack = new int[16];
+    private int _stackPointer = -1;
 
     private byte _delayTimer;
     private byte _soundTimer;
     private int _programCounter;
     private int _indexRegister;
-    private int _stackPointer;
 
     private readonly long _ticksPerFrame;
     private long _ticksPerInstruction;
@@ -125,24 +125,29 @@ internal sealed class Chip8Machine : IChip8Machine
 
     public int PeekStack()
     {
+        if (_stackPointer < 0)
+            throw new InvalidOperationException("Stack is empty");
+        
         return _stack[_stackPointer];
     }
 
     public void PushStack(int value)
     {
-        _stackPointer++;
-        if(_stackPointer >= _stack.Length)
+        var nextStackPointer = _stackPointer + 1;
+        if(nextStackPointer >= _stack.Length)
             throw new InvalidOperationException("Stack overflow");
+        _stackPointer = nextStackPointer;
         _stack[_stackPointer] = value;
     }
 
     public int PopStack()
     {
-        var stackPointer = _stackPointer;
-        _stackPointer--;
         if (_stackPointer < 0)
             throw new InvalidOperationException("Stack underflow");
-        return _stack[stackPointer];   
+
+        var value = _stack[_stackPointer];
+        _stackPointer--;
+        return value;
     }
 
     public IDisplay Display => _display;
@@ -207,7 +212,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private void ResetStack()
     {
         Array.Clear(_stack);
-        _stackPointer = 0;
+        _stackPointer = -1;
     }
 
     public void Update()
@@ -327,44 +332,34 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteZeroBaseIns(int ins)
     {
-        var x = ExtractY(ins);
-        var n = ExtractN(ins);
+        if ((ins & 0xFF00) != 0x0000) return;
+        
+        var lo = (ins & 0x00FF);
 
-        if (x == 0xF)
+        switch (lo)
         {
-            if (n == 0xF)
-            {
-                ExecuteEnableHiresModeIns();
-            }
-            else if (n == 0xE)
-            {
-                ExecuteDisableHiresModeIns();
-            }
-            else if (n == 0xB)
-            {
-                _display.ScrollRight(4);
-            }
-            else if (n == 0xC)
-            {
-                _display.ScrollLeft(4);
-            }
-        }
-        else if (x == 0xE)
-        {
-            if (n == 0x0)
-            {
+            case 0xE0:
                 ExecuteClearDisplayIns();
-            }
-            else if (n == 0xE)
-            {
+                break;
+            case 0xEE:
                 ExecuteReturnFromSubroutineIns();
-            }
+                break;
+            case 0xFF:
+                ExecuteEnableHiresModeIns();
+                break;
+            case 0xFE:
+                ExecuteDisableHiresModeIns();
+                break;
+            case 0xFB:
+                _display.ScrollRight(4);
+                break;
+            case 0xFC:
+                _display.ScrollDown(4);
+                break;
+            default:
+                if ((lo & 0xF0) == 0xC0) _display.ScrollDown(lo & 0x0F);
+                break;
         }
-        else if (x == 0xC)
-        {
-            _display.ScrollDown(n);
-        }
-        // Any other 0NNN is SYS (machine-code call) and is a no-op on modern emulators.
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
