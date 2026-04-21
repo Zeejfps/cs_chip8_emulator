@@ -53,8 +53,6 @@ internal sealed class Chip8Machine : IChip8Machine
         0x3C, 0x7E, 0xC3, 0xC3, 0x7F, 0x3F, 0x03, 0x03, 0x3E, 0x7C
     ];
     
-    private const int DisplayWidth = 64;
-    private const int DisplayHeight = 32;
     private const int InstructionsPerSecondConst = 1000;
     private const int InstructionSizeInBytes = 2;
     
@@ -142,22 +140,48 @@ internal sealed class Chip8Machine : IChip8Machine
     
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
-        Array.Clear(_memory);
-        LowResFont.CopyTo(_memory.AsSpan(LowResFontBaseAddress));
+        ResetMemory();
         program.CopyTo(_memory.AsSpan(0x200));
         _programCounter = 0x200;
         _indexRegister = 0;
-        _stackPointer = 0;
-        _delayTimer = 0;
-        _soundTimer = 0;
         _isWaitingForKeyPress = false;
         _keyRegisterIndex = 0;
         _instructionAcc = 0;
         _frameAcc = 0;
         _lastTimestamp = _clock.Timestamp;
+        ResetTimers();
+        ResetDisplay();
+        ResetRegisters();
+        ResetStack();
+    }
+
+    private void ResetTimers()
+    {
+        _delayTimer = 0;
+        _soundTimer = 0;
+    }
+    
+    private void ResetMemory()
+    {
+        Array.Clear(_memory);
+        LowResFont.CopyTo(_memory.AsSpan(LowResFontBaseAddress));
+        HighResFont.CopyTo(_memory.AsSpan(HighResFontBaseAddress));
+    }
+
+    private void ResetDisplay()
+    {
+        _display.Reset();   
+    }
+
+    private void ResetRegisters()
+    {
         Array.Clear(_vRegisters);
+    }
+
+    private void ResetStack()
+    {
         Array.Clear(_stack);
-        _display.Clear();
+        _stackPointer = 0;
     }
 
     public void Update()
