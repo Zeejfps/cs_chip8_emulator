@@ -25,7 +25,7 @@ export class AppUi {
 
   private lastRomBytes: Uint8Array | null = null;
   private running = false;
-  private paused = false;
+  private paused = true;
 
   constructor(
     private readonly api: InteropExports,
@@ -91,7 +91,7 @@ export class AppUi {
     if (!this.paused) {
       this.paused = true;
       this.api.Stop();
-      this.pauseBtn.textContent = 'Play';
+      this.pauseBtn.textContent = 'Start';
     }
     this.stepBtn.disabled = false;
     const pc = this.api.GetProgramCounter();
@@ -126,12 +126,12 @@ export class AppUi {
     this.paused = next;
     if (this.paused) {
       this.api.Stop();
-      this.pauseBtn.textContent = 'Play';
+      this.pauseBtn.textContent = 'Start';
       this.stepBtn.disabled = false;
       this.disasm.render();
     } else {
       this.api.Start();
-      this.pauseBtn.textContent = 'Pause';
+      this.pauseBtn.textContent = 'Stop';
       this.stepBtn.disabled = true;
     }
   }
@@ -145,18 +145,18 @@ export class AppUi {
       const buf = await file.arrayBuffer();
       const bytes = new Uint8Array(buf);
       this.lastRomBytes = bytes;
+      if (!this.paused) this.api.Stop();
       this.api.LoadProgram(bytes);
-      this.disasm.setPrevInsLine(null);
-      this.restartBtn.disabled = false;
+      this.paused = true;
+      this.pauseBtn.textContent = 'Start';
       this.pauseBtn.disabled = false;
-      if (this.paused) {
-        this.stepBtn.disabled = false;
-        this.disasm.render();
-      }
+      this.restartBtn.disabled = false;
+      this.stepBtn.disabled = false;
+      this.disasm.setPrevInsLine(null);
+      this.disasm.render();
       this.setStatus(`Loaded ${file.name} (${bytes.length} bytes)`);
       if (!this.running) {
         this.running = true;
-        this.api.Start();
         this.startLoop();
       }
     });
