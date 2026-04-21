@@ -20,12 +20,16 @@
   </ItemGroup>
 
   <Target Name="BuildTypeScript"
-          BeforeTargets="PrepareForBuild"
+          BeforeTargets="AssignTargetPaths;ResolveStaticWebAssetsInputs;PrepareForBuild"
           Inputs="@(TypeScriptInputs)"
           Outputs="wwwroot/main.js">
     <Exec WorkingDirectory="web"
           Command="npm ci"
           Condition="!Exists('web/node_modules/.package-lock.json')" />
     <Exec WorkingDirectory="web" Command="npm run build" />
+    <ItemGroup>
+      <Content Remove="wwwroot/*.js;wwwroot/*.js.map" />
+      <Content Include="wwwroot/*.js;wwwroot/*.js.map" />
+    </ItemGroup>
   </Target>
 </Project>
