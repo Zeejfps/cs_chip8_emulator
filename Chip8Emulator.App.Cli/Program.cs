@@ -44,10 +44,11 @@ try
     var romData = File.ReadAllBytes(romPath);
 
     machine.LoadProgram(romData);
+    machine.Start();
 
     while (!cancelled && !input.IsCancelRequested)
     {
-        machine.Update();
+        clock.Tick();
 
         if (input.ConsumeRestartRequest())
         {
@@ -55,6 +56,7 @@ try
         }
     }
 
+    machine.Stop();
     return 0;
 }
 catch (Exception ex)

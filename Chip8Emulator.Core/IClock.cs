@@ -4,4 +4,5 @@ public interface IClock
 {
     long Timestamp { get; }
     long Frequency { get; }
+    event EventHandler? Ticked;
 }

@@ -739,10 +739,11 @@ public class Chip8MachineTests
     public void Update_WhileWaitingForKey_AndNoKeyPressed_StaysWaiting()
     {
         var emulator = CreateEmulator(out var clock, out _);
+        emulator.Start();
         emulator.ExecuteWaitForKeyPress(0xF20A);
         clock.Timestamp = clock.Frequency / 60;
 
-        emulator.Update();
+        clock.Tick();
 
         Assert.True(emulator.Debugger.IsWaitingForKeyPress);
         Assert.Equal(0, emulator.Debugger.Registers[2]);
@@ -752,12 +753,13 @@ public class Chip8MachineTests
     public void Update_WhileWaitingForKey_AndKeyPressed_StoresKeyAndResumes()
     {
         var emulator = CreateEmulator(out var clock, out var input);
+        emulator.Start();
         emulator.WriteMemory(0, [0x10, 0x00]);
         emulator.ExecuteWaitForKeyPress(0xF20A);
         input.QueueKeyPressEvent(0xA);
         clock.Timestamp = clock.Frequency / 60;
 
-        emulator.Update();
+        clock.Tick();
 
         Assert.False(emulator.Debugger.IsWaitingForKeyPress);
         Assert.Equal(0xA, emulator.Debugger.Registers[2]);
@@ -767,12 +769,13 @@ public class Chip8MachineTests
     public void Update_WhileWaitingForKey_DelayTimerStillTicks()
     {
         var emulator = CreateEmulator(out var clock, out _);
+        emulator.Start();
         emulator.ExecuteSetRegisterValueIns(0x600A);
         emulator.ExecuteSetDelayTimer(0xF015);
         emulator.ExecuteWaitForKeyPress(0xF10A);
         clock.Timestamp = clock.Frequency / 60;
 
-        emulator.Update();
+        clock.Tick();
 
         Assert.Equal(9, emulator.Debugger.DelayTimer);
         Assert.True(emulator.Debugger.IsWaitingForKeyPress);
@@ -782,12 +785,13 @@ public class Chip8MachineTests
     public void Update_WhileWaitingForKey_SoundTimerStillTicks()
     {
         var emulator = CreateEmulator(out var clock, out _);
+        emulator.Start();
         emulator.ExecuteSetRegisterValueIns(0x6005);
         emulator.ExecuteSetSoundTimer(0xF018);
         emulator.ExecuteWaitForKeyPress(0xF10A);
         clock.Timestamp = clock.Frequency / 60;
 
-        emulator.Update();
+        clock.Tick();
 
         Assert.Equal(4, emulator.Debugger.SoundTimer);
     }

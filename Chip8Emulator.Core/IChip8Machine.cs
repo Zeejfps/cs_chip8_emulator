@@ -12,5 +12,6 @@ public interface IChip8Machine
     bool SpritesWrap { get; set; }
     bool DisplayWait { get; set; }
     void LoadProgram(ReadOnlySpan<byte> program);
-    void Update();
+    void Start();
+    void Stop();
 }

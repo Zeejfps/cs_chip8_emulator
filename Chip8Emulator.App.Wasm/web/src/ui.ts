@@ -90,7 +90,7 @@ export class AppUi {
   handleEmulatorError(e: unknown): void {
     if (!this.paused) {
       this.paused = true;
-      this.api.Pause();
+      this.api.Stop();
       this.pauseBtn.textContent = 'Play';
     }
     this.stepBtn.disabled = false;
@@ -125,12 +125,12 @@ export class AppUi {
     if (this.paused === next) return;
     this.paused = next;
     if (this.paused) {
-      this.api.Pause();
+      this.api.Stop();
       this.pauseBtn.textContent = 'Play';
       this.stepBtn.disabled = false;
       this.disasm.render();
     } else {
-      this.api.Resume();
+      this.api.Start();
       this.pauseBtn.textContent = 'Pause';
       this.stepBtn.disabled = true;
     }
@@ -156,6 +156,7 @@ export class AppUi {
       this.setStatus(`Loaded ${file.name} (${bytes.length} bytes)`);
       if (!this.running) {
         this.running = true;
+        this.api.Start();
         this.startLoop();
       }
     });
@@ -173,14 +174,6 @@ export class AppUi {
 
   private wirePause(): void {
     this.pauseBtn.addEventListener('click', () => {
-      if (!this.paused) {
-        try {
-          this.api.Update();
-        } catch (e) {
-          this.handleEmulatorError(e);
-          return;
-        }
-      }
       this.setPaused(!this.paused);
     });
   }
@@ -226,7 +219,7 @@ export class AppUi {
         const prePc = this.api.GetProgramCounter();
         const preWord = this.disasm.readInsWord(prePc);
         try {
-          this.api.Update();
+          this.api.Tick();
         } catch (e) {
           this.handleEmulatorError(e);
           requestAnimationFrame(frame);

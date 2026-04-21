@@ -7,4 +7,6 @@ public sealed class StopwatchClock : IClock
 {
     public long Timestamp => Stopwatch.GetTimestamp();
     public long Frequency { get; } = Stopwatch.Frequency;
+    public event EventHandler? Ticked;
+    public void Tick() => Ticked?.Invoke(this, EventArgs.Empty);
 }

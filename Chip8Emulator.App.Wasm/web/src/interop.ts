@@ -1,9 +1,9 @@
 export interface InteropExports {
   Init(): void;
   LoadProgram(rom: Uint8Array): void;
-  Update(): void;
-  Pause(): void;
-  Resume(): void;
+  Tick(): void;
+  Start(): void;
+  Stop(): void;
   Step(): void;
 
   GetProgramCounter(): number;

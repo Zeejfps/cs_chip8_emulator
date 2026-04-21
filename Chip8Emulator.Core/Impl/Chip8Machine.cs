@@ -84,6 +84,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private bool _isWaitingForKeyPress;
     private bool _waitForVBlank;
     private int _keyRegisterIndex;
+    private bool _running;
 
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
     {
@@ -106,7 +107,7 @@ internal sealed class Chip8Machine : IChip8Machine
         get => _instructionsPerSecond;
         set
         {
-            if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
             _instructionsPerSecond = value;
             _ticksPerInstruction = _clock.Frequency / value;
             _instructionAcc = 0;
@@ -205,7 +206,22 @@ internal sealed class Chip8Machine : IChip8Machine
         _stackPointer = -1;
     }
 
-    public void Update()
+    public void Start()
+    {
+        if (_running) throw new InvalidOperationException("Machine is already started.");
+        _lastTimestamp = _clock.Timestamp;
+        _clock.Ticked += OnTicked;
+        _running = true;
+    }
+
+    public void Stop()
+    {
+        if (!_running) return;
+        _clock.Ticked -= OnTicked;
+        _running = false;
+    }
+
+    private void OnTicked(object? sender, EventArgs e)
     {
         var now = _clock.Timestamp;
         var delta = now - _lastTimestamp;

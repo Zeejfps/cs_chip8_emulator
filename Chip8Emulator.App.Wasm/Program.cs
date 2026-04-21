@@ -10,15 +10,14 @@ public static partial class Interop
 {
     private static IChip8Machine? _machine;
     private static BrowserInput? _input;
-    private static PausableStopwatchClock? _clock;
+    private static StopwatchClock? _clock;
     private static MemoryHandle _pixelsHandle;
-    private static long _ticksPerInstruction;
 
     [JSExport]
     public static void Init()
     {
         _input = new BrowserInput();
-        _clock = new PausableStopwatchClock();
+        _clock = new StopwatchClock();
         _machine = Chip8.Builder()
             .WithRenderer(new BrowserRenderer())
             .WithAudio(new BrowserAudio())
@@ -26,7 +25,6 @@ public static partial class Interop
             .WithInput(_input)
             .Build();
         _pixelsHandle = _machine.Display.Pixels.Pin();
-        _ticksPerInstruction = _clock.Frequency / _machine.InstructionsPerSecond;
     }
 
     [JSExport]
@@ -36,23 +34,16 @@ public static partial class Interop
     }
 
     [JSExport]
-    public static void Update()
-    {
-        _machine!.Update();
-    }
+    public static void Tick() => _clock!.Tick();
 
     [JSExport]
-    public static void Pause() => _clock!.Pause();
+    public static void Start() => _machine!.Start();
 
     [JSExport]
-    public static void Resume() => _clock!.Resume();
+    public static void Stop() => _machine!.Stop();
 
     [JSExport]
-    public static void Step()
-    {
-        _clock!.Advance(_ticksPerInstruction);
-        _machine!.Update();
-    }
+    public static void Step() => _machine!.Debugger.StepInstruction();
 
     [JSExport]
     public static int GetProgramCounter() => _machine!.Debugger.ProgramCounter;
@@ -82,11 +73,7 @@ public static partial class Interop
     public static int GetInstructionsPerSecond() => _machine!.InstructionsPerSecond;
 
     [JSExport]
-    public static void SetInstructionsPerSecond(int ips)
-    {
-        _machine!.InstructionsPerSecond = ips;
-        _ticksPerInstruction = _clock!.Frequency / ips;
-    }
+    public static void SetInstructionsPerSecond(int ips) => _machine!.InstructionsPerSecond = ips;
 
     [JSExport]
     public static bool GetShiftUsesVy() => _machine!.ShiftUsesVy;
