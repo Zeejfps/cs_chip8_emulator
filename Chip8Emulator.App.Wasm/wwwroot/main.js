@@ -274,12 +274,17 @@ window.addEventListener('keyup', (e) => {
 
 function frame() {
   if (!paused) {
+    const prePc = api.GetProgramCounter();
+    const preWord = readInsWord(prePc);
     try {
       api.Update();
     } catch (e) {
       handleEmulatorError(e);
       requestAnimationFrame(frame);
       return;
+    }
+    if (preWord !== null && api.GetProgramCounter() !== prePc) {
+      prevInsLine = formatInsLine('-', prePc, preWord);
     }
   }
 

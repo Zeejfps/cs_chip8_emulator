@@ -165,6 +165,13 @@ internal sealed class Chip8Machine : IChip8Machine
         _keyRegisterIndex = 0;
         program.CopyTo(_memory.AsSpan(0x200));
         _programCounter = 0x200;
+
+        // Classic CHIP-8 HIRES signature: programs starting with `1260` (JP 0x260)
+        // switch the display to a 64x64 canvas. See Hans Christian Egeberg / David Winter.
+        if (program.Length >= 2 && program[0] == 0x12 && program[1] == 0x60)
+        {
+            _display.EnableClassicHiresMode();
+        }
     }
 
     private void ResetClock()

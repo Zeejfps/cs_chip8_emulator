@@ -4,6 +4,8 @@ internal sealed class Display : IDisplay
 {
     public const int HighRestWidth = 128;
     public const int HighRestHeight = 64;
+    public const int ClassicHiresWidth = 64;
+    public const int ClassicHiresHeight = 64;
     public const int LowRestWidth = 64;
     public const int LowRestHeight = 32;
     
@@ -58,6 +60,13 @@ internal sealed class Display : IDisplay
         IsHighRes = false;
         Width = LowRestWidth;
         Height = LowRestHeight;
+    }
+
+    public void EnableClassicHiresMode()
+    {
+        IsHighRes = false;
+        Width = ClassicHiresWidth;
+        Height = ClassicHiresHeight;
     }
 
     public void ScrollLeft(int n)
