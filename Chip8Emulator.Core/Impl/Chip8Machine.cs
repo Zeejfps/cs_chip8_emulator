@@ -842,7 +842,6 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteJumpToAddressIns(int ins)
     {
         var address = ExtractNnn(ins);
-        //Console.WriteLine($"Jumping to address: {address:X}");
         _programCounter = address;
     }
 
@@ -850,7 +849,15 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteJumpWithOffsetIns(int ins)
     {
         var address = ExtractNnn(ins);
-        _programCounter = address + _vRegisters[0];
+        if (JumpUsesVx)
+        {
+            var x = ExtractX(ins);
+            _programCounter = address + _vRegisters[x];
+        }
+        else
+        {
+            _programCounter = address + _vRegisters[0];
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
