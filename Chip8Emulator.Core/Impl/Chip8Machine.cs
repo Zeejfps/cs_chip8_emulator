@@ -433,9 +433,15 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteLoadRegisters(int ins)
     {
         var x = ExtractX(ins);
-        for (var i = 0; i <= x; i++)
+        var index = _indexRegister;
+        for (var i = 0; i <= x; i++, index++)
         {
-            _vRegisters[i] = _memory[_indexRegister + i];
+            _vRegisters[i] = _memory[index];
+        }
+        
+        if (LoadStoreIncrementsI)
+        {
+            _indexRegister = index;
         }
     }
 
@@ -443,9 +449,15 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteStoreRegisters(int ins)
     {
         var x = ExtractX(ins);
-        for (var i = 0; i <= x; i++)
+        var index = _indexRegister;
+        for (var i = 0; i <= x; i++, index++)
         {
-            _memory[_indexRegister + i] = _vRegisters[i];
+            _memory[index] = _vRegisters[i];
+        }
+
+        if (LoadStoreIncrementsI)
+        {
+            _indexRegister = index;
         }
     }
 
