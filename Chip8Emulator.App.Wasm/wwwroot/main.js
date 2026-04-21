@@ -149,6 +149,34 @@ function setPaused(next) {
   }
 }
 
+function extractErrorMessage(e) {
+  if (!e) return 'Unknown error';
+  if (typeof e === 'string') return e;
+  const msg = e.message ?? String(e);
+  // ManagedError messages often look like: "Arg_...\nArgumentOutOfRange_..., 684"
+  // Strip resource-lookup prefixes and collapse whitespace for a compact display.
+  return msg.replace(/\s+/g, ' ').trim();
+}
+
+function handleEmulatorError(e) {
+  // Pause the clock so no more instructions can run. The machine's PC is past
+  // the offending instruction (Fetch advanced it before execute threw), so the
+  // faulting word lives at PC - 2.
+  if (!paused) {
+    paused = true;
+    api.Pause();
+    pauseBtn.textContent = 'Play';
+  }
+  stepBtn.disabled = false;
+  const pc = api.GetProgramCounter();
+  const bad = pc - 2;
+  const word = readInsWord(bad);
+  prevInsLine = word !== null ? formatInsLine('!', bad, word) : null;
+  renderDisasm();
+  renderPixels();
+  status.textContent = `Error: ${extractErrorMessage(e)}`;
+}
+
 romInput.addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
@@ -180,6 +208,16 @@ restartBtn.addEventListener('click', () => {
 });
 
 pauseBtn.addEventListener('click', () => {
+  if (!paused) {
+    // Drain pending real-time ticks so the first Step() after pause runs
+    // exactly one instruction. If this Update faults, pivot to error state.
+    try {
+      api.Update();
+    } catch (e) {
+      handleEmulatorError(e);
+      return;
+    }
+  }
   setPaused(!paused);
 });
 
@@ -187,7 +225,12 @@ stepBtn.addEventListener('click', () => {
   if (!paused) return;
   const prePc = api.GetProgramCounter();
   const preWord = readInsWord(prePc);
-  api.Step();
+  try {
+    api.Step();
+  } catch (e) {
+    handleEmulatorError(e);
+    return;
+  }
   if (preWord !== null) prevInsLine = formatInsLine('-', prePc, preWord);
   renderDisasm();
   renderPixels();
@@ -213,7 +256,13 @@ window.addEventListener('keyup', (e) => {
 
 function frame() {
   if (!paused) {
-    api.Update();
+    try {
+      api.Update();
+    } catch (e) {
+      handleEmulatorError(e);
+      requestAnimationFrame(frame);
+      return;
+    }
   }
 
   const curW = api.GetWidth();

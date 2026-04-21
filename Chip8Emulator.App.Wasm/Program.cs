@@ -42,15 +42,7 @@ public static partial class Interop
     }
 
     [JSExport]
-    public static void Pause()
-    {
-        // Drain any real-time delta accumulated since the last Update so that
-        // _lastTimestamp lines up with the frozen clock. Without this, the
-        // first Step() after pause would see a delta covering the gap between
-        // the last frame and the pause click, and run multiple instructions.
-        _machine!.Update();
-        _clock!.Pause();
-    }
+    public static void Pause() => _clock!.Pause();
 
     [JSExport]
     public static void Resume() => _clock!.Resume();
