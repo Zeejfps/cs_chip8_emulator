@@ -82,6 +82,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private long _instructionAcc;
     private long _frameAcc;
     private bool _isWaitingForKeyPress;
+    private bool _waitForVBlank;
     private int _keyRegisterIndex;
 
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
@@ -174,6 +175,7 @@ internal sealed class Chip8Machine : IChip8Machine
         ResetStack();
         _indexRegister = 0;
         _isWaitingForKeyPress = false;
+        _waitForVBlank = false;
         _keyRegisterIndex = 0;
         program.CopyTo(_memory.AsSpan(0x200));
         _programCounter = 0x200;
@@ -250,7 +252,7 @@ internal sealed class Chip8Machine : IChip8Machine
         _instructionAcc += delta;
         _frameAcc += delta;
 
-        while (!_isWaitingForKeyPress && _instructionAcc >= _ticksPerInstruction)
+        while (!_waitForVBlank && !_isWaitingForKeyPress && _instructionAcc >= _ticksPerInstruction)
         {
             FetchDecodeExecute();
             _instructionAcc -= _ticksPerInstruction;
@@ -271,6 +273,7 @@ internal sealed class Chip8Machine : IChip8Machine
 
             _renderer.Render();
             _frameAcc -= _ticksPerFrame;
+            _waitForVBlank = false;
         }
     }
 
@@ -631,6 +634,11 @@ internal sealed class Chip8Machine : IChip8Machine
         else
         {
             DrawLowResSprite(x, y, n);
+        }
+
+        if (DisplayWait)
+        {
+            _waitForVBlank = true;
         }
     }
 
