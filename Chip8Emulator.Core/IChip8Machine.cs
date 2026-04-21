@@ -2,6 +2,7 @@ namespace Chip8Emulator.Core;
 
 public interface IChip8Machine
 {
+    IDebugger Debugger { get; }
     ReadOnlySpan<byte> Memory { get; }
     IDisplay Display { get; }
     int ProgramCounter { get; }

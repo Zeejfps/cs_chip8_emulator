@@ -96,8 +96,11 @@ internal sealed class Chip8Machine : IChip8Machine
         _lastTimestamp = clock.Timestamp;
         LowResFont.CopyTo(_memory.AsSpan(LowResFontBaseAddress));
         HighResFont.CopyTo(_memory.AsSpan(HighResFontBaseAddress));
+        Debugger = new Chip8MachineDebugger(this);
     }
 
+    public IDebugger Debugger { get; }
+    
     public int ProgramCounter => _programCounter;
 
     public int InstructionsPerSecond
@@ -937,5 +940,11 @@ internal sealed class Chip8Machine : IChip8Machine
         var ins = _memory[_programCounter] << 8 | _memory[_programCounter+1];
         _programCounter += InstructionSizeInBytes;
         return ins;
+    }
+
+    sealed class Chip8MachineDebugger(Chip8Machine machine) : IDebugger
+    {
+        public ReadOnlySpan<byte> Memory => machine._memory;
+        public int ProgramCounter => machine._programCounter;
     }
 }
