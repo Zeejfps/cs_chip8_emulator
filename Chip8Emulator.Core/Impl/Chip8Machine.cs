@@ -195,6 +195,8 @@ internal sealed class Chip8Machine : IChip8Machine, IDisplay
                     ExecuteClearDisplayIns();
                 else if (ins == 0x00EE)
                     ExecuteReturnFromSubroutineIns();
+                else if (ins == 0x00FF)
+                    ExecuteEnableHiresModeIns();
                 else
                     throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
                 break;
@@ -248,6 +250,12 @@ internal sealed class Chip8Machine : IChip8Machine, IDisplay
         }
         
         _instructionsExecuted++;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void ExecuteEnableHiresModeIns()
+    {
+        
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -467,24 +475,24 @@ internal sealed class Chip8Machine : IChip8Machine, IDisplay
     public void ExeuteDrawToScreenIns(int ins)
     {
         //Console.WriteLine($"Draw to screen");
-        var x = _vRegisters[ExtractX(ins)] % DisplayWidth;
-        var y = _vRegisters[ExtractY(ins)] % DisplayHeight;
+        var x = _vRegisters[ExtractX(ins)] % Display.Width;
+        var y = _vRegisters[ExtractY(ins)] % Display.Height;
         var spriteHeight = ExtractN(ins);
 
         byte collision = 0;
         for (var i = 0; i < spriteHeight; i++)
         {
             var dstY = y + i;
-            if (dstY >= DisplayHeight) break;
+            if (dstY >= Display.Height) break;
             
             var spritePixelsRow = _memory[_indexRegister + i];
             for (var bit = 0; bit < 8; bit++)
             {
                 var dstX = x + bit;
-                if (dstX >= DisplayWidth) break;
+                if (dstX >= Display.Width) break;
                 
                 var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
-                var dstIndex = dstY * DisplayWidth + dstX;
+                var dstIndex = dstY * Display.Width + dstX;
                 var before = _displayPixels[dstIndex];
                 collision |= (byte)(before & spritePixel);
                 _displayPixels[dstIndex] = (byte)(before ^ spritePixel);
