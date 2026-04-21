@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Chip8Emulator.Core.Impl;
 
-internal sealed class Chip8Machine : IChip8Machine, IDisplay
+internal sealed class Chip8Machine : IChip8Machine
 {
     private const int FontBaseAddress = 0x050;
 
@@ -36,11 +36,12 @@ internal sealed class Chip8Machine : IChip8Machine, IDisplay
     private readonly IAudio _audio;
     private readonly IClock _clock;
     private readonly IInput _input;
-
+    
+    private readonly Display _display = new();
+    
     private readonly byte[] _memory = new byte[4096];
     private readonly byte[] _vRegisters = new byte[16];
 
-    private readonly byte[] _displayPixels = new byte[DisplayWidth * DisplayHeight];
     private readonly int[] _stack = new int[16];
 
     private byte _delayTimer;
@@ -102,11 +103,8 @@ internal sealed class Chip8Machine : IChip8Machine, IDisplay
         return _stack[stackPointer];   
     }
 
-    public IDisplay Display => this;
-    public Memory<byte> Pixels => _displayPixels;
-    public int Width => DisplayWidth;
-    public int Height => DisplayHeight;
-
+    public IDisplay Display => _display;
+    
     internal void WriteMemory(int address, ReadOnlySpan<byte> data)
     {
         data.CopyTo(_memory.AsSpan(address));
@@ -129,7 +127,7 @@ internal sealed class Chip8Machine : IChip8Machine, IDisplay
         _lastTimestamp = _clock.Timestamp;
         Array.Clear(_vRegisters);
         Array.Clear(_stack);
-        Array.Clear(_displayPixels);
+        _display.Clear();
     }
 
     public void Update()
@@ -490,12 +488,13 @@ internal sealed class Chip8Machine : IChip8Machine, IDisplay
             {
                 var dstX = x + bit;
                 if (dstX >= Display.Width) break;
-                
+
+                var displayPixels = _display.Pixels.Span;
                 var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
                 var dstIndex = dstY * Display.Width + dstX;
-                var before = _displayPixels[dstIndex];
+                var before = displayPixels[dstIndex];
                 collision |= (byte)(before & spritePixel);
-                _displayPixels[dstIndex] = (byte)(before ^ spritePixel);
+                displayPixels[dstIndex] = (byte)(before ^ spritePixel);
             }
         }
 
@@ -717,7 +716,7 @@ internal sealed class Chip8Machine : IChip8Machine, IDisplay
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteClearDisplayIns()
     {
-        Array.Clear(_displayPixels);
+        _display.Clear();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
