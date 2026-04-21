@@ -528,21 +528,69 @@ internal sealed class Chip8Machine : IChip8Machine
         //Console.WriteLine($"Draw to screen");
         var x = _vRegisters[ExtractX(ins)] % Display.Width;
         var y = _vRegisters[ExtractY(ins)] % Display.Height;
-        var spriteHeight = ExtractN(ins);
+        var n = ExtractN(ins);
 
+        if (n == 0)
+        {
+            DrawHighResSprite(x, y);
+        }
+        else
+        {
+            DrawLowResSprite(x, y, n);
+        }
+    }
+
+    private void DrawHighResSprite(int x, int y)
+    {
+        var displayPixels = _display.Pixels.Span;
         byte collision = 0;
-        for (var i = 0; i < spriteHeight; i++)
+        for (var i = 0; i < 16; i++)
         {
             var dstY = y + i;
             if (dstY >= Display.Height) break;
-            
-            var spritePixelsRow = _memory[_indexRegister + i];
-            for (var bit = 0; bit < 8; bit++)
+
+            var offset = i * 2;
+            var spritePixelsRow = (ushort)(_memory[_indexRegister + offset] << 8 |
+                                          _memory[_indexRegister + offset + 1]);
+            for (var bit = 0; bit < 16; bit++)
             {
                 var dstX = x + bit;
                 if (dstX >= Display.Width) break;
 
-                var displayPixels = _display.Pixels.Span;
+                var spritePixel = (byte)((spritePixelsRow >> (15 - bit)) & 1);
+                var dstIndex = dstY * Display.Width + dstX;
+                var before = displayPixels[dstIndex];
+                collision |= (byte)(before & spritePixel);
+                displayPixels[dstIndex] = (byte)(before ^ spritePixel);
+            }
+        }
+        
+        var vf = collision != 0;
+        if (vf)
+        {
+            _vRegisters[0xF] = 1;
+        }
+        else
+        {
+            _vRegisters[0xF] = 0;
+        }
+    }
+
+    private void DrawLowResSprite(int sx, int sy, int height)
+    {
+        var displayPixels = _display.Pixels.Span;
+        byte collision = 0;
+        for (var y = 0; y < height; y++)
+        {
+            var dstY = sy + y;
+            if (dstY >= Display.Height) break;
+            
+            var spritePixelsRow = _memory[_indexRegister + y];
+            for (var bit = 0; bit < 8; bit++)
+            {
+                var dstX = sx + bit;
+                if (dstX >= Display.Width) break;
+
                 var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
                 var dstIndex = dstY * Display.Width + dstX;
                 var before = displayPixels[dstIndex];
