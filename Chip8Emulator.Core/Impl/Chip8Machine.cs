@@ -699,8 +699,8 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteArithmeticOperationIns(int ins)
     {
-        var op = ins & 0x000F;
-        switch (op)
+        var lo = ins & 0x000F;
+        switch (lo)
         {
             case 0:
                 ExecuteSetRegisterValueFromRegisterIns(ins);
@@ -737,6 +737,12 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteShiftRightIns(int ins)
     {
         var x = ExtractX(ins);
+        if (ShiftUsesVy)
+        {
+            var y = ExtractY(ins);
+            _vRegisters[x] = _vRegisters[y];
+        }
+        
         var value = _vRegisters[x];
         var flag = (byte)(value & 0x1);
         _vRegisters[x] = (byte)(value >> 1);
