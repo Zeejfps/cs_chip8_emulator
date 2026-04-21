@@ -100,7 +100,7 @@ public class DrawToScreenTests
 
         emulator.ExeuteDrawToScreenIns(0xD001);
 
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class DrawToScreenTests
 
         emulator.ExeuteDrawToScreenIns(0xD001);
 
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -142,13 +142,13 @@ public class DrawToScreenTests
         emulator.WriteMemory(0x301, [0x0F]);
         emulator.ExecuteSetIndexRegisterIns(0xA301);
         emulator.ExeuteDrawToScreenIns(0xD001);
-        Assert.Equal(0, emulator.ReadRegister(0xF)); // no collision
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]); // no collision
 
         // Row 3: 0x81 = 10000001 — overlaps both existing bits
         emulator.WriteMemory(0x302, [0x81]);
         emulator.ExecuteSetIndexRegisterIns(0xA302);
         emulator.ExeuteDrawToScreenIns(0xD001);
-        Assert.Equal(1, emulator.ReadRegister(0xF)); // collision
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]); // collision
 
         // After row 3 XOR: bits 0 and 7 flipped off, rest unchanged -> 01111110
         Assert.Equal(0, PixelAt(emulator, 0, 0));
@@ -260,14 +260,14 @@ public class DrawToScreenTests
 
         // First draw: lights pixel at (0,0)
         emulator.ExeuteDrawToScreenIns(0xD001);
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
 
         // Second draw from x=64: wraps to x=0 -> collides with (0,0)
         emulator.ExecuteSetRegisterValueIns(0x6240); // V2 = 64 -> wraps to 0
         emulator.ExecuteSetRegisterValueIns(0x6300);
         emulator.ExeuteDrawToScreenIns(0xD231);
 
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
         Assert.Equal(0, CountLitPixels(emulator)); // XOR erased it
     }
 

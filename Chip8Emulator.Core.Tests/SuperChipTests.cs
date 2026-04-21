@@ -186,7 +186,7 @@ public class SuperChipTests
         emulator.ExecuteTimerIns(0xF030);
 
         // High-res font base 0x0A0, each glyph is 10 bytes -> 0xA0 + 5*10 = 0xD2
-        Assert.Equal(0xA0 + 5 * 10, emulator.IndexRegister);
+        Assert.Equal(0xA0 + 5 * 10, emulator.Debugger.IndexRegister);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class SuperChipTests
 
         emulator.ExecuteTimerIns(0xF230);
 
-        Assert.Equal(0xA0, emulator.IndexRegister);
+        Assert.Equal(0xA0, emulator.Debugger.IndexRegister);
     }
 
     // ---- DXY0 : 16x16 high-res sprite drawing -------------------------------
@@ -334,7 +334,7 @@ public class SuperChipTests
 
         emulator.ExeuteDrawToScreenIns(0xD000);
 
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -351,6 +351,6 @@ public class SuperChipTests
 
         emulator.ExeuteDrawToScreenIns(0xD000);
 
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
     }
 }

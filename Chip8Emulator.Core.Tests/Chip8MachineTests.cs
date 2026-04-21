@@ -23,11 +23,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        Assert.Equal(0, emulator.ProgramCounter);
-        Assert.Equal(0, emulator.IndexRegister);
-        Assert.Equal(0, emulator.DelayTimer);
-        Assert.Equal(0, emulator.SoundTimer);
-        Assert.Equal(4096, emulator.Memory.Length);
+        Assert.Equal(0, emulator.Debugger.ProgramCounter);
+        Assert.Equal(0, emulator.Debugger.IndexRegister);
+        Assert.Equal(0, emulator.Debugger.DelayTimer);
+        Assert.Equal(0, emulator.Debugger.SoundTimer);
+        Assert.Equal(4096, emulator.Debugger.Memory.Length);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class Chip8MachineTests
 
         for (var i = 0; i < 16; i++)
         {
-            Assert.Equal(0, emulator.ReadRegister(i));
+            Assert.Equal(0, emulator.Debugger.Registers[i]);
         }
     }
 
@@ -46,11 +46,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        for (var i = 0; i < emulator.Memory.Length; i++)
+        for (var i = 0; i < emulator.Debugger.Memory.Length; i++)
         {
             if (i >= 0x050 && i < 0x050 + 80) continue;   // low-res font (16 glyphs * 5 bytes)
             if (i >= 0x0A0 && i < 0x0A0 + 100) continue;  // high-res font (10 glyphs * 10 bytes)
-            Assert.Equal(0, emulator.Memory[i]);
+            Assert.Equal(0, emulator.Debugger.Memory[i]);
         }
     }
 
@@ -59,7 +59,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        var zeroSprite = emulator.Memory.Slice(0x050, 5);
+        var zeroSprite = emulator.Debugger.Memory.Slice(0x050, 5);
         Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, zeroSprite.ToArray());
     }
 
@@ -74,7 +74,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteSetRegisterValueIns(instruction);
 
-        Assert.Equal(expected, emulator.ReadRegister(x));
+        Assert.Equal(expected, emulator.Debugger.Registers[x]);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class Chip8MachineTests
         for (var i = 0; i < 16; i++)
         {
             if (i == 3) continue;
-            Assert.Equal(0, emulator.ReadRegister(i));
+            Assert.Equal(0, emulator.Debugger.Registers[i]);
         }
     }
 
@@ -99,7 +99,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteAddValueToRegisterIns(0x7203);
 
-        Assert.Equal(8, emulator.ReadRegister(2));
+        Assert.Equal(8, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteAddValueToRegisterIns(0x7202);
 
-        Assert.Equal(0x01, emulator.ReadRegister(2));
+        Assert.Equal(0x01, emulator.Debugger.Registers[2]);
     }
 
     [Theory]
@@ -123,7 +123,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteSetIndexRegisterIns(instruction);
 
-        Assert.Equal(expected, emulator.IndexRegister);
+        Assert.Equal(expected, emulator.Debugger.IndexRegister);
     }
 
     [Theory]
@@ -136,7 +136,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteJumpToAddressIns(instruction);
 
-        Assert.Equal(expected, emulator.ProgramCounter);
+        Assert.Equal(expected, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -144,11 +144,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6242);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfRegisterValueEqualsValueIns(0x3242);
 
-        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -156,11 +156,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6242);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfRegisterValueEqualsValueIns(0x3201);
 
-        Assert.Equal(pcBefore, emulator.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -168,11 +168,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6242);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(0x4201);
 
-        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -180,11 +180,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6242);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(0x4242);
 
-        Assert.Equal(pcBefore, emulator.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -193,11 +193,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6142);
         emulator.ExecuteSetRegisterValueIns(0x6242);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(0x5120);
 
-        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -206,11 +206,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6142);
         emulator.ExecuteSetRegisterValueIns(0x6201);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(0x5120);
 
-        Assert.Equal(pcBefore, emulator.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -218,13 +218,13 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         emulator.ExecuteJumpToAddressIns(0x1246);
-        var spBefore = emulator.StackPointer;
+        var spBefore = emulator.Debugger.StackPointer;
 
         emulator.ExecuteCallSubroutineIns(0x2ABC);
 
-        Assert.Equal(0xABC, emulator.ProgramCounter);
-        Assert.Equal(spBefore + 1, emulator.StackPointer);
-        Assert.Equal(0x246, emulator.PeekStack());
+        Assert.Equal(0xABC, emulator.Debugger.ProgramCounter);
+        Assert.Equal(spBefore + 1, emulator.Debugger.StackPointer);
+        Assert.Equal(0x246, emulator.Debugger.Stack[emulator.Debugger.StackPointer]);
     }
 
     [Fact]
@@ -236,7 +236,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteReturnFromSubroutineIns();
 
-        Assert.Equal(0x246, emulator.ProgramCounter);
+        Assert.Equal(0x246, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -248,8 +248,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteSetRegisterValueFromRegisterIns(0x8120);
 
-        Assert.Equal(0xAB, emulator.ReadRegister(1));
-        Assert.Equal(0xAB, emulator.ReadRegister(2));
+        Assert.Equal(0xAB, emulator.Debugger.Registers[1]);
+        Assert.Equal(0xAB, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -261,8 +261,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteBitwiseOrOnRegistersIns(0x8121);
 
-        Assert.Equal(0xFF, emulator.ReadRegister(1));
-        Assert.Equal(0x0F, emulator.ReadRegister(2));
+        Assert.Equal(0xFF, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x0F, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -274,8 +274,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteBitwiseAndOnRegistersIns(0x8122);
 
-        Assert.Equal(0x0C, emulator.ReadRegister(1));
-        Assert.Equal(0x0F, emulator.ReadRegister(2));
+        Assert.Equal(0x0C, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x0F, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -287,8 +287,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteXorRegisterValueFromRegisterIns(0x8123);
 
-        Assert.Equal(0xF3, emulator.ReadRegister(1));
-        Assert.Equal(0x0F, emulator.ReadRegister(2));
+        Assert.Equal(0xF3, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x0F, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -301,9 +301,9 @@ public class Chip8MachineTests
 
         emulator.ExecuteAddValueToRegisterWithCarryIns(0x8124);
 
-        Assert.Equal(0x08, emulator.ReadRegister(1));
-        Assert.Equal(0x03, emulator.ReadRegister(2));
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0x08, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x03, emulator.Debugger.Registers[2]);
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -315,9 +315,9 @@ public class Chip8MachineTests
 
         emulator.ExecuteAddValueToRegisterWithCarryIns(0x8124);
 
-        Assert.Equal(0x01, emulator.ReadRegister(1));
-        Assert.Equal(0x02, emulator.ReadRegister(2));
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(0x01, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x02, emulator.Debugger.Registers[2]);
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -329,8 +329,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteAddValueToRegisterWithCarryIns(0x8124);
 
-        Assert.Equal(0xFF, emulator.ReadRegister(1));
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0xFF, emulator.Debugger.Registers[1]);
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -342,9 +342,9 @@ public class Chip8MachineTests
 
         emulator.ExecuteVxSubVyIns(0x8125);
 
-        Assert.Equal(0x07, emulator.ReadRegister(1));
-        Assert.Equal(0x03, emulator.ReadRegister(2));
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(0x07, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x03, emulator.Debugger.Registers[2]);
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -356,9 +356,9 @@ public class Chip8MachineTests
 
         emulator.ExecuteVxSubVyIns(0x8125);
 
-        Assert.Equal(0xF9, emulator.ReadRegister(1));
-        Assert.Equal(0x0A, emulator.ReadRegister(2));
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0xF9, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x0A, emulator.Debugger.Registers[2]);
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -370,8 +370,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteVxSubVyIns(0x8125);
 
-        Assert.Equal(0x00, emulator.ReadRegister(1));
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(0x00, emulator.Debugger.Registers[1]);
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -383,9 +383,9 @@ public class Chip8MachineTests
 
         emulator.ExecuteVySubVxIns(0x8127);
 
-        Assert.Equal(0x07, emulator.ReadRegister(1));
-        Assert.Equal(0x0A, emulator.ReadRegister(2));
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(0x07, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x0A, emulator.Debugger.Registers[2]);
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -397,9 +397,9 @@ public class Chip8MachineTests
 
         emulator.ExecuteVySubVxIns(0x8127);
 
-        Assert.Equal(0xF9, emulator.ReadRegister(1));
-        Assert.Equal(0x03, emulator.ReadRegister(2));
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0xF9, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x03, emulator.Debugger.Registers[2]);
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -410,8 +410,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteShiftRightIns(0x8106);
 
-        Assert.Equal(0x04, emulator.ReadRegister(1));
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0x04, emulator.Debugger.Registers[1]);
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -422,8 +422,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteShiftRightIns(0x8106);
 
-        Assert.Equal(0x04, emulator.ReadRegister(1));
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(0x04, emulator.Debugger.Registers[1]);
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -434,8 +434,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteShiftLeftIns(0x810E);
 
-        Assert.Equal(0x82, emulator.ReadRegister(1));
-        Assert.Equal(0, emulator.ReadRegister(0xF));
+        Assert.Equal(0x82, emulator.Debugger.Registers[1]);
+        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -446,8 +446,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteShiftLeftIns(0x810E);
 
-        Assert.Equal(0x02, emulator.ReadRegister(1));
-        Assert.Equal(1, emulator.ReadRegister(0xF));
+        Assert.Equal(0x02, emulator.Debugger.Registers[1]);
+        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
     }
 
     [Fact]
@@ -456,11 +456,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6142);
         emulator.ExecuteSetRegisterValueIns(0x6201);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
 
-        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -469,11 +469,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x6142);
         emulator.ExecuteSetRegisterValueIns(0x6242);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
 
-        Assert.Equal(pcBefore, emulator.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
 
     [Theory]
@@ -489,7 +489,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteArithmeticOperationIns(instruction);
 
-        Assert.Equal(expected, emulator.ReadRegister(1));
+        Assert.Equal(expected, emulator.Debugger.Registers[1]);
     }
 
     [Fact]
@@ -498,11 +498,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         emulator.ExecuteSetRegisterValueIns(0x6105);
         input.Press(0x5);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfKeyIsPressed(0xE19E);
 
-        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -511,11 +511,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         emulator.ExecuteSetRegisterValueIns(0x6105);
         input.Press(0x3);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfKeyIsPressed(0xE19E);
 
-        Assert.Equal(pcBefore, emulator.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -524,11 +524,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         emulator.ExecuteSetRegisterValueIns(0x6105);
         input.Press(0x3);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfKeyIsReleased(0xE1A1);
 
-        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -537,11 +537,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         emulator.ExecuteSetRegisterValueIns(0x6105);
         input.Press(0x5);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfKeyIsReleased(0xE1A1);
 
-        Assert.Equal(pcBefore, emulator.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -550,11 +550,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         emulator.ExecuteSetRegisterValueIns(0x6107);
         input.Press(0x7);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfKeyIsPressedOrReleased(0xE19E);
 
-        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -562,11 +562,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator(out var input);
         emulator.ExecuteSetRegisterValueIns(0x6107);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfKeyIsPressedOrReleased(0xE1A1);
 
-        Assert.Equal(pcBefore + 2, emulator.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -575,11 +575,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         emulator.ExecuteSetRegisterValueIns(0x6107);
         input.Press(0x7);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteSkipNextInsIfKeyIsPressedOrReleased(0xE100);
 
-        Assert.Equal(pcBefore, emulator.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -590,7 +590,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteSetDelayTimer(0xF115);
 
-        Assert.Equal(0x3C, emulator.DelayTimer);
+        Assert.Equal(0x3C, emulator.Debugger.DelayTimer);
     }
 
     [Fact]
@@ -601,7 +601,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteSetSoundTimer(0xF118);
 
-        Assert.Equal(0x20, emulator.SoundTimer);
+        Assert.Equal(0x20, emulator.Debugger.SoundTimer);
     }
 
     [Fact]
@@ -613,7 +613,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteReadDelayTimer(0xF207);
 
-        Assert.Equal(0x2A, emulator.ReadRegister(2));
+        Assert.Equal(0x2A, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -625,7 +625,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF207);
 
-        Assert.Equal(0x55, emulator.ReadRegister(2));
+        Assert.Equal(0x55, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -636,7 +636,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF115);
 
-        Assert.Equal(0x99, emulator.DelayTimer);
+        Assert.Equal(0x99, emulator.Debugger.DelayTimer);
     }
 
     [Fact]
@@ -647,7 +647,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF118);
 
-        Assert.Equal(0x7F, emulator.SoundTimer);
+        Assert.Equal(0x7F, emulator.Debugger.SoundTimer);
     }
 
     [Fact]
@@ -655,11 +655,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         emulator.ExecuteSetRegisterValueIns(0x61AA);
-        var pcBefore = emulator.ProgramCounter;
+        var pcBefore = emulator.Debugger.ProgramCounter;
 
         emulator.ExecuteTimerIns(0xF100);
 
-        Assert.Equal(pcBefore, emulator.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
 
     [Fact]
@@ -671,7 +671,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteAddVxToI(0xF11E);
 
-        Assert.Equal(0x125, emulator.IndexRegister);
+        Assert.Equal(0x125, emulator.Debugger.IndexRegister);
     }
 
     [Fact]
@@ -684,7 +684,7 @@ public class Chip8MachineTests
         emulator.ExecuteAddVxToI(0xF11E);
         emulator.ExecuteAddVxToI(0xF11E);
 
-        Assert.Equal(0x01A, emulator.IndexRegister);
+        Assert.Equal(0x01A, emulator.Debugger.IndexRegister);
     }
 
     [Theory]
@@ -700,7 +700,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteLoadLowResFontCharacter(0xF129);
 
-        Assert.Equal(expectedIndex, emulator.IndexRegister);
+        Assert.Equal(expectedIndex, emulator.Debugger.IndexRegister);
     }
 
     [Fact]
@@ -711,7 +711,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteLoadLowResFontCharacter(0xF129);
 
-        var sprite = emulator.Memory.Slice(emulator.IndexRegister, 5);
+        var sprite = emulator.Debugger.Memory.Slice(emulator.Debugger.IndexRegister, 5);
         Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, sprite.ToArray());
     }
 
@@ -722,7 +722,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteWaitForKeyPress(0xF20A);
 
-        Assert.True(emulator.IsWaitingForKeyPress);
+        Assert.True(emulator.Debugger.IsWaitingForKeyPress);
     }
 
     [Fact]
@@ -732,7 +732,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteWaitForKeyPress(0xF20A);
 
-        Assert.Equal(0, emulator.ReadRegister(2));
+        Assert.Equal(0, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -744,8 +744,8 @@ public class Chip8MachineTests
 
         emulator.Update();
 
-        Assert.True(emulator.IsWaitingForKeyPress);
-        Assert.Equal(0, emulator.ReadRegister(2));
+        Assert.True(emulator.Debugger.IsWaitingForKeyPress);
+        Assert.Equal(0, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -759,8 +759,8 @@ public class Chip8MachineTests
 
         emulator.Update();
 
-        Assert.False(emulator.IsWaitingForKeyPress);
-        Assert.Equal(0xA, emulator.ReadRegister(2));
+        Assert.False(emulator.Debugger.IsWaitingForKeyPress);
+        Assert.Equal(0xA, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -774,8 +774,8 @@ public class Chip8MachineTests
 
         emulator.Update();
 
-        Assert.Equal(9, emulator.DelayTimer);
-        Assert.True(emulator.IsWaitingForKeyPress);
+        Assert.Equal(9, emulator.Debugger.DelayTimer);
+        Assert.True(emulator.Debugger.IsWaitingForKeyPress);
     }
 
     [Fact]
@@ -789,7 +789,7 @@ public class Chip8MachineTests
 
         emulator.Update();
 
-        Assert.Equal(4, emulator.SoundTimer);
+        Assert.Equal(4, emulator.Debugger.SoundTimer);
     }
 
     [Fact]
@@ -799,7 +799,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF10A);
 
-        Assert.True(emulator.IsWaitingForKeyPress);
+        Assert.True(emulator.Debugger.IsWaitingForKeyPress);
     }
 
     [Fact]
@@ -811,7 +811,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF11E);
 
-        Assert.Equal(0x023, emulator.IndexRegister);
+        Assert.Equal(0x023, emulator.Debugger.IndexRegister);
     }
 
     [Fact]
@@ -822,7 +822,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF129);
 
-        Assert.Equal(0x050 + 5 * 3, emulator.IndexRegister);
+        Assert.Equal(0x050 + 5 * 3, emulator.Debugger.IndexRegister);
     }
 
     [Fact]
@@ -837,11 +837,11 @@ public class Chip8MachineTests
 
         emulator.ExecuteStoreRegisters(0xF355);
 
-        Assert.Equal(0x11, emulator.Memory[0x300]);
-        Assert.Equal(0x22, emulator.Memory[0x301]);
-        Assert.Equal(0x33, emulator.Memory[0x302]);
-        Assert.Equal(0x44, emulator.Memory[0x303]);
-        Assert.Equal(0x00, emulator.Memory[0x304]);
+        Assert.Equal(0x11, emulator.Debugger.Memory[0x300]);
+        Assert.Equal(0x22, emulator.Debugger.Memory[0x301]);
+        Assert.Equal(0x33, emulator.Debugger.Memory[0x302]);
+        Assert.Equal(0x44, emulator.Debugger.Memory[0x303]);
+        Assert.Equal(0x00, emulator.Debugger.Memory[0x304]);
     }
 
     [Fact]
@@ -854,8 +854,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteStoreRegisters(0xF055);
 
-        Assert.Equal(0xAB, emulator.Memory[0x300]);
-        Assert.Equal(0x00, emulator.Memory[0x301]);
+        Assert.Equal(0xAB, emulator.Debugger.Memory[0x300]);
+        Assert.Equal(0x00, emulator.Debugger.Memory[0x301]);
     }
 
     [Fact]
@@ -867,11 +867,11 @@ public class Chip8MachineTests
 
         emulator.ExecuteLoadRegisters(0xF365);
 
-        Assert.Equal(0x11, emulator.ReadRegister(0));
-        Assert.Equal(0x22, emulator.ReadRegister(1));
-        Assert.Equal(0x33, emulator.ReadRegister(2));
-        Assert.Equal(0x44, emulator.ReadRegister(3));
-        Assert.Equal(0x00, emulator.ReadRegister(4));
+        Assert.Equal(0x11, emulator.Debugger.Registers[0]);
+        Assert.Equal(0x22, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x33, emulator.Debugger.Registers[2]);
+        Assert.Equal(0x44, emulator.Debugger.Registers[3]);
+        Assert.Equal(0x00, emulator.Debugger.Registers[4]);
     }
 
     [Fact]
@@ -883,8 +883,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteLoadRegisters(0xF065);
 
-        Assert.Equal(0xAB, emulator.ReadRegister(0));
-        Assert.Equal(0x00, emulator.ReadRegister(1));
+        Assert.Equal(0xAB, emulator.Debugger.Registers[0]);
+        Assert.Equal(0x00, emulator.Debugger.Registers[1]);
     }
 
     [Fact]
@@ -902,9 +902,9 @@ public class Chip8MachineTests
         emulator.ExecuteSetRegisterValueIns(0x6200);
         emulator.ExecuteLoadRegisters(0xF265);
 
-        Assert.Equal(0x12, emulator.ReadRegister(0));
-        Assert.Equal(0x34, emulator.ReadRegister(1));
-        Assert.Equal(0x56, emulator.ReadRegister(2));
+        Assert.Equal(0x12, emulator.Debugger.Registers[0]);
+        Assert.Equal(0x34, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x56, emulator.Debugger.Registers[2]);
     }
 
     [Fact]
@@ -916,7 +916,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF055);
 
-        Assert.Equal(0x99, emulator.Memory[0x400]);
+        Assert.Equal(0x99, emulator.Debugger.Memory[0x400]);
     }
 
     [Theory]
@@ -934,9 +934,9 @@ public class Chip8MachineTests
 
         emulator.ExecuteStoreBcdInMemory(0xF133);
 
-        Assert.Equal(hundreds, emulator.Memory[0x300]);
-        Assert.Equal(tens, emulator.Memory[0x301]);
-        Assert.Equal(ones, emulator.Memory[0x302]);
+        Assert.Equal(hundreds, emulator.Debugger.Memory[0x300]);
+        Assert.Equal(tens, emulator.Debugger.Memory[0x301]);
+        Assert.Equal(ones, emulator.Debugger.Memory[0x302]);
     }
 
     [Fact]
@@ -948,8 +948,8 @@ public class Chip8MachineTests
 
         emulator.ExecuteStoreBcdInMemory(0xF133);
 
-        Assert.Equal(0x7B, emulator.ReadRegister(1));
-        Assert.Equal(0x300, emulator.IndexRegister);
+        Assert.Equal(0x7B, emulator.Debugger.Registers[1]);
+        Assert.Equal(0x300, emulator.Debugger.IndexRegister);
     }
 
     [Fact]
@@ -961,9 +961,9 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF133);
 
-        Assert.Equal(2, emulator.Memory[0x400]);
-        Assert.Equal(0, emulator.Memory[0x401]);
-        Assert.Equal(0, emulator.Memory[0x402]);
+        Assert.Equal(2, emulator.Debugger.Memory[0x400]);
+        Assert.Equal(0, emulator.Debugger.Memory[0x401]);
+        Assert.Equal(0, emulator.Debugger.Memory[0x402]);
     }
 
     [Fact]
@@ -975,7 +975,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF065);
 
-        Assert.Equal(0x77, emulator.ReadRegister(0));
+        Assert.Equal(0x77, emulator.Debugger.Registers[0]);
     }
 
     [Fact]

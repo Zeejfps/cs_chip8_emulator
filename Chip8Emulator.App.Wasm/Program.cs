@@ -55,10 +55,10 @@ public static partial class Interop
     }
 
     [JSExport]
-    public static int GetProgramCounter() => _machine!.ProgramCounter;
+    public static int GetProgramCounter() => _machine!.Debugger.ProgramCounter;
 
     [JSExport]
-    public static int GetMemoryByte(int address) => _machine!.Memory[address];
+    public static int GetMemoryByte(int address) => _machine!.Debugger.Memory[address];
 
     [JSExport]
     public static string DisassembleInstruction(int ins) => Chip8Disassembler.Disassemble(ins);

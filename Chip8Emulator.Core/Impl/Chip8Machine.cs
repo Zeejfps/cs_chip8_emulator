@@ -100,8 +100,6 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     public IMachineDebugger Debugger { get; }
-    
-    public int ProgramCounter => _programCounter;
 
     public int InstructionsPerSecond
     {
@@ -115,13 +113,6 @@ internal sealed class Chip8Machine : IChip8Machine
         }
     }
 
-    public int IndexRegister => _indexRegister;
-    public int StackPointer => _stackPointer;
-    public byte DelayTimer => _delayTimer;
-    public byte SoundTimer => _soundTimer;
-    public bool IsWaitingForKeyPress => _isWaitingForKeyPress;
-    public ReadOnlySpan<byte> Memory => _memory;
-
     public bool ShiftUsesVy { get; set; } = false;
     public bool JumpUsesVx { get; set; } = true;
     public bool LoadStoreIncrementsI { get; set; } = false;
@@ -129,20 +120,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public bool SpritesWrap { get; set; } = false;
     public bool DisplayWait { get; set; } = false;
 
-    public byte ReadRegister(int x)
-    {
-        return _vRegisters[x];
-    }
-
-    public int PeekStack()
-    {
-        if (_stackPointer < 0)
-            throw new InvalidOperationException("Stack is empty");
-        
-        return _stack[_stackPointer];
-    }
-
-    public void PushStack(int value)
+    private void PushStack(int value)
     {
         var nextStackPointer = _stackPointer + 1;
         if(nextStackPointer >= _stack.Length)
@@ -151,7 +129,7 @@ internal sealed class Chip8Machine : IChip8Machine
         _stack[_stackPointer] = value;
     }
 
-    public int PopStack()
+    private int PopStack()
     {
         if (_stackPointer < 0)
             throw new InvalidOperationException("Stack underflow");
@@ -947,7 +925,7 @@ internal sealed class Chip8Machine : IChip8Machine
         return ins;
     }
 
-    sealed class Chip8MachineDebugger(Chip8Machine machine) : IMachineDebugger
+    private sealed class Chip8MachineDebugger(Chip8Machine machine) : IMachineDebugger
     {
         public ReadOnlySpan<byte> Memory => machine._memory;
         public ReadOnlySpan<byte> Registers => machine._vRegisters;
