@@ -48,7 +48,8 @@ public class Chip8MachineTests
 
         for (var i = 0; i < emulator.Memory.Length; i++)
         {
-            if (i >= 0x050 && i < 0x050 + 80) continue;
+            if (i >= 0x050 && i < 0x050 + 80) continue;   // low-res font (16 glyphs * 5 bytes)
+            if (i >= 0x0A0 && i < 0x0A0 + 100) continue;  // high-res font (10 glyphs * 10 bytes)
             Assert.Equal(0, emulator.Memory[i]);
         }
     }

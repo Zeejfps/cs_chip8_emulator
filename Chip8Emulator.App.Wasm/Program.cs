@@ -10,14 +10,15 @@ public static partial class Interop
 {
     private static IChip8Machine? _machine;
     private static BrowserInput? _input;
-    private static StopwatchClock? _clock;
+    private static PausableStopwatchClock? _clock;
     private static MemoryHandle _pixelsHandle;
+    private static long _ticksPerInstruction;
 
     [JSExport]
     public static void Init()
     {
         _input = new BrowserInput();
-        _clock = new StopwatchClock();
+        _clock = new PausableStopwatchClock();
         _machine = Chip8.Builder()
             .WithRenderer(new BrowserRenderer())
             .WithAudio(new BrowserAudio())
@@ -25,6 +26,7 @@ public static partial class Interop
             .WithInput(_input)
             .Build();
         _pixelsHandle = _machine.Display.Pixels.Pin();
+        _ticksPerInstruction = _clock.Frequency / _machine.InstructionsPerSecond;
     }
 
     [JSExport]
@@ -38,6 +40,33 @@ public static partial class Interop
     {
         _machine!.Update();
     }
+
+    [JSExport]
+    public static void Pause()
+    {
+        // Drain any real-time delta accumulated since the last Update so that
+        // _lastTimestamp lines up with the frozen clock. Without this, the
+        // first Step() after pause would see a delta covering the gap between
+        // the last frame and the pause click, and run multiple instructions.
+        _machine!.Update();
+        _clock!.Pause();
+    }
+
+    [JSExport]
+    public static void Resume() => _clock!.Resume();
+
+    [JSExport]
+    public static void Step()
+    {
+        _clock!.Advance(_ticksPerInstruction);
+        _machine!.Update();
+    }
+
+    [JSExport]
+    public static int GetProgramCounter() => _machine!.ProgramCounter;
+
+    [JSExport]
+    public static int GetMemoryByte(int address) => _machine!.Memory[address];
 
     [JSExport]
     public static unsafe int GetPixelDataPtr() => (int)_pixelsHandle.Pointer;

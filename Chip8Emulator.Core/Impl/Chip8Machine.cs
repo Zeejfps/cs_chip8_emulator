@@ -55,8 +55,7 @@ internal sealed class Chip8Machine : IChip8Machine
     
     private const int DisplayWidth = 64;
     private const int DisplayHeight = 32;
-    private const int InstructionsPerSecond = 1000;
-    private const int InstructionsPerFrame = InstructionsPerSecond / 60;
+    private const int InstructionsPerSecondConst = 1000;
     private const int InstructionSizeInBytes = 2;
     
     private readonly IRenderer _renderer;
@@ -78,9 +77,10 @@ internal sealed class Chip8Machine : IChip8Machine
     private int _stackPointer;
 
     private readonly long _ticksPerFrame;
+    private readonly long _ticksPerInstruction;
     private long _lastTimestamp;
-    private long _accumulatedTicks;
-    private int _instructionsExecuted;
+    private long _instructionAcc;
+    private long _frameAcc;
     private bool _isWaitingForKeyPress;
     private int _keyRegisterIndex;
 
@@ -91,12 +91,14 @@ internal sealed class Chip8Machine : IChip8Machine
         _clock = clock;
         _input = input;
         _ticksPerFrame = clock.Frequency / 60;
+        _ticksPerInstruction = clock.Frequency / InstructionsPerSecondConst;
         _lastTimestamp = clock.Timestamp;
         LowResFont.CopyTo(_memory.AsSpan(LowResFontBaseAddress));
         HighResFont.CopyTo(_memory.AsSpan(HighResFontBaseAddress));
     }
 
     public int ProgramCounter => _programCounter;
+    public int InstructionsPerSecond => InstructionsPerSecondConst;
     public int IndexRegister => _indexRegister;
     public int StackPointer => _stackPointer;
     public byte DelayTimer => _delayTimer;
@@ -148,10 +150,10 @@ internal sealed class Chip8Machine : IChip8Machine
         _stackPointer = 0;
         _delayTimer = 0;
         _soundTimer = 0;
-        _instructionsExecuted = 0;
         _isWaitingForKeyPress = false;
         _keyRegisterIndex = 0;
-        _accumulatedTicks = 0;
+        _instructionAcc = 0;
+        _frameAcc = 0;
         _lastTimestamp = _clock.Timestamp;
         Array.Clear(_vRegisters);
         Array.Clear(_stack);
@@ -168,6 +170,12 @@ internal sealed class Chip8Machine : IChip8Machine
             return;
         }
 
+        var maxDelta = _ticksPerFrame * 2;
+        if (delta > maxDelta)
+        {
+            delta = maxDelta;
+        }
+
         if (_isWaitingForKeyPress)
         {
             if (_input.WasAnyKeyPressed(out var key))
@@ -177,19 +185,17 @@ internal sealed class Chip8Machine : IChip8Machine
             }
         }
 
-        if (!_isWaitingForKeyPress && _instructionsExecuted < InstructionsPerFrame)
+        _instructionAcc += delta;
+        _frameAcc += delta;
+
+        while (!_isWaitingForKeyPress && _instructionAcc >= _ticksPerInstruction)
         {
             FetchDecodeExecute();
+            _instructionAcc -= _ticksPerInstruction;
         }
 
-        _accumulatedTicks += delta;
-        while (_accumulatedTicks >= _ticksPerFrame)
+        while (_frameAcc >= _ticksPerFrame)
         {
-            while (!_isWaitingForKeyPress && _instructionsExecuted < InstructionsPerFrame)
-            {
-                FetchDecodeExecute();
-            }
-
             if (_delayTimer > 0)
             {
                 _delayTimer--;
@@ -202,8 +208,7 @@ internal sealed class Chip8Machine : IChip8Machine
             }
 
             _renderer.Render();
-            _accumulatedTicks -= _ticksPerFrame;
-            _instructionsExecuted = 0;
+            _frameAcc -= _ticksPerFrame;
         }
     }
 
@@ -267,8 +272,6 @@ internal sealed class Chip8Machine : IChip8Machine
             default:
                 throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
         }
-        
-        _instructionsExecuted++;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

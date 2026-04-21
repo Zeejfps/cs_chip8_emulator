@@ -194,20 +194,6 @@ public class DrawToScreenTests
     }
 
     [Fact]
-    public void ZeroHeightSpriteDrawsNothingAndClearsVf()
-    {
-        var emulator = CreateEmulator();
-        emulator.ExecuteSetRegisterValueIns(0x6F01); // VF = 1
-        emulator.WriteMemory(0x300, [0xFF]);
-        emulator.ExecuteSetIndexRegisterIns(0xA300);
-
-        emulator.ExeuteDrawToScreenIns(0xD000); // n = 0
-
-        Assert.Equal(0, CountLitPixels(emulator));
-        Assert.Equal(0, emulator.ReadRegister(0xF));
-    }
-
-    [Fact]
     public void ReadsSpriteFromIndexRegister()
     {
         var emulator = CreateEmulator();

@@ -40,9 +40,12 @@ const audio = {
 
 const status = document.getElementById('status');
 const restartBtn = document.getElementById('restart');
+const pauseBtn = document.getElementById('pause');
+const stepBtn = document.getElementById('step');
 const romInput = document.getElementById('rom');
 const canvas = document.getElementById('screen');
 const ctx2d = canvas.getContext('2d');
+const disasmEl = document.getElementById('disasm');
 
 status.textContent = 'Loading runtime...';
 
@@ -85,6 +88,66 @@ resize(api.GetWidth(), api.GetHeight());
 
 let lastRomBytes = null;
 let running = false;
+let paused = false;
+let lastRenderedPc = -1;
+let prevInsLine = null; // formatted line of the last instruction we stepped through
+
+const MEMORY_SIZE = 4096;
+
+function readInsWord(addr) {
+  if (addr < 0 || addr + 1 >= MEMORY_SIZE) return null;
+  const hi = api.GetMemoryByte(addr);
+  const lo = api.GetMemoryByte(addr + 1);
+  return (hi << 8) | lo;
+}
+
+function formatInsLine(marker, addr, word) {
+  const a = addr.toString(16).toUpperCase().padStart(4, '0');
+  const w = word.toString(16).toUpperCase().padStart(4, '0');
+  return `${marker} 0x${a}  ${w}`;
+}
+
+function renderDisasm() {
+  const pc = api.GetProgramCounter();
+  const lines = [];
+  lines.push(prevInsLine ?? '                ');
+  for (let i = 0; i < 5; i++) {
+    const addr = pc + i * 2;
+    const word = readInsWord(addr);
+    if (word === null) break;
+    lines.push(formatInsLine(i === 0 ? '>' : ' ', addr, word));
+  }
+  disasmEl.textContent = lines.join('\n');
+  lastRenderedPc = pc;
+}
+
+function renderPixels() {
+  const pixelCount = width * height;
+  const view = runtime.localHeapViewU8().subarray(pixelPtr, pixelPtr + pixelCount);
+  for (let i = 0; i < pixelCount; i++) {
+    const on = view[i] !== 0;
+    const j = i * 4;
+    rgba[j] = on ? 0xE6 : 0x0D;
+    rgba[j + 1] = on ? 0xED : 0x11;
+    rgba[j + 2] = on ? 0xF3 : 0x17;
+  }
+  ctx2d.putImageData(imageData, 0, 0);
+}
+
+function setPaused(next) {
+  if (paused === next) return;
+  paused = next;
+  if (paused) {
+    api.Pause();
+    pauseBtn.textContent = 'Play';
+    stepBtn.disabled = false;
+    renderDisasm();
+  } else {
+    api.Resume();
+    pauseBtn.textContent = 'Pause';
+    stepBtn.disabled = true;
+  }
+}
 
 romInput.addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
@@ -94,7 +157,13 @@ romInput.addEventListener('change', async (e) => {
   const bytes = new Uint8Array(buf);
   lastRomBytes = bytes;
   api.LoadProgram(bytes);
+  prevInsLine = null;
   restartBtn.disabled = false;
+  pauseBtn.disabled = false;
+  if (paused) {
+    stepBtn.disabled = false;
+    renderDisasm();
+  }
   status.textContent = `Loaded ${file.name} (${bytes.length} bytes)`;
   if (!running) {
     running = true;
@@ -106,6 +175,22 @@ restartBtn.addEventListener('click', () => {
   if (!lastRomBytes) return;
   audio.ensureStarted();
   api.LoadProgram(lastRomBytes);
+  prevInsLine = null;
+  if (paused) renderDisasm();
+});
+
+pauseBtn.addEventListener('click', () => {
+  setPaused(!paused);
+});
+
+stepBtn.addEventListener('click', () => {
+  if (!paused) return;
+  const prePc = api.GetProgramCounter();
+  const preWord = readInsWord(prePc);
+  api.Step();
+  if (preWord !== null) prevInsLine = formatInsLine('-', prePc, preWord);
+  renderDisasm();
+  renderPixels();
 });
 
 const tracked = new Set();
@@ -127,7 +212,9 @@ window.addEventListener('keyup', (e) => {
 });
 
 function frame() {
-  api.Update();
+  if (!paused) {
+    api.Update();
+  }
 
   const curW = api.GetWidth();
   const curH = api.GetHeight();
@@ -135,18 +222,14 @@ function frame() {
     resize(curW, curH);
   }
 
-  const pixelCount = width * height;
-  const view = runtime.localHeapViewU8().subarray(pixelPtr, pixelPtr + pixelCount);
-  for (let i = 0; i < pixelCount; i++) {
-    const on = view[i] !== 0;
-    const j = i * 4;
-    rgba[j] = on ? 0xE6 : 0x0D;
-    rgba[j + 1] = on ? 0xED : 0x11;
-    rgba[j + 2] = on ? 0xF3 : 0x17;
-  }
-  ctx2d.putImageData(imageData, 0, 0);
+  renderPixels();
 
-  audio.reconcile();
+  if (!paused) {
+    const pc = api.GetProgramCounter();
+    if (pc !== lastRenderedPc) renderDisasm();
+    audio.reconcile();
+  }
+
   requestAnimationFrame(frame);
 }
 

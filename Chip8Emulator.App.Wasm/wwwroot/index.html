@@ -16,9 +16,12 @@
         <input type="file" id="rom" accept=".ch8,.rom,.bin,application/octet-stream" />
       </label>
       <button id="restart" disabled>Restart</button>
+      <button id="pause" disabled>Pause</button>
+      <button id="step" disabled>Step</button>
       <span id="status">Install wasm-tools and build to get started.</span>
     </div>
     <canvas id="screen" width="64" height="32"></canvas>
+    <pre id="disasm" class="disasm" aria-label="Upcoming instructions"></pre>
     <details class="help">
       <summary>Keyboard</summary>
       <pre>
