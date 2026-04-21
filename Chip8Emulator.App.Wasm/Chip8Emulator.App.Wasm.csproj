@@ -12,4 +12,20 @@
     <ProjectReference Include="..\Chip8Emulator.Core\Chip8Emulator.Core.csproj" />
     <ProjectReference Include="..\Chip8Emulator.App\Chip8Emulator.App.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptInputs Include="web/src/**/*.ts" />
+    <TypeScriptInputs Include="web/tsconfig.json" />
+    <TypeScriptInputs Include="web/package.json" />
+  </ItemGroup>
+
+  <Target Name="BuildTypeScript"
+          BeforeTargets="PrepareForBuild"
+          Inputs="@(TypeScriptInputs)"
+          Outputs="wwwroot/main.js">
+    <Exec WorkingDirectory="web"
+          Command="npm ci"
+          Condition="!Exists('web/node_modules/.package-lock.json')" />
+    <Exec WorkingDirectory="web" Command="npm run build" />
+  </Target>
 </Project>

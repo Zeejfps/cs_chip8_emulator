@@ -4,3 +4,10 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+
+# TypeScript build output (sources in Chip8Emulator.App.Wasm/web/src)
+/Chip8Emulator.App.Wasm/wwwroot/*.js
+/Chip8Emulator.App.Wasm/wwwroot/*.js.map
+
+# Node
+/Chip8Emulator.App.Wasm/web/node_modules/
