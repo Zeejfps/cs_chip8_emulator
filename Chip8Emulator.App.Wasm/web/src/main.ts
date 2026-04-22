@@ -7,8 +7,10 @@ import './app.css';
 
 const boot = document.getElementById('boot');
 
+declare const __BUILD_ID__: string;
+
 const { dotnet } = (await import(
-  /* @vite-ignore */ new URL('_framework/dotnet.js', document.baseURI).href
+  /* @vite-ignore */ new URL(`_framework/dotnet.js?v=${__BUILD_ID__}`, document.baseURI).href
 )) as { dotnet: DotnetBuilder };
 
 const runtime = await dotnet.withApplicationArgumentsFromQuery().create();

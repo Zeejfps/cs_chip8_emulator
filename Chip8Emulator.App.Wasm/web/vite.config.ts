@@ -5,6 +5,9 @@ import path from 'node:path';
 
 export default defineConfig({
   base: './',
+  define: {
+    __BUILD_ID__: JSON.stringify(Date.now().toString(36)),
+  },
   plugins: [tailwindcss(), svelte()],
   resolve: {
     alias: { $lib: path.resolve(__dirname, './src/lib') },
