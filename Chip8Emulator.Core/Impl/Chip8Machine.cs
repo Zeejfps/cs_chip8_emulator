@@ -136,10 +136,10 @@ internal sealed class Chip8Machine : IChip8Machine
         }
     }
 
-    public bool ShiftUsesVy { get; set; } = false;
-    public bool SpritesWrap { get; set; } = false;
-    public bool DisplayWait { get; set; } = false;
-    public bool VfResultWrittenLast { get; set; } = false;
+    public bool ShiftUsesVy { get; set; }
+    public bool SpritesWrap { get; set; }
+    public bool DisplayWait { get; set; }
+    public bool VfResultWrittenLast { get; set; }
 
     public bool JumpUsesVx
     {
