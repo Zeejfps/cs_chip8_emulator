@@ -3,6 +3,7 @@ import type { QuirkFlags } from '../quirks.js';
 
 export type Phosphor = 'green' | 'amber';
 export type SpeedPreset = '0.5x' | '1x' | '2x' | 'max';
+export type KeypadLabelMode = 'keyboard' | 'hex';
 
 export interface Settings {
   ips: number;
@@ -16,6 +17,7 @@ export interface Settings {
   touchKeypadManual: boolean | null;
   debugOpen: boolean;
   lastRomId: string | null;
+  keypadLabelMode: KeypadLabelMode;
 }
 
 const STORAGE_KEY = 'chip8-settings/v1';
@@ -41,6 +43,7 @@ const defaults: Settings = {
   touchKeypadManual: null,
   debugOpen: false,
   lastRomId: null,
+  keypadLabelMode: 'keyboard',
 };
 
 function load(): Settings {

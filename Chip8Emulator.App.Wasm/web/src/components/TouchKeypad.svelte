@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getEmuContext } from '$lib/context.js';
-  import { KEYPAD_ROWS, hexLabel } from '$lib/keymap.js';
+  import { KEYPAD_ROWS, hexLabel, keyboardLabel } from '$lib/keymap.js';
+  import { settings } from '$lib/stores/settings.svelte.js';
 
   const { api } = getEmuContext();
 
@@ -46,9 +47,9 @@
         onpointercancel={onPointerUp}
         onpointerleave={onPointerUp}
         oncontextmenu={(e) => e.preventDefault()}
-        aria-label={`CHIP-8 key ${hexLabel(hex)}`}
+        aria-label={`CHIP-8 key ${settings.keypadLabelMode === 'keyboard' ? keyboardLabel(hex) : hexLabel(hex)}`}
       >
-        {hexLabel(hex)}
+        {settings.keypadLabelMode === 'keyboard' ? keyboardLabel(hex) : hexLabel(hex)}
       </button>
     {/each}
   {/each}

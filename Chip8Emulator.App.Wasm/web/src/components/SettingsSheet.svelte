@@ -3,7 +3,7 @@
   import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs/index.js';
   import { Switch } from '$lib/components/ui/switch/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { settings, type Phosphor } from '$lib/stores/settings.svelte.js';
+  import { settings, type Phosphor, type KeypadLabelMode } from '$lib/stores/settings.svelte.js';
   import QuirksPanel from './QuirksPanel.svelte';
   import SpeedControl from './SpeedControl.svelte';
   import VolumeControl from './VolumeControl.svelte';
@@ -73,6 +73,13 @@
             </div>
             <div class="flex items-center justify-between gap-2">
               <div class="flex flex-col gap-0.5">
+                <span class="font-pixel text-xs tracking-wider">Keyboard labels</span>
+                <span class="text-[11px] text-muted-foreground">Show key equivalents on touch keypad</span>
+              </div>
+              <Switch id="keypad-labels" checked={settings.keypadLabelMode === 'keyboard'} onCheckedChange={(v) => { settings.keypadLabelMode = v ? 'keyboard' : 'hex'; }} />
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex flex-col gap-0.5">
                 <span class="font-pixel text-xs tracking-wider">Touch keypad</span>
                 <span class="text-[11px] text-muted-foreground">
                   {settings.touchKeypadManual === null ? 'Auto (on mobile)' : settings.touchKeypadManual ? 'Always on' : 'Always off'}
@@ -113,30 +120,6 @@
               <a class="underline" href="https://github.com/JohnEarnest/chip8Archive" target="_blank" rel="noreferrer">chip8Archive</a>
               by John Earnest and contributors (CC0/CC-BY).
             </p>
-            <div class="flex flex-col gap-1.5">
-              <span class="font-pixel text-[10px] tracking-wider text-muted-foreground/70">Keyboard mapping</span>
-              <div class="flex items-center gap-3">
-                <div class="flex flex-col gap-0.5 font-mono text-[11px]">
-                  {#each [['1','2','3','C'],['4','5','6','D'],['7','8','9','E'],['A','0','B','F']] as row}
-                    <div class="flex gap-0.5">
-                      {#each row as key}
-                        <span class="flex h-6 w-6 items-center justify-center rounded border border-border/50 bg-muted/30">{key}</span>
-                      {/each}
-                    </div>
-                  {/each}
-                </div>
-                <span class="text-base text-muted-foreground/60">→</span>
-                <div class="flex flex-col gap-0.5 font-mono text-[11px]">
-                  {#each [['1','2','3','4'],['Q','W','E','R'],['A','S','D','F'],['Z','X','C','V']] as row}
-                    <div class="flex gap-0.5">
-                      {#each row as key}
-                        <span class="flex h-6 w-6 items-center justify-center rounded border border-border/50 bg-muted/30">{key}</span>
-                      {/each}
-                    </div>
-                  {/each}
-                </div>
-              </div>
-            </div>
           </TabsContent>
         </div>
       </Tabs>

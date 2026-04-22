@@ -21,3 +21,14 @@ export const KEYPAD_ROWS: number[][] = [
 export function hexLabel(hex: number): string {
   return hex.toString(16).toUpperCase();
 }
+
+const HEX_TO_KEYBOARD: Record<number, string> = Object.fromEntries(
+  Object.entries(KEYBOARD_TO_HEX).map(([code, hex]) => [
+    hex,
+    code.startsWith('Digit') ? code.slice(5) : code.slice(3),
+  ])
+);
+
+export function keyboardLabel(hex: number): string {
+  return HEX_TO_KEYBOARD[hex] ?? hexLabel(hex);
+}
