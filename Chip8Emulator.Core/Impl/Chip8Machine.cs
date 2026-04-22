@@ -141,6 +141,18 @@ internal sealed class Chip8Machine : IChip8Machine
         return value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private int ReadIndexRegisterWithOffset(int offset)
+    {
+        return (_indexRegister + offset) & 0xFFFF;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void WriteIndexRegister(int value)
+    {
+        _indexRegister = value & 0xFFFF;
+    }
+
     public IDisplay Display => _display;
     
     internal void WriteMemory(int address, ReadOnlySpan<byte> data)
@@ -418,6 +430,10 @@ internal sealed class Chip8Machine : IChip8Machine
         var op = ins & 0x00FF;
         switch (op)
         {
+            case 0x00:
+                // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
+                if (ExtractX(ins) == 0) ExecuteLongLoadIndexRegister();
+                break;
             case 0x07:
                 ExecuteReadDelayTimer(ins);
                 break;
@@ -453,28 +469,36 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void ExecuteLongLoadIndexRegister()
+    {
+        var hi = _memory[_programCounter];
+        var lo = _memory[_programCounter + 1];
+        WriteIndexRegister((hi << 8) | lo);
+        _programCounter += InstructionSizeInBytes;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteStoreBcdInMemory(int ins)
     {
         var x = ExtractX(ins);
         var bcd = _vRegisters[x];
-        _memory[_indexRegister & 0xFFF] = (byte)(bcd / 100);
-        _memory[(_indexRegister + 1) & 0xFFF] = (byte)((bcd / 10) % 10);
-        _memory[(_indexRegister + 2) & 0xFFF] = (byte)(bcd % 10);
+        _memory[ReadIndexRegisterWithOffset(0)] = (byte)(bcd / 100);
+        _memory[ReadIndexRegisterWithOffset(1)] = (byte)(bcd / 10 % 10);
+        _memory[ReadIndexRegisterWithOffset(2)] = (byte)(bcd % 10);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteLoadRegisters(int ins)
     {
         var x = ExtractX(ins);
-        var index = _indexRegister;
-        for (var i = 0; i <= x; i++, index++)
+        for (var i = 0; i <= x; i++)
         {
-            _vRegisters[i] = _memory[index & 0xFFF];
+            _vRegisters[i] = _memory[ReadIndexRegisterWithOffset(i)];
         }
 
         if (LoadStoreIncrementsI)
         {
-            _indexRegister = index & 0xFFF;
+            WriteIndexRegister(_indexRegister + x + 1);
         }
     }
 
@@ -482,15 +506,14 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteStoreRegisters(int ins)
     {
         var x = ExtractX(ins);
-        var index = _indexRegister;
-        for (var i = 0; i <= x; i++, index++)
+        for (var i = 0; i <= x; i++)
         {
-            _memory[index & 0xFFF] = _vRegisters[i];
+            _memory[ReadIndexRegisterWithOffset(i)] = _vRegisters[i];
         }
 
         if (LoadStoreIncrementsI)
         {
-            _indexRegister = index & 0xFFF;
+            WriteIndexRegister(_indexRegister + x + 1);
         }
     }
 
@@ -499,22 +522,22 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var x = ExtractX(ins);
         var value = _vRegisters[x];
-        _indexRegister = (value & 0x0F) * LowRestFontCharWidth + LowResFontBaseAddress;
+        WriteIndexRegister((value & 0x0F) * LowRestFontCharWidth + LowResFontBaseAddress);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteLoadHighResFontCharacter(int ins)
     {
         var x = ExtractX(ins);
         var value = _vRegisters[x];
-        _indexRegister = (value & 0x0F) * HighRestFontCharWidth + HighResFontBaseAddress;
+        WriteIndexRegister((value & 0x0F) * HighRestFontCharWidth + HighResFontBaseAddress);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteAddVxToI(int ins)
     {
         var x = ExtractX(ins);
-        _indexRegister = (_indexRegister + _vRegisters[x]) & 0xFFF;
+        WriteIndexRegister(_indexRegister + _vRegisters[x]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -701,8 +724,8 @@ internal sealed class Chip8Machine : IChip8Machine
             }
 
             var offset = i * 2;
-            var spritePixelsRow = (ushort)(_memory[(_indexRegister + offset) & 0xFFF] << 8 |
-                                          _memory[(_indexRegister + offset + 1) & 0xFFF]);
+            var spritePixelsRow = (ushort)(_memory[ReadIndexRegisterWithOffset(offset)] << 8 |
+                                          _memory[ReadIndexRegisterWithOffset(offset + 1)]);
             var rowCollided = false;
             for (var bit = 0; bit < 16; bit++)
             {
@@ -732,7 +755,7 @@ internal sealed class Chip8Machine : IChip8Machine
             if (SpritesWrap) dstY %= Display.Height;
             else if (dstY >= Display.Height) break;
             
-            var spritePixelsRow = _memory[(_indexRegister + y) & 0xFFF];
+            var spritePixelsRow = _memory[ReadIndexRegisterWithOffset(y)];
             for (var bit = 0; bit < 8; bit++)
             {
                 var dstX = sx + bit;
@@ -945,7 +968,7 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var nnn = ExtractNnn(ins);
         //Console.WriteLine($"Set Index Register: {nnn:X}");
-        _indexRegister = nnn;
+        WriteIndexRegister(nnn);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

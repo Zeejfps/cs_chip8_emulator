@@ -27,7 +27,7 @@ public class Chip8MachineTests
         Assert.Equal(0, emulator.Debugger.IndexRegister);
         Assert.Equal(0, emulator.Debugger.DelayTimer);
         Assert.Equal(0, emulator.Debugger.SoundTimer);
-        Assert.Equal(4096, emulator.Debugger.Memory.Length);
+        Assert.Equal(64 * 1024, emulator.Debugger.Memory.Length);
     }
 
     [Fact]
