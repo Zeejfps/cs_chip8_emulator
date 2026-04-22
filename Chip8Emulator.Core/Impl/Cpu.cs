@@ -175,7 +175,7 @@ internal static class Cpu
     public static void ExecuteStoreBcdInMemory(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        var bcd = machine.ReadRegister(x);
+        var bcd = machine.ReadGeneralPurposeRegister(x);
         machine.WriteMemory(machine.ReadIndexRegisterWithOffset(0), (byte)(bcd / 100));
         machine.WriteMemory(machine.ReadIndexRegisterWithOffset(1), (byte)(bcd / 10 % 10));
         machine.WriteMemory(machine.ReadIndexRegisterWithOffset(2), (byte)(bcd % 10));
@@ -187,7 +187,7 @@ internal static class Cpu
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            machine.WriteRegister(i, machine.ReadMemory(machine.ReadIndexRegisterWithOffset(i)));
+            machine.WriteGeneralPurposeRegister(i, machine.ReadMemory(machine.ReadIndexRegisterWithOffset(i)));
         }
 
         if (machine.LoadStoreIncrementsI)
@@ -202,7 +202,7 @@ internal static class Cpu
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            machine.WriteMemory(machine.ReadIndexRegisterWithOffset(i), machine.ReadRegister(i));
+            machine.WriteMemory(machine.ReadIndexRegisterWithOffset(i), machine.ReadGeneralPurposeRegister(i));
         }
 
         if (machine.LoadStoreIncrementsI)
@@ -215,7 +215,7 @@ internal static class Cpu
     public static void ExecuteLoadLowResFontCharacter(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        var value = machine.ReadRegister(x);
+        var value = machine.ReadGeneralPurposeRegister(x);
         machine.WriteIndexRegister((value & 0x0F) * Chip8Machine.LowRestFontCharWidth + Chip8Machine.LowResFontBaseAddress);
     }
 
@@ -223,7 +223,7 @@ internal static class Cpu
     public static void ExecuteLoadHighResFontCharacter(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        var value = machine.ReadRegister(x);
+        var value = machine.ReadGeneralPurposeRegister(x);
         machine.WriteIndexRegister((value & 0x0F) * Chip8Machine.HighRestFontCharWidth + Chip8Machine.HighResFontBaseAddress);
     }
 
@@ -231,7 +231,9 @@ internal static class Cpu
     public static void ExecuteAddVxToI(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        machine.WriteIndexRegister(machine.ReadIndexRegister() + machine.ReadRegister(x));
+        var i = machine.ReadIndexRegister();
+        var vx = machine.ReadGeneralPurposeRegister(x);
+        machine.WriteIndexRegister(i + vx);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -245,21 +247,21 @@ internal static class Cpu
     public static void ExecuteSetSoundTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        machine.WriteSoundTimer(machine.ReadRegister(x));
+        machine.WriteSoundTimer(machine.ReadGeneralPurposeRegister(x));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSetDelayTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        machine.WriteDelayTimer(machine.ReadRegister(x));
+        machine.WriteDelayTimer(machine.ReadGeneralPurposeRegister(x));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteReadDelayTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        machine.WriteRegister(x, machine.ReadDelayTimer());
+        machine.WriteGeneralPurposeRegister(x, machine.ReadDelayTimer());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -281,7 +283,7 @@ internal static class Cpu
     public static void ExecuteSkipNextInsIfKeyIsPressed(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        var key = machine.ReadRegister(x);
+        var key = machine.ReadGeneralPurposeRegister(x);
         if (machine.Input.IsKeyPressed(key))
         {
             machine.AdvanceProgramCounter();
@@ -292,7 +294,7 @@ internal static class Cpu
     public static void ExecuteSkipNextInsIfKeyIsReleased(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        var key = machine.ReadRegister(x);
+        var key = machine.ReadGeneralPurposeRegister(x);
         if (!machine.Input.IsKeyPressed(key))
         {
             machine.AdvanceProgramCounter();
@@ -305,7 +307,7 @@ internal static class Cpu
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
         var randNum = (byte)Random.Shared.Next(0, 256);
-        machine.WriteRegister(x, (byte)(randNum & nn));
+        machine.WriteGeneralPurposeRegister(x, (byte)(randNum & nn));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -313,7 +315,7 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        if (machine.ReadRegister(x) != machine.ReadRegister(y))
+        if (machine.ReadGeneralPurposeRegister(x) != machine.ReadGeneralPurposeRegister(y))
         {
             machine.AdvanceProgramCounter();
         }
@@ -324,7 +326,7 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        if (machine.ReadRegister(x) == nn)
+        if (machine.ReadGeneralPurposeRegister(x) == nn)
         {
             machine.AdvanceProgramCounter();
         }
@@ -335,7 +337,7 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        if (machine.ReadRegister(x) != nn)
+        if (machine.ReadGeneralPurposeRegister(x) != nn)
         {
             machine.AdvanceProgramCounter();
         }
@@ -350,7 +352,7 @@ internal static class Cpu
             case 0:
                 var x = ExtractX(ins);
                 var y = ExtractY(ins);
-                if (machine.ReadRegister(x) == machine.ReadRegister(y))
+                if (machine.ReadGeneralPurposeRegister(x) == machine.ReadGeneralPurposeRegister(y))
                 {
                     machine.AdvanceProgramCounter();
                 }
@@ -374,7 +376,7 @@ internal static class Cpu
         {
             var address = machine.ReadIndexRegisterWithOffset(k);
             var value = machine.ReadMemory(address);
-            machine.WriteRegister(x + k * step, value);
+            machine.WriteGeneralPurposeRegister(x + k * step, value);
         }
     }
 
@@ -388,7 +390,7 @@ internal static class Cpu
         {
             machine.WriteMemory(
                 machine.ReadIndexRegisterWithOffset(k),
-                machine.ReadRegister(x + k * step));
+                machine.ReadGeneralPurposeRegister(x + k * step));
         }
     }
 
@@ -404,8 +406,8 @@ internal static class Cpu
     public static void ExeuteDrawToScreenIns(Chip8Machine machine, int ins)
     {
         var display = machine.Display;
-        var x = machine.ReadRegister(ExtractX(ins)) % display.Width;
-        var y = machine.ReadRegister(ExtractY(ins)) % display.Height;
+        var x = machine.ReadGeneralPurposeRegister(ExtractX(ins)) % display.Width;
+        var y = machine.ReadGeneralPurposeRegister(ExtractY(ins)) % display.Height;
         var n = ExtractN(ins);
 
         if (n == 0)
@@ -470,7 +472,7 @@ internal static class Cpu
             if (rowCollided) collidedRows++;
         }
 
-        machine.WriteRegister(0xF, (byte)(collidedRows + clippedRows));
+        machine.WriteGeneralPurposeRegister(0xF, (byte)(collidedRows + clippedRows));
     }
 
     private static void DrawLowResSprite(Chip8Machine machine, int sx, int sy, int height)
@@ -502,7 +504,7 @@ internal static class Cpu
             }
         }
 
-        machine.WriteRegister(0xF, collision != 0 ? (byte)1 : (byte)0);
+        machine.WriteGeneralPurposeRegister(0xF, collision != 0 ? (byte)1 : (byte)0);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -510,7 +512,7 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        machine.WriteRegister(x, nn);
+        machine.WriteGeneralPurposeRegister(x, nn);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -554,38 +556,38 @@ internal static class Cpu
     public static void ExecuteShiftRightIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        var value = machine.ReadRegister(x);
+        var value = machine.ReadGeneralPurposeRegister(x);
 
         if (machine.ShiftUsesVy)
         {
             var y = ExtractY(ins);
-            value = machine.ReadRegister(y);
+            value = machine.ReadGeneralPurposeRegister(y);
         }
 
         var flag = (byte)(value & 0x1);
         var result = (byte)(value >> 1);
-        machine.WriteRegister(x, result);
-        machine.WriteRegister(0xF, flag);
-        if (machine.VfResultWrittenLast) machine.WriteRegister(x, result);
+        machine.WriteGeneralPurposeRegister(x, result);
+        machine.WriteGeneralPurposeRegister(0xF, flag);
+        if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteShiftLeftIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
-        var value = machine.ReadRegister(x);
+        var value = machine.ReadGeneralPurposeRegister(x);
 
         if (machine.ShiftUsesVy)
         {
             var y = ExtractY(ins);
-            value = machine.ReadRegister(y);
+            value = machine.ReadGeneralPurposeRegister(y);
         }
 
         var flag = (byte)((value >> 7) & 0x1);
         var result = (byte)(value << 1);
-        machine.WriteRegister(x, result);
-        machine.WriteRegister(0xF, flag);
-        if (machine.VfResultWrittenLast) machine.WriteRegister(x, result);
+        machine.WriteGeneralPurposeRegister(x, result);
+        machine.WriteGeneralPurposeRegister(0xF, flag);
+        if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -593,13 +595,13 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        var minuend = machine.ReadRegister(x);
-        var subtrahend = machine.ReadRegister(y);
+        var minuend = machine.ReadGeneralPurposeRegister(x);
+        var subtrahend = machine.ReadGeneralPurposeRegister(y);
         var flag = (byte)(minuend >= subtrahend ? 1 : 0);
         var result = (byte)(minuend - subtrahend);
-        machine.WriteRegister(x, result);
-        machine.WriteRegister(0xF, flag);
-        if (machine.VfResultWrittenLast) machine.WriteRegister(x, result);
+        machine.WriteGeneralPurposeRegister(x, result);
+        machine.WriteGeneralPurposeRegister(0xF, flag);
+        if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -608,13 +610,13 @@ internal static class Cpu
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         // NOTE(Zee): y first
-        var minuend = machine.ReadRegister(y);
-        var subtrahend = machine.ReadRegister(x);
+        var minuend = machine.ReadGeneralPurposeRegister(y);
+        var subtrahend = machine.ReadGeneralPurposeRegister(x);
         var flag = (byte)(minuend >= subtrahend ? 1 : 0);
         var result = (byte)(minuend - subtrahend);
-        machine.WriteRegister(x, result);
-        machine.WriteRegister(0xF, flag);
-        if (machine.VfResultWrittenLast) machine.WriteRegister(x, result);
+        machine.WriteGeneralPurposeRegister(x, result);
+        machine.WriteGeneralPurposeRegister(0xF, flag);
+        if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -622,12 +624,12 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        var sum = machine.ReadRegister(x) + machine.ReadRegister(y);
+        var sum = machine.ReadGeneralPurposeRegister(x) + machine.ReadGeneralPurposeRegister(y);
         var carry = (byte)(sum > 0xFF ? 1 : 0);
         var result = (byte)sum;
-        machine.WriteRegister(x, result);
-        machine.WriteRegister(0xF, carry);
-        if (machine.VfResultWrittenLast) machine.WriteRegister(x, result);
+        machine.WriteGeneralPurposeRegister(x, result);
+        machine.WriteGeneralPurposeRegister(0xF, carry);
+        if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -635,11 +637,11 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        machine.WriteRegister(x, (byte)(machine.ReadRegister(x) | machine.ReadRegister(y)));
+        machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) | machine.ReadGeneralPurposeRegister(y)));
 
         if (machine.LogicResetsVf)
         {
-            machine.WriteRegister(0xF, 0);
+            machine.WriteGeneralPurposeRegister(0xF, 0);
         }
     }
 
@@ -648,11 +650,11 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        machine.WriteRegister(x, (byte)(machine.ReadRegister(x) & machine.ReadRegister(y)));
+        machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) & machine.ReadGeneralPurposeRegister(y)));
 
         if (machine.LogicResetsVf)
         {
-            machine.WriteRegister(0xF, 0);
+            machine.WriteGeneralPurposeRegister(0xF, 0);
         }
     }
 
@@ -661,7 +663,7 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        machine.WriteRegister(x, machine.ReadRegister(y));
+        machine.WriteGeneralPurposeRegister(x, machine.ReadGeneralPurposeRegister(y));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -669,11 +671,11 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        machine.WriteRegister(x, (byte)(machine.ReadRegister(x) ^ machine.ReadRegister(y)));
+        machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) ^ machine.ReadGeneralPurposeRegister(y)));
 
         if (machine.LogicResetsVf)
         {
-            machine.WriteRegister(0xF, 0);
+            machine.WriteGeneralPurposeRegister(0xF, 0);
         }
     }
 
@@ -682,7 +684,7 @@ internal static class Cpu
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        machine.WriteRegister(x, (byte)(machine.ReadRegister(x) + nn));
+        machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) + nn));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -706,11 +708,11 @@ internal static class Cpu
         if (machine.JumpUsesVx)
         {
             var x = ExtractX(ins);
-            machine.WriteProgramCounter(address + machine.ReadRegister(x));
+            machine.WriteProgramCounter(address + machine.ReadGeneralPurposeRegister(x));
         }
         else
         {
-            machine.WriteProgramCounter(address + machine.ReadRegister(0));
+            machine.WriteProgramCounter(address + machine.ReadGeneralPurposeRegister(0));
         }
     }
 

@@ -126,10 +126,10 @@ internal sealed class Chip8Machine : IChip8Machine
     public IInput Input => _input;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public byte ReadRegister(int register) => _vRegisters[register];
+    public byte ReadGeneralPurposeRegister(int register) => _vRegisters[register];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void WriteRegister(int register, byte value) => _vRegisters[register] = value;
+    public void WriteGeneralPurposeRegister(int register, byte value) => _vRegisters[register] = value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public int ReadIndexRegister() => _indexRegister;
