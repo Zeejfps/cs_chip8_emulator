@@ -103,10 +103,30 @@
               <a class="underline" href="https://github.com/JohnEarnest/chip8Archive" target="_blank" rel="noreferrer">chip8Archive</a>
               by John Earnest and contributors (CC0/CC-BY).
             </p>
-            <p>
-              Keyboard mapping: <code>1234 / QWER / ASDF / ZXCV</code> →
-              <code>123C / 456D / 789E / A0BF</code>.
-            </p>
+            <div class="flex flex-col gap-1.5">
+              <span class="font-pixel text-[10px] tracking-wider text-muted-foreground/70">Keyboard mapping</span>
+              <div class="flex items-center gap-3">
+                <div class="flex flex-col gap-0.5 font-mono text-[11px]">
+                  {#each [['1','2','3','C'],['4','5','6','D'],['7','8','9','E'],['A','0','B','F']] as row}
+                    <div class="flex gap-0.5">
+                      {#each row as key}
+                        <span class="flex h-6 w-6 items-center justify-center rounded border border-border/50 bg-muted/30">{key}</span>
+                      {/each}
+                    </div>
+                  {/each}
+                </div>
+                <span class="text-base text-muted-foreground/60">→</span>
+                <div class="flex flex-col gap-0.5 font-mono text-[11px]">
+                  {#each [['1','2','3','4'],['Q','W','E','R'],['A','S','D','F'],['Z','X','C','V']] as row}
+                    <div class="flex gap-0.5">
+                      {#each row as key}
+                        <span class="flex h-6 w-6 items-center justify-center rounded border border-border/50 bg-muted/30">{key}</span>
+                      {/each}
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            </div>
           </TabsContent>
         </div>
       </Tabs>
