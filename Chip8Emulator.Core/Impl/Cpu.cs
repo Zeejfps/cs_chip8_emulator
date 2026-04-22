@@ -29,6 +29,7 @@ internal static class Cpu
     public static void FetchDecodeExecute(Chip8Machine machine)
     {
         var ins = Fetch(machine);
+        machine.AdvanceProgramCounter();
         var opcode = (ins & 0xF000) >> 12;
         var execute = OpcodeTable[opcode];
         execute(machine, ins);
@@ -39,7 +40,6 @@ internal static class Cpu
     {
         var pc = machine.ReadProgramCounter();
         var ins = machine.ReadMemory(pc) << 8 | machine.ReadMemory(pc + 1);
-        machine.AdvanceProgramCounter();
         return ins;
     }
 
