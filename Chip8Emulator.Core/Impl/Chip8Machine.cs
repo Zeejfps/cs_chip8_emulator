@@ -432,9 +432,9 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var x = ExtractX(ins);
         var bcd = _vRegisters[x];
-        _memory[_indexRegister] = (byte)(bcd / 100);
-        _memory[_indexRegister + 1] = (byte)((bcd / 10) % 10);
-        _memory[_indexRegister + 2] = (byte)(bcd % 10);
+        _memory[_indexRegister & 0xFFF] = (byte)(bcd / 100);
+        _memory[(_indexRegister + 1) & 0xFFF] = (byte)((bcd / 10) % 10);
+        _memory[(_indexRegister + 2) & 0xFFF] = (byte)(bcd % 10);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -444,12 +444,12 @@ internal sealed class Chip8Machine : IChip8Machine
         var index = _indexRegister;
         for (var i = 0; i <= x; i++, index++)
         {
-            _vRegisters[i] = _memory[index];
+            _vRegisters[i] = _memory[index & 0xFFF];
         }
-        
+
         if (LoadStoreIncrementsI)
         {
-            _indexRegister = index;
+            _indexRegister = index & 0xFFF;
         }
     }
 
@@ -460,12 +460,12 @@ internal sealed class Chip8Machine : IChip8Machine
         var index = _indexRegister;
         for (var i = 0; i <= x; i++, index++)
         {
-            _memory[index] = _vRegisters[i];
+            _memory[index & 0xFFF] = _vRegisters[i];
         }
 
         if (LoadStoreIncrementsI)
         {
-            _indexRegister = index;
+            _indexRegister = index & 0xFFF;
         }
     }
 
@@ -489,7 +489,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteAddVxToI(int ins)
     {
         var x = ExtractX(ins);
-        _indexRegister += _vRegisters[x];
+        _indexRegister = (_indexRegister + _vRegisters[x]) & 0xFFF;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -656,8 +656,8 @@ internal sealed class Chip8Machine : IChip8Machine
             else if (dstY >= Display.Height) break;
 
             var offset = i * 2;
-            var spritePixelsRow = (ushort)(_memory[_indexRegister + offset] << 8 |
-                                          _memory[_indexRegister + offset + 1]);
+            var spritePixelsRow = (ushort)(_memory[(_indexRegister + offset) & 0xFFF] << 8 |
+                                          _memory[(_indexRegister + offset + 1) & 0xFFF]);
             for (var bit = 0; bit < 16; bit++)
             {
                 var dstX = x + bit;
@@ -693,7 +693,7 @@ internal sealed class Chip8Machine : IChip8Machine
             if (SpritesWrap) dstY %= Display.Height;
             else if (dstY >= Display.Height) break;
             
-            var spritePixelsRow = _memory[_indexRegister + y];
+            var spritePixelsRow = _memory[(_indexRegister + y) & 0xFFF];
             for (var bit = 0; bit < 8; bit++)
             {
                 var dstX = sx + bit;
@@ -906,7 +906,7 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var nnn = ExtractNnn(ins);
         //Console.WriteLine($"Set Index Register: {nnn:X}");
-        _indexRegister = nnn;   
+        _indexRegister = nnn;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
