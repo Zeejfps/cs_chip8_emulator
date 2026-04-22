@@ -3,7 +3,7 @@
   import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs/index.js';
   import { Switch } from '$lib/components/ui/switch/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { settings, type Phosphor, type KeypadLabelMode } from '$lib/stores/settings.svelte.js';
+  import { settings, type Phosphor } from '$lib/stores/settings.svelte.js';
   import QuirksPanel from './QuirksPanel.svelte';
   import SpeedControl from './SpeedControl.svelte';
   import VolumeControl from './VolumeControl.svelte';
