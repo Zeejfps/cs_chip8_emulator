@@ -17,10 +17,10 @@
 
   interface Props {
     settingsOpen: boolean;
+    romPickerOpen: boolean;
   }
 
-  let { settingsOpen = $bindable() }: Props = $props();
-  let romPickerOpen = $state(false);
+  let { settingsOpen = $bindable(), romPickerOpen = $bindable() }: Props = $props();
 
   const { api, audio } = getEmuContext();
 

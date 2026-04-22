@@ -1,9 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import FolderOpen from 'phosphor-svelte/lib/FolderOpen';
   import { getEmuContext } from '$lib/context.js';
   import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
   import { registerFullscreen } from '$lib/emulator-actions.js';
+
+  interface Props {
+    onOpenRomPicker?: () => void;
+  }
+
+  const { onOpenRomPicker }: Props = $props();
 
   const { api, runtime } = getEmuContext();
 
@@ -104,6 +111,18 @@
   ></canvas>
   {#if settings.scanlines}
     <div class="scanlines flicker"></div>
+  {/if}
+  {#if !emulator.lastRomName}
+    <button
+      class="absolute inset-0 flex cursor-pointer flex-col items-center justify-center gap-3 bg-black/70 transition-colors hover:bg-black/60"
+      onclick={onOpenRomPicker}
+      aria-label="Load ROM"
+    >
+      <FolderOpen size={48} class="phosphor-text opacity-80" />
+      <span class="phosphor-text font-pixel text-sm tracking-widest opacity-80">
+        Click to load a ROM
+      </span>
+    </button>
   {/if}
 </div>
 
