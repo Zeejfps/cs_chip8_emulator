@@ -268,12 +268,12 @@
     "description": "Space Invaders clone.",
     "file": "invaders.ch8",
     "preferredQuirks": {
-      "shiftVy": true,
+      "shiftVy": false,
       "jumpVx": false,
       "lsIncI": true,
-      "logicVf": true,
-      "wrap": false,
-      "dispWait": true,
+      "logicVf": false,
+      "wrap": true,
+      "dispWait": false,
       "vfResultLast": false
     }
   }
