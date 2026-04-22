@@ -11,6 +11,7 @@
   import { getEmuContext } from '$lib/context.js';
   import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
+  import { viewport } from '$lib/stores/viewport.svelte.js';
   import { resetEmulator, toggleFullscreen } from '$lib/emulator-actions.js';
   import RomPicker from './RomPicker.svelte';
 
@@ -93,15 +94,17 @@
 
   <span class="mx-1 h-4 w-px bg-border/60" aria-hidden="true"></span>
 
-  <Button
-    variant="ghost"
-    size="icon-sm"
-    onclick={toggleFullscreen}
-    title="Fullscreen"
-    aria-label="Fullscreen"
-  >
-    <ArrowsOut />
-  </Button>
+  {#if viewport.width >= 768}
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onclick={toggleFullscreen}
+      title="Fullscreen"
+      aria-label="Fullscreen"
+    >
+      <ArrowsOut />
+    </Button>
+  {/if}
 
   <Button
     variant="ghost"
