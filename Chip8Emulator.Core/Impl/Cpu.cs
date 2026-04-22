@@ -7,25 +7,7 @@ internal static class Cpu
 {
     private static void NoOp(Chip8Machine machine, int ins) { }
 
-    // Top-level dispatch — indexed by the high nibble of the instruction.
-    private static readonly Action<Chip8Machine, int>[] RootOpcodeTable = BuildRootOpcodeTable();
-
-    // 00nn — dispatched on low byte.
-    private static readonly Action<Chip8Machine, int>[] SystemInsTable = BuildSystemInsTable();
-    
-    // FXnn — dispatched on low byte.
-    private static readonly Action<Chip8Machine, int>[] TimerTable = BuildTimerTable();
-
-    // EXnn — dispatched on low byte.
-    private static readonly Action<Chip8Machine, int>[] KeyCheckTable = BuildKeyCheckTable();
-    
-    // 5XYN — dispatched on low nibble.
-    private static readonly Action<Chip8Machine, int>[] FiveOpTable = BuildFiveOpTable();
-    
-    // 8XYN — dispatched on low nibble.
-    private static readonly Action<Chip8Machine, int>[] ArithmeticTable = BuildArithmeticTable();
-    
-    private static Action<Chip8Machine, int>[] BuildRootOpcodeTable()
+    public static Action<Chip8Machine, int>[] BuildRootOpcodeTable()
     {
         var table = new Action<Chip8Machine, int>[16];
         table[0x0] = ExecuteZeroBaseIns;
@@ -47,7 +29,7 @@ internal static class Cpu
         return table;
     }
     
-    private static Action<Chip8Machine, int>[] BuildSystemInsTable()
+    public static Action<Chip8Machine, int>[] BuildSystemInsTable()
     {
         var table = new Action<Chip8Machine, int>[256];
         Array.Fill(table, NoOp);
@@ -67,7 +49,7 @@ internal static class Cpu
         return table;
     }
     
-    private static Action<Chip8Machine, int>[] BuildTimerTable()
+    public static Action<Chip8Machine, int>[] BuildTimerTable()
     {
         var table = new Action<Chip8Machine, int>[256];
         Array.Fill(table, NoOp);
@@ -86,7 +68,7 @@ internal static class Cpu
         return table;
     }
 
-    private static Action<Chip8Machine, int>[] BuildKeyCheckTable()
+    public static Action<Chip8Machine, int>[] BuildKeyCheckTable()
     {
         var table = new Action<Chip8Machine, int>[256];
         Array.Fill(table, NoOp);
@@ -95,7 +77,7 @@ internal static class Cpu
         return table;
     }
     
-    private static Action<Chip8Machine, int>[] BuildFiveOpTable()
+    public static Action<Chip8Machine, int>[] BuildFiveOpTable()
     {
         var table = new Action<Chip8Machine, int>[16];
         Array.Fill(table, NoOp);
@@ -105,7 +87,7 @@ internal static class Cpu
         return table;
     }
     
-    private static Action<Chip8Machine, int>[] BuildArithmeticTable()
+    public static Action<Chip8Machine, int>[] BuildArithmeticTable()
     {
         var table = new Action<Chip8Machine, int>[16];
         Array.Fill(table, NoOp);
@@ -147,7 +129,7 @@ internal static class Cpu
         var ins = Fetch(machine);
         machine.AdvanceProgramCounter();
         var opcode = (ins & 0xF000) >> 12;
-        var execute = RootOpcodeTable[opcode];
+        var execute = machine.RootOpcodeTable[opcode];
         execute(machine, ins);
     }
 
@@ -163,7 +145,7 @@ internal static class Cpu
     {
         // 0NNN (SYS call) — ignore on modern interpreters.
         if ((ins & 0xFF00) != 0x0000) return;
-        SystemInsTable[ins & 0x00FF](machine, ins);
+        machine.SystemInsTable[ins & 0x00FF](machine, ins);
     }
 
     public static void ExecuteEnableHiresModeIns(Chip8Machine machine, int ins)
@@ -178,7 +160,7 @@ internal static class Cpu
 
     public static void ExecuteTimerIns(Chip8Machine machine, int ins)
     {
-        TimerTable[ins & 0x00FF](machine, ins);
+        machine.TimerTable[ins & 0x00FF](machine, ins);
     }
 
     public static void ExecuteLongLoadIndexRegister(Chip8Machine machine, int ins)
@@ -201,32 +183,56 @@ internal static class Cpu
         machine.WriteMemory(machine.ReadIndexRegisterWithOffset(2), (byte)(bcd % 10));
     }
 
+    // Thin dispatcher (still used by tests). Production dispatch picks a variant at flag-set time.
     public static void ExecuteLoadRegisters(Chip8Machine machine, int ins)
+    {
+        if (machine.LoadStoreIncrementsI) ExecuteLoadRegistersIncIIns(machine, ins);
+        else ExecuteLoadRegistersKeepIIns(machine, ins);
+    }
+
+    public static void ExecuteLoadRegistersKeepIIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
             machine.WriteGeneralPurposeRegister(i, machine.ReadMemory(machine.ReadIndexRegisterWithOffset(i)));
         }
-
-        if (machine.LoadStoreIncrementsI)
-        {
-            machine.WriteIndexRegister(machine.ReadIndexRegister() + x + 1);
-        }
     }
 
+    public static void ExecuteLoadRegistersIncIIns(Chip8Machine machine, int ins)
+    {
+        var x = ExtractX(ins);
+        for (var i = 0; i <= x; i++)
+        {
+            machine.WriteGeneralPurposeRegister(i, machine.ReadMemory(machine.ReadIndexRegisterWithOffset(i)));
+        }
+        machine.WriteIndexRegister(machine.ReadIndexRegister() + x + 1);
+    }
+
+    // Thin dispatcher (still used by tests).
     public static void ExecuteStoreRegisters(Chip8Machine machine, int ins)
+    {
+        if (machine.LoadStoreIncrementsI) ExecuteStoreRegistersIncIIns(machine, ins);
+        else ExecuteStoreRegistersKeepIIns(machine, ins);
+    }
+
+    public static void ExecuteStoreRegistersKeepIIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
             machine.WriteMemory(machine.ReadIndexRegisterWithOffset(i), machine.ReadGeneralPurposeRegister(i));
         }
+    }
 
-        if (machine.LoadStoreIncrementsI)
+    public static void ExecuteStoreRegistersIncIIns(Chip8Machine machine, int ins)
+    {
+        var x = ExtractX(ins);
+        for (var i = 0; i <= x; i++)
         {
-            machine.WriteIndexRegister(machine.ReadIndexRegister() + x + 1);
+            machine.WriteMemory(machine.ReadIndexRegisterWithOffset(i), machine.ReadGeneralPurposeRegister(i));
         }
+        machine.WriteIndexRegister(machine.ReadIndexRegister() + x + 1);
     }
 
     public static void ExecuteLoadLowResFontCharacter(Chip8Machine machine, int ins)
@@ -277,7 +283,7 @@ internal static class Cpu
 
     public static void ExecuteSkipNextInsIfKeyIsPressedOrReleased(Chip8Machine machine, int ins)
     {
-        KeyCheckTable[ins & 0x00FF](machine, ins);
+        machine.KeyCheckTable[ins & 0x00FF](machine, ins);
     }
 
     public static void ExecuteSkipNextInsIfKeyIsPressed(Chip8Machine machine, int ins)
@@ -340,7 +346,7 @@ internal static class Cpu
 
     public static void ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(Chip8Machine machine, int ins)
     {
-        FiveOpTable[ExtractN(ins)](machine, ins);
+        machine.FiveOpTable[ExtractN(ins)](machine, ins);
     }
 
     private static void ExecuteSkipIfVxEqualsVy(Chip8Machine machine, int ins)
@@ -501,7 +507,7 @@ internal static class Cpu
 
     public static void ExecuteArithmeticOperationIns(Chip8Machine machine, int ins)
     {
-        ArithmeticTable[ins & 0x000F](machine, ins);
+        machine.ArithmeticTable[ins & 0x000F](machine, ins);
     }
 
     public static void ExecuteShiftRightIns(Chip8Machine machine, int ins)
@@ -579,28 +585,48 @@ internal static class Cpu
         if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
+    // Thin dispatcher (still used by tests).
     public static void ExecuteBitwiseOrOnRegistersIns(Chip8Machine machine, int ins)
+    {
+        if (machine.LogicResetsVf) ExecuteBitwiseOrResetVfIns(machine, ins);
+        else ExecuteBitwiseOrPreserveVfIns(machine, ins);
+    }
+
+    public static void ExecuteBitwiseOrPreserveVfIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) | machine.ReadGeneralPurposeRegister(y)));
-
-        if (machine.LogicResetsVf)
-        {
-            machine.WriteGeneralPurposeRegister(0xF, 0);
-        }
     }
 
+    public static void ExecuteBitwiseOrResetVfIns(Chip8Machine machine, int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) | machine.ReadGeneralPurposeRegister(y)));
+        machine.WriteGeneralPurposeRegister(0xF, 0);
+    }
+
+    // Thin dispatcher (still used by tests).
     public static void ExecuteBitwiseAndOnRegistersIns(Chip8Machine machine, int ins)
+    {
+        if (machine.LogicResetsVf) ExecuteBitwiseAndResetVfIns(machine, ins);
+        else ExecuteBitwiseAndPreserveVfIns(machine, ins);
+    }
+
+    public static void ExecuteBitwiseAndPreserveVfIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) & machine.ReadGeneralPurposeRegister(y)));
+    }
 
-        if (machine.LogicResetsVf)
-        {
-            machine.WriteGeneralPurposeRegister(0xF, 0);
-        }
+    public static void ExecuteBitwiseAndResetVfIns(Chip8Machine machine, int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) & machine.ReadGeneralPurposeRegister(y)));
+        machine.WriteGeneralPurposeRegister(0xF, 0);
     }
 
     public static void ExecuteSetRegisterValueFromRegisterIns(Chip8Machine machine, int ins)
@@ -610,16 +636,26 @@ internal static class Cpu
         machine.WriteGeneralPurposeRegister(x, machine.ReadGeneralPurposeRegister(y));
     }
 
+    // Thin dispatcher (still used by tests).
     public static void ExecuteXorRegisterValueFromRegisterIns(Chip8Machine machine, int ins)
+    {
+        if (machine.LogicResetsVf) ExecuteXorResetVfIns(machine, ins);
+        else ExecuteXorPreserveVfIns(machine, ins);
+    }
+
+    public static void ExecuteXorPreserveVfIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) ^ machine.ReadGeneralPurposeRegister(y)));
+    }
 
-        if (machine.LogicResetsVf)
-        {
-            machine.WriteGeneralPurposeRegister(0xF, 0);
-        }
+    public static void ExecuteXorResetVfIns(Chip8Machine machine, int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) ^ machine.ReadGeneralPurposeRegister(y)));
+        machine.WriteGeneralPurposeRegister(0xF, 0);
     }
 
     public static void ExecuteAddValueToRegisterIns(Chip8Machine machine, int ins)
@@ -641,18 +677,24 @@ internal static class Cpu
         machine.WriteProgramCounter(address);
     }
 
+    // Thin dispatcher (still used by tests).
     public static void ExecuteJumpWithOffsetIns(Chip8Machine machine, int ins)
     {
+        if (machine.JumpUsesVx) ExecuteJumpWithVxOffsetIns(machine, ins);
+        else ExecuteJumpWithV0OffsetIns(machine, ins);
+    }
+
+    public static void ExecuteJumpWithV0OffsetIns(Chip8Machine machine, int ins)
+    {
         var address = ExtractNnn(ins);
-        if (machine.JumpUsesVx)
-        {
-            var x = ExtractX(ins);
-            machine.WriteProgramCounter(address + machine.ReadGeneralPurposeRegister(x));
-        }
-        else
-        {
-            machine.WriteProgramCounter(address + machine.ReadGeneralPurposeRegister(0));
-        }
+        machine.WriteProgramCounter(address + machine.ReadGeneralPurposeRegister(0));
+    }
+
+    public static void ExecuteJumpWithVxOffsetIns(Chip8Machine machine, int ins)
+    {
+        var address = ExtractNnn(ins);
+        var x = ExtractX(ins);
+        machine.WriteProgramCounter(address + machine.ReadGeneralPurposeRegister(x));
     }
 
     public static void ExecuteReturnFromSubroutineIns(Chip8Machine machine, int ins)

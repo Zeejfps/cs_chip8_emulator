@@ -85,6 +85,17 @@ internal sealed class Chip8Machine : IChip8Machine
     private int _keyRegisterIndex;
     private bool _running;
 
+    private bool _jumpUsesVx = true;
+    private bool _loadStoreIncrementsI;
+    private bool _logicResetsVf;
+
+    internal readonly Action<Chip8Machine, int>[] RootOpcodeTable;
+    internal readonly Action<Chip8Machine, int>[] SystemInsTable;
+    internal readonly Action<Chip8Machine, int>[] TimerTable;
+    internal readonly Action<Chip8Machine, int>[] KeyCheckTable;
+    internal readonly Action<Chip8Machine, int>[] FiveOpTable;
+    internal readonly Action<Chip8Machine, int>[] ArithmeticTable;
+
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
     {
         _renderer = renderer;
@@ -97,6 +108,18 @@ internal sealed class Chip8Machine : IChip8Machine
         LowResFont.CopyTo(_memory.AsSpan(LowResFontBaseAddress));
         HighResFont.CopyTo(_memory.AsSpan(HighResFontBaseAddress));
         Debugger = new Chip8MachineDebugger(this);
+
+        RootOpcodeTable = Cpu.BuildRootOpcodeTable();
+        SystemInsTable = Cpu.BuildSystemInsTable();
+        TimerTable = Cpu.BuildTimerTable();
+        KeyCheckTable = Cpu.BuildKeyCheckTable();
+        FiveOpTable = Cpu.BuildFiveOpTable();
+        ArithmeticTable = Cpu.BuildArithmeticTable();
+
+        // Specialize quirk-sensitive slots to match current flag defaults.
+        ApplyJumpUsesVx();
+        ApplyLoadStoreIncrementsI();
+        ApplyLogicResetsVf();
     }
 
     public IMachineDebugger Debugger { get; }
@@ -114,12 +137,57 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     public bool ShiftUsesVy { get; set; } = false;
-    public bool JumpUsesVx { get; set; } = true;
-    public bool LoadStoreIncrementsI { get; set; } = false;
-    public bool LogicResetsVf { get; set; } = false;
     public bool SpritesWrap { get; set; } = false;
     public bool DisplayWait { get; set; } = false;
     public bool VfResultWrittenLast { get; set; } = false;
+
+    public bool JumpUsesVx
+    {
+        get => _jumpUsesVx;
+        set { _jumpUsesVx = value; ApplyJumpUsesVx(); }
+    }
+
+    public bool LoadStoreIncrementsI
+    {
+        get => _loadStoreIncrementsI;
+        set { _loadStoreIncrementsI = value; ApplyLoadStoreIncrementsI(); }
+    }
+
+    public bool LogicResetsVf
+    {
+        get => _logicResetsVf;
+        set { _logicResetsVf = value; ApplyLogicResetsVf(); }
+    }
+
+    private void ApplyJumpUsesVx()
+    {
+        RootOpcodeTable[0xB] = _jumpUsesVx
+            ? Cpu.ExecuteJumpWithVxOffsetIns
+            : Cpu.ExecuteJumpWithV0OffsetIns;
+    }
+
+    private void ApplyLoadStoreIncrementsI()
+    {
+        TimerTable[0x55] = _loadStoreIncrementsI
+            ? Cpu.ExecuteStoreRegistersIncIIns
+            : Cpu.ExecuteStoreRegistersKeepIIns;
+        TimerTable[0x65] = _loadStoreIncrementsI
+            ? Cpu.ExecuteLoadRegistersIncIIns
+            : Cpu.ExecuteLoadRegistersKeepIIns;
+    }
+
+    private void ApplyLogicResetsVf()
+    {
+        ArithmeticTable[0x1] = _logicResetsVf
+            ? Cpu.ExecuteBitwiseOrResetVfIns
+            : Cpu.ExecuteBitwiseOrPreserveVfIns;
+        ArithmeticTable[0x2] = _logicResetsVf
+            ? Cpu.ExecuteBitwiseAndResetVfIns
+            : Cpu.ExecuteBitwiseAndPreserveVfIns;
+        ArithmeticTable[0x3] = _logicResetsVf
+            ? Cpu.ExecuteXorResetVfIns
+            : Cpu.ExecuteXorPreserveVfIns;
+    }
 
     public IDisplay Display => _display;
     public IInput Input => _input;
@@ -215,7 +283,7 @@ internal sealed class Chip8Machine : IChip8Machine
         _waitForVBlank = true;
     }
 
-    internal void WriteMemory(int address, ReadOnlySpan<byte> data)
+    public void WriteMemory(int address, ReadOnlySpan<byte> data)
     {
         data.CopyTo(_memory.AsSpan(address));
     }
