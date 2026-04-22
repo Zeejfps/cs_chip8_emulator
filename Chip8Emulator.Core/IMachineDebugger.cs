@@ -7,7 +7,7 @@ public interface IMachineDebugger
     int StackPointer { get; }                                                                                    
     byte DelayTimer { get; }                                                                                     
     byte SoundTimer { get; }                                                                                     
-    bool IsWaitingForKeyPress { get; }                                                                           
+    bool IsWaitingForKey { get; }                                                                           
     bool IsWaitingForVBlank { get; }                                                                             
                   
     ReadOnlySpan<byte> Memory { get; }

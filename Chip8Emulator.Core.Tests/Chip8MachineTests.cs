@@ -722,7 +722,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteWaitForKeyPress(0xF20A);
 
-        Assert.True(emulator.Debugger.IsWaitingForKeyPress);
+        Assert.True(emulator.Debugger.IsWaitingForKey);
     }
 
     [Fact]
@@ -745,7 +745,7 @@ public class Chip8MachineTests
 
         clock.Tick();
 
-        Assert.True(emulator.Debugger.IsWaitingForKeyPress);
+        Assert.True(emulator.Debugger.IsWaitingForKey);
         Assert.Equal(0, emulator.Debugger.Registers[2]);
     }
 
@@ -761,7 +761,7 @@ public class Chip8MachineTests
 
         clock.Tick();
 
-        Assert.False(emulator.Debugger.IsWaitingForKeyPress);
+        Assert.False(emulator.Debugger.IsWaitingForKey);
         Assert.Equal(0xA, emulator.Debugger.Registers[2]);
     }
 
@@ -778,7 +778,7 @@ public class Chip8MachineTests
         clock.Tick();
 
         Assert.Equal(9, emulator.Debugger.DelayTimer);
-        Assert.True(emulator.Debugger.IsWaitingForKeyPress);
+        Assert.True(emulator.Debugger.IsWaitingForKey);
     }
 
     [Fact]
@@ -803,7 +803,7 @@ public class Chip8MachineTests
 
         emulator.ExecuteTimerIns(0xF10A);
 
-        Assert.True(emulator.Debugger.IsWaitingForKeyPress);
+        Assert.True(emulator.Debugger.IsWaitingForKey);
     }
 
     [Fact]

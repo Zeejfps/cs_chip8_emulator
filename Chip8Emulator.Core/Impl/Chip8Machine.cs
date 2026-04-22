@@ -81,11 +81,11 @@ internal sealed class Chip8Machine : IChip8Machine
     private long _lastTimestamp;
     private long _instructionAcc;
     private long _frameAcc;
-    private bool _isWaitingForKeyPress;
+    private bool _isWaitingForKey;
     private bool _waitForVBlank;
     private int _keyRegisterIndex;
     private bool _running;
-
+    
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
     {
         _renderer = renderer;
@@ -157,7 +157,7 @@ internal sealed class Chip8Machine : IChip8Machine
         ResetRegisters();
         ResetStack();
         _indexRegister = 0;
-        _isWaitingForKeyPress = false;
+        _isWaitingForKey = false;
         _waitForVBlank = false;
         _keyRegisterIndex = 0;
         program.CopyTo(_memory.AsSpan(0x200));
@@ -250,22 +250,34 @@ internal sealed class Chip8Machine : IChip8Machine
             delta = maxDelta;
         }
 
-        if (_isWaitingForKeyPress)
+        if (_isWaitingForKey)
         {
             if (_input.WasAnyKeyPressed(out var key))
             {
                 _vRegisters[_keyRegisterIndex] = key;
-                _isWaitingForKeyPress = false;
+                _isWaitingForKey = false;
             }
         }
 
-        _instructionAcc += delta;
         _frameAcc += delta;
 
-        while (!_waitForVBlank && !_isWaitingForKeyPress && _instructionAcc >= _ticksPerInstruction)
+        if (_waitForVBlank || _isWaitingForKey)                            
+        {                                                                  
+            _instructionAcc = 0;                                           
+        }                                                               
+        else
         {
-            FetchDecodeExecute();
-            _instructionAcc -= _ticksPerInstruction;
+            _instructionAcc += delta;
+            while (_instructionAcc >= _ticksPerInstruction)
+            {                                                              
+                FetchDecodeExecute();
+                _instructionAcc -= _ticksPerInstruction;                   
+                if (_waitForVBlank || _isWaitingForKey)                 
+                {                                                          
+                    _instructionAcc = 0;
+                    break;                                                 
+                }                                                       
+            }
         }
 
         while (_frameAcc >= _ticksPerFrame)
@@ -510,7 +522,7 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteWaitForKeyPress(int ins)
     {
-        _isWaitingForKeyPress = true;
+        _isWaitingForKey = true;
         var x = ExtractX(ins);
         _keyRegisterIndex = x;
     }
@@ -986,7 +998,7 @@ internal sealed class Chip8Machine : IChip8Machine
         public int StackPointer => machine._stackPointer;
         public byte DelayTimer => machine._delayTimer;
         public byte SoundTimer => machine._soundTimer;
-        public bool IsWaitingForKeyPress => machine._isWaitingForKeyPress;
+        public bool IsWaitingForKey => machine._isWaitingForKey;
         public bool IsWaitingForVBlank => machine._waitForVBlank;
 
         public void StepInstruction()
