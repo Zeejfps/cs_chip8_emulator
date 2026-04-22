@@ -20,9 +20,21 @@
   const WIDTH = api.GetWidth();
   const HEIGHT = api.GetHeight();
 
+  // Four-entry XO-Chip palette: [plane-mask value 0..3] -> [r, g, b].
+  // 0 = both planes off, 1 = plane 0 only, 2 = plane 1 only, 3 = both planes on.
   const PHOSPHOR_COLORS = {
-    green: { on: [0x6d, 0xff, 0x9c], off: [0x0a, 0x12, 0x0d] },
-    amber: { on: [0xff, 0xb8, 0x47], off: [0x10, 0x0a, 0x02] },
+    green: [
+      [0x0a, 0x12, 0x0d],
+      [0x6d, 0xff, 0x9c],
+      [0x30, 0x8a, 0x4e],
+      [0xc0, 0xff, 0xd6],
+    ],
+    amber: [
+      [0x10, 0x0a, 0x02],
+      [0xff, 0xb8, 0x47],
+      [0x8a, 0x5e, 0x22],
+      [0xff, 0xe0, 0xa8],
+    ],
   } as const;
 
   function requestFullscreen(): void {
@@ -79,7 +91,7 @@
       const ptr = api.GetPixelDataPtr();
       const view = runtime.localHeapViewU8().subarray(ptr, ptr + pixelLen);
       for (let i = 0; i < pixelLen; i++) {
-        const rgb = view[i] !== 0 ? palette.on : palette.off;
+        const rgb = palette[view[i] & 0x03];
         const o = i * 4;
         pixels[o] = rgb[0];
         pixels[o + 1] = rgb[1];

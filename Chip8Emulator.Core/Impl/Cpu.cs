@@ -57,6 +57,10 @@ internal static class Cpu
         Array.Fill(table, NoOp);
         // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
         table[0x00] = ExecuteLongLoadIndexRegister;
+        // FN01 — XO-CHIP select bitplane mask (N = 0..3).
+        table[0x01] = ExecuteSelectPlaneIns;
+        // F002 — XO-CHIP copy 16 bytes at [I] into audio pattern buffer.
+        table[0x02] = ExecuteLoadAudioPatternIns;
         table[0x07] = ExecuteReadDelayTimer;
         table[0x0A] = ExecuteWaitForKeyPress;
         table[0x15] = ExecuteSetDelayTimer;
@@ -65,8 +69,13 @@ internal static class Cpu
         table[0x29] = ExecuteLoadLowResFontCharacter;
         table[0x30] = ExecuteLoadHighResFontCharacter;
         table[0x33] = ExecuteStoreBcdInMemory;
+        // FX3A — XO-CHIP set audio playback pitch from Vx.
+        table[0x3A] = ExecuteSetPitchIns;
         table[0x55] = ExecuteStoreRegisters;
         table[0x65] = ExecuteLoadRegisters;
+        // FX75 / FX85 — SCHIP save/load V0..Vx to persistent user flags.
+        table[0x75] = ExecuteSaveFlagsIns;
+        table[0x85] = ExecuteLoadFlagsIns;
         return table;
     }
 
@@ -402,17 +411,25 @@ internal static class Cpu
         var x = machine.ReadGeneralPurposeRegister(ExtractX(ins)) % display.Width;
         var y = machine.ReadGeneralPurposeRegister(ExtractY(ins)) % display.Height;
         var n = ExtractN(ins);
+        var planeMask = (byte)(machine.SelectedPlanes & Display.AllPlanesMask);
+
+        if (planeMask == 0)
+        {
+            machine.WriteGeneralPurposeRegister(0xF, 0);
+            if (machine.DisplayWait) machine.BeginWaitForVBlank();
+            return;
+        }
 
         if (n == 0)
         {
             if (display.IsHighRes)
-                DrawHighResSprite(machine, x, y);
+                DrawHighResSprite(machine, x, y, planeMask);
             else
-                DrawLowResSprite(machine, x, y, 8);
+                DrawLowResSprite(machine, x, y, 8, planeMask);
         }
         else
         {
-            DrawLowResSprite(machine, x, y, n);
+            DrawLowResSprite(machine, x, y, n, planeMask);
         }
 
         if (machine.DisplayWait)
@@ -421,10 +438,10 @@ internal static class Cpu
         }
     }
 
-    public static void DrawHighResSprite(Chip8Machine machine, int x, int y)
+    public static void DrawHighResSprite(Chip8Machine machine, int x, int y, byte planeMask)
     {
-        // S-CHIP 1.1 DXY0 hi-res collision semantics:
-        // VF = number of sprite rows with at least one collision
+        // S-CHIP 1.1 DXY0 hi-res collision semantics (extended for XO-Chip bitplanes):
+        // VF = number of sprite rows with at least one collision in any selected plane
         //    + number of sprite rows clipped off the bottom edge (when not wrapping).
         var display = machine.Display;
         var displayPixels = display.Pixels.Span;
@@ -433,42 +450,63 @@ internal static class Cpu
         var wrap = machine.SpritesWrap;
         var collidedRows = 0;
         var clippedRows = 0;
-        for (var i = 0; i < 16; i++)
+
+        // Rows-per-plane: 16 for a single plane, 32 total when both planes selected
+        // (first 32 bytes = plane 0, next 32 = plane 1).
+        var planeStride = 32;
+        var spriteBase = 0;
+
+        Span<bool> rowCollisions = stackalloc bool[16];
+        var anyClipped = 0;
+
+        for (var planeBit = 0; planeBit < 2; planeBit++)
         {
-            var dstY = y + i;
-            if (wrap)
+            var planeBitMask = (byte)(1 << planeBit);
+            if ((planeMask & planeBitMask) == 0) continue;
+
+            for (var i = 0; i < 16; i++)
             {
-                dstY %= height;
-            }
-            else if (dstY >= height)
-            {
-                clippedRows = 16 - i;
-                break;
+                var dstY = y + i;
+                if (wrap)
+                {
+                    dstY %= height;
+                }
+                else if (dstY >= height)
+                {
+                    anyClipped = Math.Max(anyClipped, 16 - i);
+                    break;
+                }
+
+                var offset = spriteBase + i * 2;
+                var spritePixelsRow = (ushort)(machine.ReadMemory(machine.ReadIndexRegisterWithOffset(offset)) << 8 |
+                                               machine.ReadMemory(machine.ReadIndexRegisterWithOffset(offset + 1)));
+                for (var bit = 0; bit < 16; bit++)
+                {
+                    var dstX = x + bit;
+                    if (wrap) dstX %= width;
+                    else if (dstX >= width) break;
+
+                    var spriteBitOn = ((spritePixelsRow >> (15 - bit)) & 1) != 0;
+                    if (!spriteBitOn) continue;
+
+                    var dstIndex = dstY * width + dstX;
+                    var before = displayPixels[dstIndex];
+                    if ((before & planeBitMask) != 0) rowCollisions[i] = true;
+                    displayPixels[dstIndex] = (byte)(before ^ planeBitMask);
+                }
             }
 
-            var offset = i * 2;
-            var spritePixelsRow = (ushort)(machine.ReadMemory(machine.ReadIndexRegisterWithOffset(offset)) << 8 |
-                                           machine.ReadMemory(machine.ReadIndexRegisterWithOffset(offset + 1)));
-            var rowCollided = false;
-            for (var bit = 0; bit < 16; bit++)
-            {
-                var dstX = x + bit;
-                if (wrap) dstX %= width;
-                else if (dstX >= width) break;
-
-                var spritePixel = (byte)((spritePixelsRow >> (15 - bit)) & 1);
-                var dstIndex = dstY * width + dstX;
-                var before = displayPixels[dstIndex];
-                if ((before & spritePixel) != 0) rowCollided = true;
-                displayPixels[dstIndex] = (byte)(before ^ spritePixel);
-            }
-            if (rowCollided) collidedRows++;
+            spriteBase += planeStride;
         }
+
+        for (var i = 0; i < 16; i++)
+            if (rowCollisions[i]) collidedRows++;
+        clippedRows = anyClipped;
 
         machine.WriteGeneralPurposeRegister(0xF, (byte)(collidedRows + clippedRows));
     }
 
-    private static void DrawLowResSprite(Chip8Machine machine, int sx, int sy, int height)
+    private static void DrawLowResSprite(Chip8Machine machine, int sx, int sy, int height, byte planeMask)
     {
         var display = machine.Display;
         var displayPixels = display.Pixels.Span;
@@ -476,28 +514,68 @@ internal static class Cpu
         var displayHeight = display.Height;
         var wrap = machine.SpritesWrap;
         byte collision = 0;
-        for (var y = 0; y < height; y++)
+
+        var spriteBase = 0;
+        for (var planeBit = 0; planeBit < 2; planeBit++)
         {
-            var dstY = sy + y;
-            if (wrap) dstY %= displayHeight;
-            else if (dstY >= displayHeight) break;
+            var planeBitMask = (byte)(1 << planeBit);
+            if ((planeMask & planeBitMask) == 0) continue;
 
-            var spritePixelsRow = machine.ReadMemory(machine.ReadIndexRegisterWithOffset(y));
-            for (var bit = 0; bit < 8; bit++)
+            for (var y = 0; y < height; y++)
             {
-                var dstX = sx + bit;
-                if (wrap) dstX %= width;
-                else if (dstX >= width) break;
+                var dstY = sy + y;
+                if (wrap) dstY %= displayHeight;
+                else if (dstY >= displayHeight) break;
 
-                var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
-                var dstIndex = dstY * width + dstX;
-                var before = displayPixels[dstIndex];
-                collision |= (byte)(before & spritePixel);
-                displayPixels[dstIndex] = (byte)(before ^ spritePixel);
+                var row = machine.ReadMemory(machine.ReadIndexRegisterWithOffset(spriteBase + y));
+                for (var bit = 0; bit < 8; bit++)
+                {
+                    var dstX = sx + bit;
+                    if (wrap) dstX %= width;
+                    else if (dstX >= width) break;
+
+                    var spriteBitOn = ((row >> (7 - bit)) & 1) != 0;
+                    if (!spriteBitOn) continue;
+
+                    var dstIndex = dstY * width + dstX;
+                    var before = displayPixels[dstIndex];
+                    if ((before & planeBitMask) != 0) collision = 1;
+                    displayPixels[dstIndex] = (byte)(before ^ planeBitMask);
+                }
             }
+
+            spriteBase += height;
         }
 
-        machine.WriteGeneralPurposeRegister(0xF, collision != 0 ? (byte)1 : (byte)0);
+        machine.WriteGeneralPurposeRegister(0xF, collision);
+    }
+
+    public static void ExecuteSelectPlaneIns(Chip8Machine machine, int ins)
+    {
+        machine.SelectedPlanes = (byte)ExtractX(ins);
+    }
+
+    public static void ExecuteLoadAudioPatternIns(Chip8Machine machine, int ins)
+    {
+        // F002 — only defined when X == 0; other slots (F102, F202, ...) are undefined.
+        if (ExtractX(ins) != 0) return;
+        machine.LoadAudioPattern();
+    }
+
+    public static void ExecuteSetPitchIns(Chip8Machine machine, int ins)
+    {
+        var x = ExtractX(ins);
+        machine.SetPitch(machine.ReadGeneralPurposeRegister(x));
+    }
+
+    public static void ExecuteSaveFlagsIns(Chip8Machine machine, int ins)
+    {
+        machine.SaveFlags(ExtractX(ins));
+    }
+
+    public static void ExecuteLoadFlagsIns(Chip8Machine machine, int ins)
+    {
+        machine.LoadFlags(ExtractX(ins));
     }
 
     public static void ExecuteSetRegisterValueIns(Chip8Machine machine, int ins)

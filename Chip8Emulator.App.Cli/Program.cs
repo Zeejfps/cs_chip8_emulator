@@ -36,6 +36,7 @@ try
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
+        .WithPersistentFlags(new FilePersistentFlags())
         .Build();
 
     display.Attach(machine);

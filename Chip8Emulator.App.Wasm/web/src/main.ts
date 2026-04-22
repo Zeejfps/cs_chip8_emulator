@@ -20,6 +20,24 @@ runtime.setModuleImports('main.js', {
   audio: {
     playSound: () => audio.playSound(),
     stopSound: () => audio.stopSound(),
+    setPattern: (pattern: Uint8Array, frequencyHz: number) =>
+      audio.setPattern(pattern, frequencyHz),
+  },
+  persistentFlags: {
+    read: () => {
+      try {
+        return localStorage.getItem('chip8.flags') ?? '';
+      } catch {
+        return '';
+      }
+    },
+    write: (base64: string) => {
+      try {
+        localStorage.setItem('chip8.flags', base64);
+      } catch {
+        // localStorage unavailable or full — swallow silently.
+      }
+    },
   },
 });
 

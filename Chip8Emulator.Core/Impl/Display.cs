@@ -8,12 +8,20 @@ internal sealed class Display : IDisplay
     public const int ClassicHiresHeight = 64;
     public const int LowRestWidth = 64;
     public const int LowRestHeight = 32;
-    
+
+    // Pixel encoding: bit 0 = plane 0, bit 1 = plane 1. Value range 0..3.
+    public const byte Plane0Mask = 0x01;
+    public const byte Plane1Mask = 0x02;
+    public const byte AllPlanesMask = 0x03;
+
     public Memory<byte> Pixels => _pixels;
     public int Width { get; private set; }
     public int Height { get; private set; }
     public bool IsHighRes { get; private set; }
-    
+
+    // XO-Chip FX01 plane mask; defaults to plane 0 so legacy (CHIP-8/SCHIP) drawing works.
+    public byte SelectedPlanes { get; set; } = Plane0Mask;
+
     private readonly byte[] _pixels;
 
     public Display()
@@ -29,7 +37,8 @@ internal sealed class Display : IDisplay
         IsHighRes = false;
         Width = LowRestWidth;
         Height = LowRestHeight;
-        Clear();
+        SelectedPlanes = Plane0Mask;
+        Array.Clear(_pixels);
     }
 
     public void ToggleHighRest()
@@ -43,10 +52,21 @@ internal sealed class Display : IDisplay
             EnableHighResMode();
         }
     }
-    
+
     public void Clear()
     {
-        Array.Clear(_pixels);
+        var mask = (byte)(SelectedPlanes & AllPlanesMask);
+        if (mask == 0) return;
+        if (mask == AllPlanesMask)
+        {
+            Array.Clear(_pixels);
+            return;
+        }
+        var keep = (byte)(~mask & AllPlanesMask);
+        for (var i = 0; i < _pixels.Length; i++)
+        {
+            _pixels[i] = (byte)(_pixels[i] & keep);
+        }
     }
 
     public void EnableHighResMode()
@@ -55,7 +75,7 @@ internal sealed class Display : IDisplay
         Width = HighRestWidth;
         Height = HighRestHeight;
     }
-    
+
     public void DisableHighResMode()
     {
         IsHighRes = false;
@@ -73,46 +93,71 @@ internal sealed class Display : IDisplay
     public void ScrollLeft(int n)
     {
         if (n <= 0) return;
+        var mask = (byte)(SelectedPlanes & AllPlanesMask);
+        if (mask == 0) return;
+        var keep = (byte)(~mask & AllPlanesMask);
 
         if (n >= Width)
         {
-            Clear();
+            ClearSelectedPlanes(mask);
             return;
         }
 
         for (var y = 0; y < Height; y++)
         {
             var row = y * Width;
-            Array.Copy(_pixels, row + n, _pixels, row, Width - n);
-            Array.Clear(_pixels, row + Width - n, n);
+            for (var x = 0; x < Width - n; x++)
+            {
+                var src = _pixels[row + x + n];
+                var dst = _pixels[row + x];
+                _pixels[row + x] = (byte)((src & mask) | (dst & keep));
+            }
+            for (var x = Width - n; x < Width; x++)
+            {
+                _pixels[row + x] = (byte)(_pixels[row + x] & keep);
+            }
         }
     }
 
     public void ScrollRight(int n)
     {
         if (n <= 0) return;
+        var mask = (byte)(SelectedPlanes & AllPlanesMask);
+        if (mask == 0) return;
+        var keep = (byte)(~mask & AllPlanesMask);
 
         if (n >= Width)
         {
-            Clear();
+            ClearSelectedPlanes(mask);
             return;
         }
 
         for (var y = 0; y < Height; y++)
         {
             var row = y * Width;
-            Array.Copy(_pixels, row, _pixels, row + n, Width - n);
-            Array.Clear(_pixels, row, n);
+            for (var x = Width - 1; x >= n; x--)
+            {
+                var src = _pixels[row + x - n];
+                var dst = _pixels[row + x];
+                _pixels[row + x] = (byte)((src & mask) | (dst & keep));
+            }
+            for (var x = 0; x < n; x++)
+            {
+                _pixels[row + x] = (byte)(_pixels[row + x] & keep);
+            }
         }
     }
 
     public void ScrollDown(int n)
     {
         if (n <= 0) return;
+        var mask = (byte)(SelectedPlanes & AllPlanesMask);
+        if (mask == 0) return;
+        var keep = (byte)(~mask & AllPlanesMask);
 
         if (n >= Height)
         {
-            Clear();
+            ClearSelectedPlanes(mask);
             return;
         }
 
@@ -120,22 +165,34 @@ internal sealed class Display : IDisplay
         {
             var srcRow = (y - n) * Width;
             var dstRow = y * Width;
-            Array.Copy(_pixels, srcRow, _pixels, dstRow, Width);
+            for (var x = 0; x < Width; x++)
+            {
+                var src = _pixels[srcRow + x];
+                var dst = _pixels[dstRow + x];
+                _pixels[dstRow + x] = (byte)((src & mask) | (dst & keep));
+            }
         }
 
         for (var y = 0; y < n; y++)
         {
-            Array.Clear(_pixels, y * Width, Width);
+            var row = y * Width;
+            for (var x = 0; x < Width; x++)
+            {
+                _pixels[row + x] = (byte)(_pixels[row + x] & keep);
+            }
         }
     }
 
     public void ScrollUp(int n)
     {
         if (n <= 0) return;
+        var mask = (byte)(SelectedPlanes & AllPlanesMask);
+        if (mask == 0) return;
+        var keep = (byte)(~mask & AllPlanesMask);
 
         if (n >= Height)
         {
-            Clear();
+            ClearSelectedPlanes(mask);
             return;
         }
 
@@ -143,12 +200,35 @@ internal sealed class Display : IDisplay
         {
             var srcRow = (y + n) * Width;
             var dstRow = y * Width;
-            Array.Copy(_pixels, srcRow, _pixels, dstRow, Width);
+            for (var x = 0; x < Width; x++)
+            {
+                var src = _pixels[srcRow + x];
+                var dst = _pixels[dstRow + x];
+                _pixels[dstRow + x] = (byte)((src & mask) | (dst & keep));
+            }
         }
 
         for (var y = Height - n; y < Height; y++)
         {
-            Array.Clear(_pixels, y * Width, Width);
+            var row = y * Width;
+            for (var x = 0; x < Width; x++)
+            {
+                _pixels[row + x] = (byte)(_pixels[row + x] & keep);
+            }
+        }
+    }
+
+    private void ClearSelectedPlanes(byte mask)
+    {
+        if (mask == AllPlanesMask)
+        {
+            Array.Clear(_pixels);
+            return;
+        }
+        var keep = (byte)(~mask & AllPlanesMask);
+        for (var i = 0; i < _pixels.Length; i++)
+        {
+            _pixels[i] = (byte)(_pixels[i] & keep);
         }
     }
 }

@@ -6,6 +6,7 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
     private IAudio? _audio;
     private IClock? _clock;
     private IInput? _input;
+    private IPersistentFlags? _persistentFlags;
 
     public IChip8MachineBuilder WithRenderer(IRenderer renderer)
     {
@@ -31,6 +32,12 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
         return this;
     }
 
+    public IChip8MachineBuilder WithPersistentFlags(IPersistentFlags flags)
+    {
+        _persistentFlags = flags;
+        return this;
+    }
+
     public IChip8Machine Build()
     {
         var renderer = _renderer ?? throw new InvalidOperationException(
@@ -41,6 +48,7 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
             $"{nameof(WithClock)} must be called before {nameof(Build)}.");
         var input = _input ?? throw new InvalidOperationException(
             $"{nameof(WithInput)} must be called before {nameof(Build)}.");
-        return new Chip8Machine(renderer, audio, clock, input);
+        var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();
+        return new Chip8Machine(renderer, audio, clock, input, persistentFlags);
     }
 }

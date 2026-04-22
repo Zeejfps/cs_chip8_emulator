@@ -23,6 +23,7 @@ public static partial class Interop
             .WithAudio(new BrowserAudio())
             .WithClock(_clock)
             .WithInput(_input)
+            .WithPersistentFlags(new LocalStoragePersistentFlags())
             .Build();
         _pixelsHandle = _machine.Display.Pixels.Pin();
     }

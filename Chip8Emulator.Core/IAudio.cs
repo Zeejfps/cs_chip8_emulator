@@ -4,4 +4,5 @@ public interface IAudio
 {
     void PlaySound();
     void StopSound();
+    void SetPattern(ReadOnlySpan<byte> pattern, double frequencyHz);
 }

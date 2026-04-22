@@ -57,10 +57,14 @@ internal sealed class Chip8Machine : IChip8Machine
 
     private int _instructionsPerSecond = 1000;
 
+    private const int AudioPatternSize = 16;
+    private const byte DefaultPitch = 64;
+
     private readonly IRenderer _renderer;
     private readonly IAudio _audio;
     private readonly IClock _clock;
     private readonly IInput _input;
+    private readonly IPersistentFlags _persistentFlags;
 
     private readonly Display _display = new();
 
@@ -69,6 +73,9 @@ internal sealed class Chip8Machine : IChip8Machine
 
     private readonly int[] _stack = new int[16];
     private int _stackPointer = -1;
+
+    private readonly byte[] _audioPattern = new byte[AudioPatternSize];
+    private byte _pitch = DefaultPitch;
 
     private byte _delayTimer;
     private byte _soundTimer;
@@ -97,11 +104,17 @@ internal sealed class Chip8Machine : IChip8Machine
     internal readonly InstructionHandler[] ArithmeticTable;
 
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
+        : this(renderer, audio, clock, input, new InMemoryPersistentFlags())
+    {
+    }
+
+    public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input, IPersistentFlags persistentFlags)
     {
         _renderer = renderer;
         _audio = audio;
         _clock = clock;
         _input = input;
+        _persistentFlags = persistentFlags;
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
@@ -200,6 +213,59 @@ internal sealed class Chip8Machine : IChip8Machine
     public void EnableHighResMode() => _display.EnableHighResMode();
     public void DisableHighResMode() => _display.DisableHighResMode();
 
+    public byte SelectedPlanes
+    {
+        get => _display.SelectedPlanes;
+        set => _display.SelectedPlanes = (byte)(value & Impl.Display.AllPlanesMask);
+    }
+
+    public void LoadAudioPattern()
+    {
+        for (var i = 0; i < AudioPatternSize; i++)
+        {
+            _audioPattern[i] = _memory[ReadIndexRegisterWithOffset(i)];
+        }
+        PushPatternToAudio();
+    }
+
+    public void SetPitch(byte pitch)
+    {
+        _pitch = pitch;
+        PushPatternToAudio();
+    }
+
+    public byte Pitch => _pitch;
+
+    public ReadOnlySpan<byte> AudioPattern => _audioPattern;
+
+    public double AudioFrequencyHz => 4000.0 * Math.Pow(2.0, (_pitch - 64) / 48.0);
+
+    private void PushPatternToAudio()
+    {
+        _audio.SetPattern(_audioPattern, AudioFrequencyHz);
+    }
+
+    public void SaveFlags(int count)
+    {
+        Span<byte> buffer = stackalloc byte[IPersistentFlags.Capacity];
+        _persistentFlags.Read(buffer);
+        for (var i = 0; i <= count && i < buffer.Length; i++)
+        {
+            buffer[i] = _vRegisters[i];
+        }
+        _persistentFlags.Write(buffer);
+    }
+
+    public void LoadFlags(int count)
+    {
+        Span<byte> buffer = stackalloc byte[IPersistentFlags.Capacity];
+        _persistentFlags.Read(buffer);
+        for (var i = 0; i <= count && i < buffer.Length; i++)
+        {
+            _vRegisters[i] = buffer[i];
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public byte ReadGeneralPurposeRegister(int register) => _vRegisters[register];
 
@@ -296,6 +362,7 @@ internal sealed class Chip8Machine : IChip8Machine
         ResetDisplay();
         ResetRegisters();
         ResetStack();
+        ResetAudioPattern();
         _indexRegister = 0;
         _isWaitingForKey = false;
         _waitForVBlank = false;
@@ -349,6 +416,12 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         Array.Clear(_stack);
         _stackPointer = -1;
+    }
+
+    private void ResetAudioPattern()
+    {
+        Array.Clear(_audioPattern);
+        _pitch = DefaultPitch;
     }
 
     public void Start()
