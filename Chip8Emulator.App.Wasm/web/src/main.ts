@@ -17,7 +17,8 @@ const audio = new Audio();
 
 runtime.setModuleImports('main.js', {
   audio: {
-    beepTick: () => audio.beepTick(),
+    playSound: () => audio.playSound(),
+    stopSound: () => audio.stopSound(),
   },
 });
 

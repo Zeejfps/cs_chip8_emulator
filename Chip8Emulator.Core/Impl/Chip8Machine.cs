@@ -181,7 +181,11 @@ internal sealed class Chip8Machine : IChip8Machine
     private void ResetTimers()
     {
         _delayTimer = 0;
-        _soundTimer = 0;
+        if (_soundTimer > 0)
+        {
+            _soundTimer = 0;
+            _audio.StopSound();
+        }
     }
     
     private void ResetMemory()
@@ -213,6 +217,10 @@ internal sealed class Chip8Machine : IChip8Machine
         _lastTimestamp = _clock.Timestamp;
         _clock.Ticked += OnTicked;
         _running = true;
+        if (_soundTimer > 0)
+        {
+            _audio.PlaySound();
+        }
     }
 
     public void Stop()
@@ -220,6 +228,10 @@ internal sealed class Chip8Machine : IChip8Machine
         if (!_running) return;
         _clock.Ticked -= OnTicked;
         _running = false;
+        if (_soundTimer > 0)
+        {
+            _audio.StopSound();
+        }
     }
 
     private void OnTicked(object? sender, EventArgs e)
@@ -271,8 +283,11 @@ internal sealed class Chip8Machine : IChip8Machine
 
         if (_soundTimer > 0)
         {
-            _audio.Beep();
             _soundTimer--;
+            if (_soundTimer == 0)
+            {
+                _audio.StopSound();
+            }
         }
 
         _renderer.Render();
@@ -504,7 +519,16 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteSetSoundTimer(int ins)
     {
         var x = ExtractX(ins);
+        var prevSoundTimer = _soundTimer;
         _soundTimer = _vRegisters[x];
+        if (prevSoundTimer == 0 && _soundTimer != 0)
+        {
+            _audio.PlaySound();
+        }
+        else if (prevSoundTimer != 0 && _soundTimer == 0)
+        {
+            _audio.StopSound();
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

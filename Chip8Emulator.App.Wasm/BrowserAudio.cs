@@ -5,8 +5,12 @@ namespace Chip8Emulator.App.Wasm;
 
 internal sealed partial class BrowserAudio : IAudio
 {
-    public void Beep() => BeepTick();
+    public void PlaySound() => PlaySoundJs();
+    public void StopSound() => StopSoundJs();
 
-    [JSImport("audio.beepTick", "main.js")]
-    private static partial void BeepTick();
+    [JSImport("audio.playSound", "main.js")]
+    private static partial void PlaySoundJs();
+
+    [JSImport("audio.stopSound", "main.js")]
+    private static partial void StopSoundJs();
 }

@@ -3,9 +3,9 @@ export class Audio {
   private oscillator: OscillatorNode | null = null;
   private toneGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
-  private beepRequestedThisFrame = false;
   private volume = 0.5;
   private muted = false;
+  private playing = false;
 
   ensureStarted(): void {
     if (this.ctx) return;
@@ -17,7 +17,7 @@ export class Audio {
     this.masterGain.gain.value = this.muted ? 0 : this.volume;
     this.masterGain.connect(this.ctx.destination);
     this.toneGain = this.ctx.createGain();
-    this.toneGain.gain.value = 0;
+    this.toneGain.gain.value = this.playing ? 0.15 : 0;
     this.toneGain.connect(this.masterGain);
     this.oscillator = this.ctx.createOscillator();
     this.oscillator.type = 'square';
@@ -26,15 +26,16 @@ export class Audio {
     this.oscillator.start();
   }
 
-  beepTick(): void {
-    this.beepRequestedThisFrame = true;
+  playSound(): void {
+    this.playing = true;
+    if (!this.toneGain || !this.ctx) return;
+    this.toneGain.gain.setTargetAtTime(0.15, this.ctx.currentTime, 0.005);
   }
 
-  reconcile(): void {
+  stopSound(): void {
+    this.playing = false;
     if (!this.toneGain || !this.ctx) return;
-    const target = this.beepRequestedThisFrame ? 0.15 : 0;
-    this.toneGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.005);
-    this.beepRequestedThisFrame = false;
+    this.toneGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.005);
   }
 
   setVolume(v: number): void {

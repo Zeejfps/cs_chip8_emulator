@@ -5,7 +5,7 @@
   import { settings } from '$lib/stores/settings.svelte.js';
   import { registerFullscreen } from '$lib/emulator-actions.js';
 
-  const { api, runtime, audio } = getEmuContext();
+  const { api, runtime } = getEmuContext();
 
   let canvasEl = $state<HTMLCanvasElement | null>(null);
   let wrapperEl = $state<HTMLDivElement | null>(null);
@@ -67,7 +67,6 @@
           emulator.pc = pc;
         }
 
-        audio.reconcile();
       }
 
       const palette = PHOSPHOR_COLORS[settings.phosphor];
