@@ -474,7 +474,7 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var x = ExtractX(ins);
         var value = _vRegisters[x];
-        _indexRegister = value * LowRestFontCharWidth + LowResFontBaseAddress;
+        _indexRegister = (value & 0x0F) * LowRestFontCharWidth + LowResFontBaseAddress;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -482,7 +482,7 @@ internal sealed class Chip8Machine : IChip8Machine
     {
         var x = ExtractX(ins);
         var value = _vRegisters[x];
-        _indexRegister = value * HighRestFontCharWidth + HighResFontBaseAddress;
+        _indexRegister = (value & 0x0F) * HighRestFontCharWidth + HighResFontBaseAddress;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
