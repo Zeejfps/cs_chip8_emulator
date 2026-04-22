@@ -367,7 +367,7 @@ internal sealed class Chip8Machine : IChip8Machine
                 _display.ScrollRight(4);
                 break;
             case 0xFC:
-                _display.ScrollDown(4);
+                _display.ScrollLeft(4);
                 break;
             default:
                 if ((lo & 0xF0) == 0xC0) _display.ScrollDown(lo & 0x0F);
@@ -632,7 +632,7 @@ internal sealed class Chip8Machine : IChip8Machine
             if (_display.IsHighRes)
                 DrawHighResSprite(x, y);
             else
-                DrawLowResSprite(x, y, n);
+                DrawLowResSprite(x, y, 8);
         }
         else
         {

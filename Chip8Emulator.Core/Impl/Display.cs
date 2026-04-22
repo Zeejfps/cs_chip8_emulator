@@ -26,6 +26,7 @@ internal sealed class Display : IDisplay
 
     public void Reset()
     {
+        IsHighRes = false;
         Width = LowRestWidth;
         Height = LowRestHeight;
         Clear();
