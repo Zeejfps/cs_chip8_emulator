@@ -756,7 +756,7 @@ public class Chip8MachineTests
         emulator.Start();
         emulator.WriteMemory(0, [0x10, 0x00]);
         emulator.ExecuteWaitForKeyPress(0xF20A);
-        input.QueueKeyPressEvent(0xA);
+        input.QueueKeyPressAndReleaseEvent(0xA);
         clock.Timestamp = clock.Frequency / 60;
 
         clock.Tick();

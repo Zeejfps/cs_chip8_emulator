@@ -6,7 +6,7 @@ public sealed class NoOpInput : IInput
 {
     public bool IsKeyPressed(byte key) => false;
 
-    public bool WasAnyKeyPressed(out byte key)
+    public bool WasAnyKeyPressedAndReleased(out byte key)
     {
         key = 0;
         return false;

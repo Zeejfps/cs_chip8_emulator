@@ -252,7 +252,7 @@ internal sealed class Chip8Machine : IChip8Machine
 
         if (_isWaitingForKey)
         {
-            if (_input.WasAnyKeyPressed(out var key))
+            if (_input.WasAnyKeyPressedAndReleased(out var key))
             {
                 _vRegisters[_keyRegisterIndex] = key;
                 _isWaitingForKey = false;

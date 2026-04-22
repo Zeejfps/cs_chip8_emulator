@@ -37,7 +37,7 @@ public sealed class ConsoleInput : IInput, IDisposable
         return elapsedMs < DecayMilliseconds;
     }
 
-    public bool WasAnyKeyPressed(out byte key)
+    public bool WasAnyKeyPressedAndReleased(out byte key)
     {
         var pending = Interlocked.Exchange(ref _pendingKey, NoPendingKey);
         if (pending >= 0)
