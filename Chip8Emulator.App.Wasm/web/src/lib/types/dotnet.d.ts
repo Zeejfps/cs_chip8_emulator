@@ -13,10 +13,3 @@ export interface DotnetRuntime {
   getConfig(): { mainAssemblyName: string };
   localHeapViewU8(): Uint8Array;
 }
-
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface Window {
-    __chip8_fullscreen?: () => void;
-  }
-}

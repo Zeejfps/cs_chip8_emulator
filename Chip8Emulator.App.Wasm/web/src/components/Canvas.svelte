@@ -3,6 +3,7 @@
   import { getEmuContext } from '$lib/context.js';
   import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
+  import { registerFullscreen } from '$lib/emulator-actions.js';
 
   const { api, runtime, audio } = getEmuContext();
 
@@ -27,16 +28,10 @@
     }
   }
 
-  $effect(() => {
-    window.__chip8_fullscreen = requestFullscreen;
-    return () => {
-      delete window.__chip8_fullscreen;
-    };
-  });
+  $effect(() => registerFullscreen(requestFullscreen));
 
   onMount(() => {
     if (!canvasEl) return;
-    emulator.canvasEl = canvasEl;
     const ctx = canvasEl.getContext('2d');
     if (!ctx) throw new Error('Canvas 2D context unavailable');
     ctx.imageSmoothingEnabled = false;
@@ -44,6 +39,8 @@
     const imageData = ctx.createImageData(WIDTH, HEIGHT);
     const pixels = imageData.data;
     for (let i = 3; i < pixels.length; i += 4) pixels[i] = 255;
+
+    const pixelLen = api.GetPixelDataLength();
 
     let rafId = 0;
     let lastPc = -1;
@@ -75,11 +72,9 @@
 
       const palette = PHOSPHOR_COLORS[settings.phosphor];
       const ptr = api.GetPixelDataPtr();
-      const len = api.GetPixelDataLength();
-      const view = runtime.localHeapViewU8().subarray(ptr, ptr + len);
-      for (let i = 0; i < len; i++) {
-        const on = view[i] !== 0;
-        const rgb = on ? palette.on : palette.off;
+      const view = runtime.localHeapViewU8().subarray(ptr, ptr + pixelLen);
+      for (let i = 0; i < pixelLen; i++) {
+        const rgb = view[i] !== 0 ? palette.on : palette.off;
         const o = i * 4;
         pixels[o] = rgb[0];
         pixels[o + 1] = rgb[1];
@@ -90,12 +85,9 @@
 
     rafId = requestAnimationFrame(render);
 
-    emulator.canvasEl = canvasEl;
-
     return () => {
       running = false;
       cancelAnimationFrame(rafId);
-      emulator.canvasEl = null;
     };
   });
 </script>

@@ -1,19 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { Sheet, SheetContent, SheetHeader, SheetTitle } from '$lib/components/ui/sheet/index.js';
   import { Collapsible, CollapsibleContent } from '$lib/components/ui/collapsible/index.js';
   import { settings } from '$lib/stores/settings.svelte.js';
+  import { viewport } from '$lib/stores/viewport.svelte.js';
   import Disasm from './Disasm.svelte';
 
-  let viewportWidth = $state(typeof window === 'undefined' ? 1024 : window.innerWidth);
-
-  onMount(() => {
-    const onResize = () => { viewportWidth = window.innerWidth; };
-    window.addEventListener('resize', onResize, { passive: true });
-    return () => window.removeEventListener('resize', onResize);
-  });
-
-  const isMobile = $derived(viewportWidth < 768);
+  const isMobile = $derived(viewport.width < 768);
 </script>
 
 {#if isMobile}

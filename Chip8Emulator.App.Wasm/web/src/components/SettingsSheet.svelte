@@ -3,7 +3,7 @@
   import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs/index.js';
   import { Switch } from '$lib/components/ui/switch/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
-  import { settings } from '$lib/stores/settings.svelte.js';
+  import { settings, type Phosphor } from '$lib/stores/settings.svelte.js';
   import QuirksPanel from './QuirksPanel.svelte';
   import SpeedControl from './SpeedControl.svelte';
   import VolumeControl from './VolumeControl.svelte';
@@ -13,6 +13,17 @@
   }
 
   let { open = $bindable() }: Props = $props();
+
+  const PHOSPHOR_OPTIONS: { value: Phosphor; label: string }[] = [
+    { value: 'green', label: 'Green' },
+    { value: 'amber', label: 'Amber' },
+  ];
+
+  const TOUCH_KEYPAD_OPTIONS: { value: boolean | null; label: string }[] = [
+    { value: null,  label: 'Auto' },
+    { value: true,  label: 'On' },
+    { value: false, label: 'Off' },
+  ];
 </script>
 
 <Sheet bind:open>
@@ -41,20 +52,15 @@
             <div class="flex flex-col gap-2">
               <Label class="font-pixel text-xs tracking-wider">Phosphor</Label>
               <div class="flex gap-2">
-                <button
-                  type="button"
-                  class="flex-1 rounded border px-2 py-1 text-xs {settings.phosphor === 'green' ? 'bg-primary/20 border-primary/60' : 'border-border/60'}"
-                  onclick={() => { settings.phosphor = 'green'; }}
-                >
-                  Green
-                </button>
-                <button
-                  type="button"
-                  class="flex-1 rounded border px-2 py-1 text-xs {settings.phosphor === 'amber' ? 'bg-primary/20 border-primary/60' : 'border-border/60'}"
-                  onclick={() => { settings.phosphor = 'amber'; }}
-                >
-                  Amber
-                </button>
+                {#each PHOSPHOR_OPTIONS as opt (opt.value)}
+                  <button
+                    type="button"
+                    class="flex-1 rounded border px-2 py-1 text-xs {settings.phosphor === opt.value ? 'bg-primary/20 border-primary/60' : 'border-border/60'}"
+                    onclick={() => { settings.phosphor = opt.value; }}
+                  >
+                    {opt.label}
+                  </button>
+                {/each}
               </div>
             </div>
             <div class="flex items-center justify-between gap-2">
@@ -72,21 +78,13 @@
                 </span>
               </div>
               <div class="flex gap-1">
-                <button
-                  type="button"
-                  class="rounded border px-2 py-0.5 text-xs {settings.touchKeypadManual === null ? 'bg-primary/20 border-primary/60' : 'border-border/60'}"
-                  onclick={() => { settings.touchKeypadManual = null; }}
-                >Auto</button>
-                <button
-                  type="button"
-                  class="rounded border px-2 py-0.5 text-xs {settings.touchKeypadManual === true ? 'bg-primary/20 border-primary/60' : 'border-border/60'}"
-                  onclick={() => { settings.touchKeypadManual = true; }}
-                >On</button>
-                <button
-                  type="button"
-                  class="rounded border px-2 py-0.5 text-xs {settings.touchKeypadManual === false ? 'bg-primary/20 border-primary/60' : 'border-border/60'}"
-                  onclick={() => { settings.touchKeypadManual = false; }}
-                >Off</button>
+                {#each TOUCH_KEYPAD_OPTIONS as opt (opt.label)}
+                  <button
+                    type="button"
+                    class="rounded border px-2 py-0.5 text-xs {settings.touchKeypadManual === opt.value ? 'bg-primary/20 border-primary/60' : 'border-border/60'}"
+                    onclick={() => { settings.touchKeypadManual = opt.value; }}
+                  >{opt.label}</button>
+                {/each}
               </div>
             </div>
           </TabsContent>

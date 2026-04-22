@@ -5,10 +5,10 @@
   import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '$lib/components/ui/sheet/index.js';
   import { Button } from '$lib/components/ui/button/index.js';
   import { getEmuContext } from '$lib/context.js';
-  import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
   import { loadManifest, loadRomBytes, type RomEntry } from '$lib/roms.js';
-  import { QUIRK_PRESETS, writeQuirksToApi } from '$lib/quirks.js';
+  import { QUIRK_PRESETS } from '$lib/quirks.js';
+  import { runRom } from '$lib/emulator-actions.js';
 
   interface Props {
     open: boolean;
@@ -36,24 +36,9 @@
     loadError = null;
     try {
       const bytes = await loadRomBytes(entry);
-      api.Stop();
-      api.Init();
-      api.LoadProgram(bytes);
-
-      const quirks = QUIRK_PRESETS[entry.preferredQuirks];
-      settings.quirks = { ...quirks };
+      settings.quirks = { ...QUIRK_PRESETS[entry.preferredQuirks] };
       settings.quirksPreset = entry.preferredQuirks;
-      writeQuirksToApi(api, quirks);
-
-      audio.ensureStarted();
-      api.Start();
-      emulator.running = true;
-      emulator.paused = false;
-      emulator.pc = api.GetProgramCounter();
-      emulator.lastRomName = entry.title;
-      emulator.lastRomBytes = bytes;
-      settings.lastRomId = entry.id;
-      emulator.status = `Running ${entry.title}`;
+      runRom(api, audio, bytes, entry.title, entry.id);
       open = false;
     } catch (err) {
       loadError = err instanceof Error ? err.message : String(err);
@@ -67,19 +52,7 @@
     loadError = null;
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
-      api.Stop();
-      api.Init();
-      api.LoadProgram(bytes);
-      writeQuirksToApi(api, settings.quirks);
-      audio.ensureStarted();
-      api.Start();
-      emulator.running = true;
-      emulator.paused = false;
-      emulator.pc = api.GetProgramCounter();
-      emulator.lastRomName = file.name;
-      emulator.lastRomBytes = bytes;
-      settings.lastRomId = null;
-      emulator.status = `Running ${file.name}`;
+      runRom(api, audio, bytes, file.name, null);
       open = false;
     } catch (err) {
       loadError = err instanceof Error ? err.message : String(err);

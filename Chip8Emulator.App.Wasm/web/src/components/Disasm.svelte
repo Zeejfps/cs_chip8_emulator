@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getEmuContext } from '$lib/context.js';
   import { emulator } from '$lib/stores/emulator.svelte.js';
+  import { hex4 } from '$lib/format.js';
 
   const { api } = getEmuContext();
 
@@ -24,7 +25,7 @@
       const ins = ((hi << 8) | lo) & 0xffff;
       out.push({
         pc: addr,
-        bytes: ins.toString(16).padStart(4, '0').toUpperCase(),
+        bytes: hex4(ins),
         text: api.DisassembleInstruction(ins),
         current: i === 0,
       });
@@ -41,7 +42,7 @@
       <div
         class="grid grid-cols-[4rem_3.5rem_1fr] items-baseline gap-2 {line.current ? 'phosphor-text' : 'text-muted-foreground'}"
       >
-        <span class="tabular-nums">{line.pc.toString(16).padStart(4, '0').toUpperCase()}</span>
+        <span class="tabular-nums">{hex4(line.pc)}</span>
         <span class="tabular-nums">{line.bytes}</span>
         <span class="truncate">{line.text}</span>
       </div>

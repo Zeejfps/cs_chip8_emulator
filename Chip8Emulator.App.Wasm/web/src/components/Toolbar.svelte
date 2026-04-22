@@ -11,7 +11,7 @@
   import { getEmuContext } from '$lib/context.js';
   import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
-  import { writeQuirksToApi } from '$lib/quirks.js';
+  import { resetEmulator, toggleFullscreen } from '$lib/emulator-actions.js';
   import RomPicker from './RomPicker.svelte';
 
   interface Props {
@@ -36,31 +36,10 @@
     }
   }
 
-  function reset(): void {
-    api.Stop();
-    api.Init();
-    writeQuirksToApi(api, settings.quirks);
-    api.SetInstructionsPerSecond(settings.ips);
-    if (emulator.lastRomBytes) {
-      api.LoadProgram(emulator.lastRomBytes);
-    }
-    emulator.running = false;
-    emulator.paused = true;
-    emulator.pc = api.GetProgramCounter();
-    emulator.prevInsLine = null;
-    emulator.status = emulator.lastRomName
-      ? `Reset. Press Start to run ${emulator.lastRomName}.`
-      : 'Reset. Load a ROM to begin.';
-  }
-
   function step(): void {
     if (!emulator.running) return;
     api.Step();
     emulator.pc = api.GetProgramCounter();
-  }
-
-  function fullscreen(): void {
-    window.__chip8_fullscreen?.();
   }
 </script>
 
@@ -104,7 +83,7 @@
   <Button
     variant="outline"
     size="icon-sm"
-    onclick={reset}
+    onclick={() => resetEmulator(api)}
     disabled={!emulator.lastRomName}
     title="Reset"
     aria-label="Reset"
@@ -117,7 +96,7 @@
   <Button
     variant="ghost"
     size="icon-sm"
-    onclick={fullscreen}
+    onclick={toggleFullscreen}
     title="Fullscreen"
     aria-label="Fullscreen"
   >

@@ -6,7 +6,6 @@ export interface EmulatorState {
   prevInsLine: string | null;
   lastRomName: string | null;
   lastRomBytes: Uint8Array | null;
-  canvasEl: HTMLCanvasElement | null;
 }
 
 export const emulator = $state<EmulatorState>({
@@ -17,5 +16,4 @@ export const emulator = $state<EmulatorState>({
   prevInsLine: null,
   lastRomName: null,
   lastRomBytes: null,
-  canvasEl: null,
 });

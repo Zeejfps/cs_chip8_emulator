@@ -6,6 +6,7 @@
   import { setEmuContext } from '$lib/context.js';
   import { settings, persistSettings } from '$lib/stores/settings.svelte.js';
   import { emulator } from '$lib/stores/emulator.svelte.js';
+  import { viewport, initViewport } from '$lib/stores/viewport.svelte.js';
   import { KEYBOARD_TO_HEX } from '$lib/keymap.js';
   import { writeQuirksToApi } from '$lib/quirks.js';
   import Canvas from './Canvas.svelte';
@@ -27,10 +28,9 @@
   setEmuContext({ api, runtime, audio });
 
   let settingsOpen = $state(false);
-  let viewportWidth = $state(typeof window === 'undefined' ? 1024 : window.innerWidth);
 
   const touchKeypadVisible = $derived(
-    settings.touchKeypadManual ?? viewportWidth < 768,
+    settings.touchKeypadManual ?? viewport.width < 768,
   );
 
   onMount(() => {
@@ -40,9 +40,7 @@
     audio.setMuted(settings.muted);
 
     const stopPersist = persistSettings();
-
-    const onResize = () => { viewportWidth = window.innerWidth; };
-    window.addEventListener('resize', onResize, { passive: true });
+    const stopViewport = initViewport();
 
     const onKeyDown = (e: KeyboardEvent) => {
       const active = document.activeElement;
@@ -71,10 +69,10 @@
     emulator.status = 'Ready. Load a ROM to begin.';
 
     return () => {
-      window.removeEventListener('resize', onResize);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       stopPersist();
+      stopViewport();
     };
   });
 
