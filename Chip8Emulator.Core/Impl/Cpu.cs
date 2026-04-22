@@ -3,13 +3,15 @@ using static Chip8Emulator.Core.Chip8Disassembler;
 
 namespace Chip8Emulator.Core.Impl;
 
+internal delegate void InstructionHandler(Chip8Machine machine, int ins);
+
 internal static class Cpu
 {
     private static void NoOp(Chip8Machine machine, int ins) { }
 
-    public static Action<Chip8Machine, int>[] BuildRootOpcodeTable()
+    public static InstructionHandler[] BuildRootOpcodeTable()
     {
-        var table = new Action<Chip8Machine, int>[16];
+        var table = new InstructionHandler[16];
         table[0x0] = ExecuteZeroBaseIns;
         table[0x1] = ExecuteJumpToAddressIns;
         table[0x2] = ExecuteCallSubroutineIns;
@@ -29,9 +31,9 @@ internal static class Cpu
         return table;
     }
     
-    public static Action<Chip8Machine, int>[] BuildSystemInsTable()
+    public static InstructionHandler[] BuildSystemInsTable()
     {
-        var table = new Action<Chip8Machine, int>[256];
+        var table = new InstructionHandler[256];
         Array.Fill(table, NoOp);
         table[0xE0] = ExecuteClearDisplayIns;
         table[0xEE] = ExecuteReturnFromSubroutineIns;
@@ -49,9 +51,9 @@ internal static class Cpu
         return table;
     }
     
-    public static Action<Chip8Machine, int>[] BuildTimerTable()
+    public static InstructionHandler[] BuildTimerTable()
     {
-        var table = new Action<Chip8Machine, int>[256];
+        var table = new InstructionHandler[256];
         Array.Fill(table, NoOp);
         // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
         table[0x00] = ExecuteLongLoadIndexRegister;
@@ -68,18 +70,18 @@ internal static class Cpu
         return table;
     }
 
-    public static Action<Chip8Machine, int>[] BuildKeyCheckTable()
+    public static InstructionHandler[] BuildKeyCheckTable()
     {
-        var table = new Action<Chip8Machine, int>[256];
+        var table = new InstructionHandler[256];
         Array.Fill(table, NoOp);
         table[0x9E] = ExecuteSkipNextInsIfKeyIsPressed;
         table[0xA1] = ExecuteSkipNextInsIfKeyIsReleased;
         return table;
     }
     
-    public static Action<Chip8Machine, int>[] BuildFiveOpTable()
+    public static InstructionHandler[] BuildFiveOpTable()
     {
-        var table = new Action<Chip8Machine, int>[16];
+        var table = new InstructionHandler[16];
         Array.Fill(table, NoOp);
         table[0] = ExecuteSkipIfVxEqualsVy;
         table[2] = ExecuteStoreRegisterRange;
@@ -87,9 +89,9 @@ internal static class Cpu
         return table;
     }
     
-    public static Action<Chip8Machine, int>[] BuildArithmeticTable()
+    public static InstructionHandler[] BuildArithmeticTable()
     {
-        var table = new Action<Chip8Machine, int>[16];
+        var table = new InstructionHandler[16];
         Array.Fill(table, NoOp);
         table[0x0] = ExecuteSetRegisterValueFromRegisterIns;
         table[0x1] = ExecuteBitwiseOrOnRegistersIns;

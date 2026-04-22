@@ -89,12 +89,12 @@ internal sealed class Chip8Machine : IChip8Machine
     private bool _loadStoreIncrementsI;
     private bool _logicResetsVf;
 
-    internal readonly Action<Chip8Machine, int>[] RootOpcodeTable;
-    internal readonly Action<Chip8Machine, int>[] SystemInsTable;
-    internal readonly Action<Chip8Machine, int>[] TimerTable;
-    internal readonly Action<Chip8Machine, int>[] KeyCheckTable;
-    internal readonly Action<Chip8Machine, int>[] FiveOpTable;
-    internal readonly Action<Chip8Machine, int>[] ArithmeticTable;
+    internal readonly InstructionHandler[] RootOpcodeTable;
+    internal readonly InstructionHandler[] SystemInsTable;
+    internal readonly InstructionHandler[] TimerTable;
+    internal readonly InstructionHandler[] KeyCheckTable;
+    internal readonly InstructionHandler[] FiveOpTable;
+    internal readonly InstructionHandler[] ArithmeticTable;
 
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
     {
