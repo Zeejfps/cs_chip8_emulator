@@ -36,6 +36,12 @@ internal static class Cpu
     // EXnn — dispatched on low byte.
     private static readonly Action<Chip8Machine, int>[] KeyCheckTable = BuildKeyCheckTable();
     
+    // 5XYN — dispatched on low nibble.
+    private static readonly Action<Chip8Machine, int>[] FiveOpTable = BuildFiveOpTable();
+    
+    // 8XYN — dispatched on low nibble.
+    private static readonly Action<Chip8Machine, int>[] ArithmeticTable = BuildArithmeticTable();
+    
     private static Action<Chip8Machine, int>[] BuildZeroBaseTable()
     {
         var table = new Action<Chip8Machine, int>[256];
@@ -55,7 +61,61 @@ internal static class Cpu
         }
         return table;
     }
+    
+    private static Action<Chip8Machine, int>[] BuildTimerTable()
+    {
+        var table = new Action<Chip8Machine, int>[256];
+        Array.Fill(table, NoOp);
+        // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
+        table[0x00] = ExecuteLongLoadIndexRegister;
+        table[0x07] = ExecuteReadDelayTimer;
+        table[0x0A] = ExecuteWaitForKeyPress;
+        table[0x15] = ExecuteSetDelayTimer;
+        table[0x18] = ExecuteSetSoundTimer;
+        table[0x1E] = ExecuteAddVxToI;
+        table[0x29] = ExecuteLoadLowResFontCharacter;
+        table[0x30] = ExecuteLoadHighResFontCharacter;
+        table[0x33] = ExecuteStoreBcdInMemory;
+        table[0x55] = ExecuteStoreRegisters;
+        table[0x65] = ExecuteLoadRegisters;
+        return table;
+    }
 
+    private static Action<Chip8Machine, int>[] BuildKeyCheckTable()
+    {
+        var table = new Action<Chip8Machine, int>[256];
+        Array.Fill(table, NoOp);
+        table[0x9E] = ExecuteSkipNextInsIfKeyIsPressed;
+        table[0xA1] = ExecuteSkipNextInsIfKeyIsReleased;
+        return table;
+    }
+    
+    private static Action<Chip8Machine, int>[] BuildFiveOpTable()
+    {
+        var table = new Action<Chip8Machine, int>[16];
+        Array.Fill(table, NoOp);
+        table[0] = ExecuteSkipIfVxEqualsVy;
+        table[2] = ExecuteStoreRegisterRange;
+        table[3] = ExecuteLoadRegisterRange;
+        return table;
+    }
+    
+    private static Action<Chip8Machine, int>[] BuildArithmeticTable()
+    {
+        var table = new Action<Chip8Machine, int>[16];
+        Array.Fill(table, NoOp);
+        table[0x0] = ExecuteSetRegisterValueFromRegisterIns;
+        table[0x1] = ExecuteBitwiseOrOnRegistersIns;
+        table[0x2] = ExecuteBitwiseAndOnRegistersIns;
+        table[0x3] = ExecuteXorRegisterValueFromRegisterIns;
+        table[0x4] = ExecuteAddValueToRegisterWithCarryIns;
+        table[0x5] = ExecuteVxSubVyIns;
+        table[0x6] = ExecuteShiftRightIns;
+        table[0x7] = ExecuteVySubVxIns;
+        table[0xE] = ExecuteShiftLeftIns;
+        return table;
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteScrollRightIns(Chip8Machine machine, int ins)
     {
@@ -78,66 +138,6 @@ internal static class Cpu
     public static void ExecuteScrollUpIns(Chip8Machine machine, int ins)
     {
         machine.ScrollDisplayUp(ins & 0x0F);
-    }
-    
-    private static Action<Chip8Machine, int>[] BuildTimerTable()
-    {
-        var table = new Action<Chip8Machine, int>[256];
-        Array.Fill(table, NoOp);
-        // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
-        table[0x00] = ExecuteLongLoadIndexRegister;
-        table[0x07] = ExecuteReadDelayTimer;
-        table[0x0A] = ExecuteWaitForKeyPress;
-        table[0x15] = ExecuteSetDelayTimer;
-        table[0x18] = ExecuteSetSoundTimer;
-        table[0x1E] = ExecuteAddVxToI;
-        table[0x29] = ExecuteLoadLowResFontCharacter;
-        table[0x30] = ExecuteLoadHighResFontCharacter;
-        table[0x33] = ExecuteStoreBcdInMemory;
-        table[0x55] = ExecuteStoreRegisters;
-        table[0x65] = ExecuteLoadRegisters;
-        return table;
-    }
-    
-    private static Action<Chip8Machine, int>[] BuildKeyCheckTable()
-    {
-        var table = new Action<Chip8Machine, int>[256];
-        Array.Fill(table, NoOp);
-        table[0x9E] = ExecuteSkipNextInsIfKeyIsPressed;
-        table[0xA1] = ExecuteSkipNextInsIfKeyIsReleased;
-        return table;
-    }
-
-    // 5XYN — dispatched on low nibble.
-    private static readonly Action<Chip8Machine, int>[] FiveOpTable = BuildFiveOpTable();
-
-    private static Action<Chip8Machine, int>[] BuildFiveOpTable()
-    {
-        var table = new Action<Chip8Machine, int>[16];
-        Array.Fill(table, NoOp);
-        table[0] = ExecuteSkipIfVxEqualsVy;
-        table[2] = ExecuteStoreRegisterRange;
-        table[3] = ExecuteLoadRegisterRange;
-        return table;
-    }
-
-    // 8XYN — dispatched on low nibble.
-    private static readonly Action<Chip8Machine, int>[] ArithmeticTable = BuildArithmeticTable();
-
-    private static Action<Chip8Machine, int>[] BuildArithmeticTable()
-    {
-        var table = new Action<Chip8Machine, int>[16];
-        Array.Fill(table, NoOp);
-        table[0x0] = ExecuteSetRegisterValueFromRegisterIns;
-        table[0x1] = ExecuteBitwiseOrOnRegistersIns;
-        table[0x2] = ExecuteBitwiseAndOnRegistersIns;
-        table[0x3] = ExecuteXorRegisterValueFromRegisterIns;
-        table[0x4] = ExecuteAddValueToRegisterWithCarryIns;
-        table[0x5] = ExecuteVxSubVyIns;
-        table[0x6] = ExecuteShiftRightIns;
-        table[0x7] = ExecuteVySubVxIns;
-        table[0xE] = ExecuteShiftLeftIns;
-        return table;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -390,7 +390,8 @@ internal static class Cpu
         }
     }
 
-    private static void ExecuteStoreRegisterRange(Chip8Machine machine, int ins)  // 5XY2
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void ExecuteStoreRegisterRange(Chip8Machine machine, int ins)  // 5XY2
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -438,7 +439,8 @@ internal static class Cpu
         }
     }
 
-    private static void DrawHighResSprite(Chip8Machine machine, int x, int y)
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void DrawHighResSprite(Chip8Machine machine, int x, int y)
     {
         // S-CHIP 1.1 DXY0 hi-res collision semantics:
         // VF = number of sprite rows with at least one collision
