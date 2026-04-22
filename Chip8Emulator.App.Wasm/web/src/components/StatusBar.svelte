@@ -2,7 +2,6 @@
   import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
   import { PRESET_LABELS } from '$lib/quirks.js';
-  import { hex4 } from '$lib/format.js';
 
   const presetLabel = $derived(
     settings.quirksPreset === 'custom' ? 'CUSTOM' : PRESET_LABELS[settings.quirksPreset],
@@ -14,6 +13,5 @@
   <span class="flex items-center gap-3">
     <span>{presetLabel}</span>
     <span>{settings.ips} IPS</span>
-    <span>PC {hex4(emulator.pc)}</span>
   </span>
 </div>

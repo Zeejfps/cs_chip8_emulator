@@ -19,13 +19,13 @@ export function runRom(
   audio.ensureStarted();
   api.Start();
   emulator.running = true;
-  emulator.paused = false;
+  emulator.paused = settings.debugOpen;
   emulator.pc = api.GetProgramCounter();
   emulator.lastRomName = name;
   emulator.lastRomBytes = bytes;
   emulator.prevInsLine = null;
   settings.lastRomId = romId;
-  emulator.status = `Running ${name}`;
+  emulator.status = settings.debugOpen ? 'Paused (debug)' : `Running ${name}`;
 }
 
 export function resetEmulator(api: InteropExports): void {
