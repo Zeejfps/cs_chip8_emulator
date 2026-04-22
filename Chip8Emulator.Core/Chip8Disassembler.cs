@@ -62,6 +62,7 @@ public static class Chip8Disassembler
             0xF when n == 0xB => "SCR",
             0xF when n == 0xC => "SCL",
             0xC => $"SCD  {n}",
+            0xD => $"SCU  {n}",
             _ => DisassembleUnknown(ins)
         };
     }

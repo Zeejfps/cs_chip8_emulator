@@ -373,32 +373,30 @@ internal sealed class Chip8Machine : IChip8Machine
     public void ExecuteZeroBaseIns(int ins)
     {
         if ((ins & 0xFF00) != 0x0000) return;
-        
-        var lo = (ins & 0x00FF);
+
+        var lo = ins & 0x00FF;
 
         switch (lo)
         {
-            case 0xE0:
-                ExecuteClearDisplayIns();
-                break;
-            case 0xEE:
-                ExecuteReturnFromSubroutineIns();
-                break;
-            case 0xFF:
-                ExecuteEnableHiresModeIns();
-                break;
-            case 0xFE:
-                ExecuteDisableHiresModeIns();
-                break;
-            case 0xFB:
-                _display.ScrollRight(4);
-                break;
-            case 0xFC:
-                _display.ScrollLeft(4);
-                break;
-            default:
-                if ((lo & 0xF0) == 0xC0) _display.ScrollDown(lo & 0x0F);
-                break;
+            case 0xE0: ExecuteClearDisplayIns();     return;
+            case 0xEE: ExecuteReturnFromSubroutineIns(); return;
+            case 0xFF: ExecuteEnableHiresModeIns();  return;
+            case 0xFE: ExecuteDisableHiresModeIns(); return;
+            case 0xFB: _display.ScrollRight(4);      return;
+            case 0xFC: _display.ScrollLeft(4);       return;
+        }
+
+        // 00CN — S-CHIP: scroll display down N rows.
+        if ((lo & 0xF0) == 0xC0)
+        {
+            _display.ScrollDown(lo & 0x0F);
+            return;
+        }
+
+        // 00DN — XO-CHIP: scroll display up N rows.
+        if ((lo & 0xF0) == 0xD0)
+        {
+            _display.ScrollUp(lo & 0x0F);
         }
     }
 

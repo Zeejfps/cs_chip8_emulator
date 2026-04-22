@@ -102,6 +102,63 @@ public class SuperChipTests
             Assert.Equal(1, PixelAt(emulator, x, 0));
     }
 
+    // ---- 00DN : scroll up N rows (XO-CHIP) ----------------------------------
+
+    [Fact]
+    public void ScrollUpIns_MovesPixelsUpByNRows()
+    {
+        var emulator = CreateEmulator();
+        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExecuteSetRegisterValueIns(0x6000); // V0 = 0
+        emulator.ExecuteSetRegisterValueIns(0x6105); // V1 = 5 -> draw at y=5
+        emulator.ExeuteDrawToScreenIns(0xD011);
+
+        emulator.ExecuteZeroBaseIns(0x00D3); // scroll up 3
+
+        for (var x = 0; x < 8; x++)
+        {
+            Assert.Equal(1, PixelAt(emulator, x, 2));
+            Assert.Equal(0, PixelAt(emulator, x, 3));
+            Assert.Equal(0, PixelAt(emulator, x, 4));
+            Assert.Equal(0, PixelAt(emulator, x, 5));
+        }
+        Assert.Equal(8, CountLitPixels(emulator));
+    }
+
+    [Fact]
+    public void ScrollUpIns_ClearsBottomNRows()
+    {
+        var emulator = CreateEmulator();
+        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExecuteSetRegisterValueIns(0x6000); // V0 = 0
+        emulator.ExecuteSetRegisterValueIns(0x611F); // V1 = 31 -> bottom row of 64x32
+        emulator.ExeuteDrawToScreenIns(0xD011);
+
+        emulator.ExecuteZeroBaseIns(0x00D2); // scroll up 2
+
+        for (var x = 0; x < LowResWidth; x++)
+        {
+            Assert.Equal(0, PixelAt(emulator, x, LowResHeight - 1));
+            Assert.Equal(0, PixelAt(emulator, x, LowResHeight - 2));
+        }
+    }
+
+    [Fact]
+    public void ScrollUpIns_WithZeroIsNoOp()
+    {
+        var emulator = CreateEmulator();
+        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExeuteDrawToScreenIns(0xD001); // row of 8 lit at y=0
+
+        emulator.ExecuteZeroBaseIns(0x00D0);
+
+        for (var x = 0; x < 8; x++)
+            Assert.Equal(1, PixelAt(emulator, x, 0));
+    }
+
     // ---- 00FB : scroll right 4 pixels ---------------------------------------
 
     [Fact]

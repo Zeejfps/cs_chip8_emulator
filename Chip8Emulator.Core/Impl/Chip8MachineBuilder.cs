@@ -33,7 +33,14 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
 
     public IChip8Machine Build()
     {
-        // TODO: validate
-        return new Chip8Machine(_renderer, _audio, _clock, _input);
+        var renderer = _renderer ?? throw new InvalidOperationException(
+            $"{nameof(WithRenderer)} must be called before {nameof(Build)}.");
+        var audio = _audio ?? throw new InvalidOperationException(
+            $"{nameof(WithAudio)} must be called before {nameof(Build)}.");
+        var clock = _clock ?? throw new InvalidOperationException(
+            $"{nameof(WithClock)} must be called before {nameof(Build)}.");
+        var input = _input ?? throw new InvalidOperationException(
+            $"{nameof(WithInput)} must be called before {nameof(Build)}.");
+        return new Chip8Machine(renderer, audio, clock, input);
     }
 }

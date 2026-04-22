@@ -128,4 +128,27 @@ internal sealed class Display : IDisplay
             Array.Clear(_pixels, y * Width, Width);
         }
     }
+
+    public void ScrollUp(int n)
+    {
+        if (n <= 0) return;
+
+        if (n >= Height)
+        {
+            Clear();
+            return;
+        }
+
+        for (var y = 0; y < Height - n; y++)
+        {
+            var srcRow = (y + n) * Width;
+            var dstRow = y * Width;
+            Array.Copy(_pixels, srcRow, _pixels, dstRow, Width);
+        }
+
+        for (var y = Height - n; y < Height; y++)
+        {
+            Array.Clear(_pixels, y * Width, Width);
+        }
+    }
 }
