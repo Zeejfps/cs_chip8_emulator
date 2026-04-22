@@ -32,4 +32,6 @@ export interface InteropExports {
   SetSpritesWrap(value: boolean): void;
   GetDisplayWait(): boolean;
   SetDisplayWait(value: boolean): void;
+  GetVfResultWrittenLast(): boolean;
+  SetVfResultWrittenLast(value: boolean): void;
 }

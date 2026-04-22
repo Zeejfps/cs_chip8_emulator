@@ -120,6 +120,7 @@ internal sealed class Chip8Machine : IChip8Machine
     public bool LogicResetsVf { get; set; } = false;
     public bool SpritesWrap { get; set; } = false;
     public bool DisplayWait { get; set; } = false;
+    public bool VfResultWrittenLast { get; set; } = false;
 
     private void PushStack(int value)
     {
@@ -777,8 +778,10 @@ internal sealed class Chip8Machine : IChip8Machine
         }
         
         var flag = (byte)(value & 0x1);
-        _vRegisters[x] = (byte)(value >> 1);
+        var result = (byte)(value >> 1);
+        _vRegisters[x] = result;
         _vRegisters[0xF] = flag;
+        if (VfResultWrittenLast) _vRegisters[x] = result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -794,8 +797,10 @@ internal sealed class Chip8Machine : IChip8Machine
         }
         
         var flag = (byte)((value >> 7) & 0x1);
-        _vRegisters[x] = (byte)(value << 1);
+        var result = (byte)(value << 1);
+        _vRegisters[x] = result;
         _vRegisters[0xF] = flag;
+        if (VfResultWrittenLast) _vRegisters[x] = result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -806,8 +811,10 @@ internal sealed class Chip8Machine : IChip8Machine
         var minuend = _vRegisters[x];
         var subtrahend = _vRegisters[y];
         var flag = (byte)(minuend >= subtrahend ? 1 : 0);
-        _vRegisters[x] = (byte)(minuend - subtrahend);
+        var result = (byte)(minuend - subtrahend);
+        _vRegisters[x] = result;
         _vRegisters[0xF] = flag;
+        if (VfResultWrittenLast) _vRegisters[x] = result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -819,8 +826,10 @@ internal sealed class Chip8Machine : IChip8Machine
         var minuend = _vRegisters[y];
         var subtrahend = _vRegisters[x];
         var flag = (byte)(minuend >= subtrahend ? 1 : 0);
-        _vRegisters[x] = (byte)(minuend - subtrahend);
+        var result = (byte)(minuend - subtrahend);
+        _vRegisters[x] = result;
         _vRegisters[0xF] = flag;
+        if (VfResultWrittenLast) _vRegisters[x] = result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -830,8 +839,10 @@ internal sealed class Chip8Machine : IChip8Machine
         var y = ExtractY(ins);
         var sum = _vRegisters[x] + _vRegisters[y];
         var carry = (byte)(sum > 0xFF ? 1 : 0);
-        _vRegisters[x] = (byte)sum;
+        var result = (byte)sum;
+        _vRegisters[x] = result;
         _vRegisters[0xF] = carry;
+        if (VfResultWrittenLast) _vRegisters[x] = result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

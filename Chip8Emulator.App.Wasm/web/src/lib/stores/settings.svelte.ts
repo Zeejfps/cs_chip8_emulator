@@ -36,7 +36,7 @@ const defaults: Settings = {
   muted: false,
   phosphor: 'green',
   scanlines: true,
-  quirks: { shiftVy: false, jumpVx: true, lsIncI: false, logicVf: false, wrap: false, dispWait: false },
+  quirks: { shiftVy: false, jumpVx: true, lsIncI: false, logicVf: false, wrap: false, dispWait: false, vfResultLast: false },
   quirksPreset: 'chip48',
   touchKeypadManual: null,
   debugOpen: false,

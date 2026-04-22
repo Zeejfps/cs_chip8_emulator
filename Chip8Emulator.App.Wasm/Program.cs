@@ -110,4 +110,10 @@ public static partial class Interop
 
     [JSExport]
     public static void SetDisplayWait(bool value) => _machine!.DisplayWait = value;
+
+    [JSExport]
+    public static bool GetVfResultWrittenLast() => _machine!.VfResultWrittenLast;
+
+    [JSExport]
+    public static void SetVfResultWrittenLast(bool value) => _machine!.VfResultWrittenLast = value;
 }

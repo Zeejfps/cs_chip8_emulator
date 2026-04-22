@@ -30,12 +30,13 @@ const ROMS = [
 function optionsToQuirks(options = {}) {
   const f = (k) => Boolean(options[k]);
   return {
-    shiftVy:  !f('shiftQuirks'),
-    jumpVx:    f('jumpQuirks'),
-    lsIncI:   !f('loadStoreQuirks'),
-    logicVf:   f('logicQuirks'),
-    wrap:     !f('clipQuirks'),
-    dispWait:  f('vBlankQuirks'),
+    shiftVy:      !f('shiftQuirks'),
+    jumpVx:        f('jumpQuirks'),
+    lsIncI:       !f('loadStoreQuirks'),
+    logicVf:       f('logicQuirks'),
+    wrap:         !f('clipQuirks'),
+    dispWait:      f('vBlankQuirks'),
+    vfResultLast:  f('vfOrderQuirks'),
   };
 }
 

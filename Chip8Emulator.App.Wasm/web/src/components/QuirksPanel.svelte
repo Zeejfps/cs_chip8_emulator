@@ -14,6 +14,7 @@
     { key: 'logicVf',  label: 'Logic resets VF',    hint: '8XY1/2/3 clear VF' },
     { key: 'wrap',     label: 'Sprites wrap',       hint: 'Sprites wrap at screen edges' },
     { key: 'dispWait', label: 'Display wait',       hint: 'DXYN waits for vblank' },
+    { key: 'vfResultLast', label: 'VF result kept', hint: 'Math ops preserve result when VX is VF' },
   ];
 
   $effect(() => {

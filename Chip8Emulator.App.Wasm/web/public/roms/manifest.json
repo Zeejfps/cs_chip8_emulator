@@ -12,7 +12,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   },
   {
@@ -28,7 +29,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   },
   {
@@ -44,7 +46,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   },
   {
@@ -60,7 +63,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   },
   {
@@ -76,7 +80,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   },
   {
@@ -92,7 +97,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   },
   {
@@ -108,7 +114,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   },
   {
@@ -124,7 +131,8 @@
       "lsIncI": true,
       "logicVf": true,
       "wrap": false,
-      "dispWait": true
+      "dispWait": true,
+      "vfResultLast": false
     }
   },
   {
@@ -140,7 +148,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   },
   {
@@ -156,7 +165,8 @@
       "lsIncI": true,
       "logicVf": false,
       "wrap": true,
-      "dispWait": false
+      "dispWait": false,
+      "vfResultLast": false
     }
   }
 ]

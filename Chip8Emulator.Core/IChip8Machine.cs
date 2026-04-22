@@ -11,6 +11,7 @@ public interface IChip8Machine
     bool LogicResetsVf { get; set; }
     bool SpritesWrap { get; set; }
     bool DisplayWait { get; set; }
+    bool VfResultWrittenLast { get; set; }
     void LoadProgram(ReadOnlySpan<byte> program);
     void Start();
     void Stop();
