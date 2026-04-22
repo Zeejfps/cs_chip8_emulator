@@ -142,7 +142,7 @@ internal sealed class Chip8Machine : IChip8Machine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private int ReadIndexRegisterWithOffset(int offset)
+    public int ReadIndexRegisterWithOffset(int offset)
     {
         return (_indexRegister + offset) & 0xFFFF;
     }
@@ -675,23 +675,10 @@ internal sealed class Chip8Machine : IChip8Machine
                 ExecuteStoreRegisterRange(ins);
                 break;
             case 3:
-                ExecuteLoadRegisterRange(ins);
+                Cpu.ExecuteLoadRegisterRange(this, ins);
                 break;
         }
     }
-    
-    private void ExecuteLoadRegisterRange(int ins)  // 5XY3       
-    {                                  
-        var x = ExtractX(ins);                                    
-        var y = ExtractY(ins);
-        var step = x <= y ? 1 : -1;                               
-        var count = Math.Abs(y - x) + 1;                          
-        for (var k = 0; k < count; k++)
-        {                                                         
-            _vRegisters[x + k * step] =                   
-                _memory[ReadIndexRegisterWithOffset(k)];                      
-        }
-    }       
     
     private void ExecuteStoreRegisterRange(int ins)  // 5XY2
     {
@@ -1069,5 +1056,15 @@ internal sealed class Chip8Machine : IChip8Machine
         {
             machine.FetchDecodeExecute();
         }
+    }
+
+    public byte ReadMemory(int address)
+    {
+        return _memory[address];
+    }
+
+    public void WriteRegister(int register, byte value)
+    {
+        _vRegisters[register] = value;
     }
 }
