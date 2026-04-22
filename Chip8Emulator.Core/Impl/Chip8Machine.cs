@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Chip8Emulator.Core.Impl;
 
-internal sealed class Chip8Machine : IChip8Machine
+internal sealed partial class Chip8Machine : IChip8Machine
 {
     public const int LowResFontBaseAddress = 0x050;
     public const int HighResFontBaseAddress = 0x0A0;
@@ -122,12 +122,12 @@ internal sealed class Chip8Machine : IChip8Machine
         HighResFont.CopyTo(_memory.AsSpan(HighResFontBaseAddress));
         Debugger = new Chip8MachineDebugger(this);
 
-        RootOpcodeTable = Cpu.BuildRootOpcodeTable();
-        SystemInsTable = Cpu.BuildSystemInsTable();
-        TimerTable = Cpu.BuildTimerTable();
-        KeyCheckTable = Cpu.BuildKeyCheckTable();
-        FiveOpTable = Cpu.BuildFiveOpTable();
-        ArithmeticTable = Cpu.BuildArithmeticTable();
+        RootOpcodeTable = BuildRootOpcodeTable();
+        SystemInsTable = BuildSystemInsTable();
+        TimerTable = BuildTimerTable();
+        KeyCheckTable = BuildKeyCheckTable();
+        FiveOpTable = BuildFiveOpTable();
+        ArithmeticTable = BuildArithmeticTable();
 
         // Specialize quirk-sensitive slots to match current flag defaults.
         ApplyJumpUsesVx();
@@ -175,31 +175,31 @@ internal sealed class Chip8Machine : IChip8Machine
     private void ApplyJumpUsesVx()
     {
         RootOpcodeTable[0xB] = _jumpUsesVx
-            ? Cpu.ExecuteJumpWithVxOffsetIns
-            : Cpu.ExecuteJumpWithV0OffsetIns;
+            ? Chip8Cpu.ExecuteJumpWithVxOffsetIns
+            : Chip8Cpu.ExecuteJumpWithV0OffsetIns;
     }
 
     private void ApplyLoadStoreIncrementsI()
     {
         TimerTable[0x55] = _loadStoreIncrementsI
-            ? Cpu.ExecuteStoreRegistersIncIIns
-            : Cpu.ExecuteStoreRegistersKeepIIns;
+            ? Chip8Cpu.ExecuteStoreRegistersIncIIns
+            : Chip8Cpu.ExecuteStoreRegistersKeepIIns;
         TimerTable[0x65] = _loadStoreIncrementsI
-            ? Cpu.ExecuteLoadRegistersIncIIns
-            : Cpu.ExecuteLoadRegistersKeepIIns;
+            ? Chip8Cpu.ExecuteLoadRegistersIncIIns
+            : Chip8Cpu.ExecuteLoadRegistersKeepIIns;
     }
 
     private void ApplyLogicResetsVf()
     {
         ArithmeticTable[0x1] = _logicResetsVf
-            ? Cpu.ExecuteBitwiseOrResetVfIns
-            : Cpu.ExecuteBitwiseOrPreserveVfIns;
+            ? Chip8Cpu.ExecuteBitwiseOrResetVfIns
+            : Chip8Cpu.ExecuteBitwiseOrPreserveVfIns;
         ArithmeticTable[0x2] = _logicResetsVf
-            ? Cpu.ExecuteBitwiseAndResetVfIns
-            : Cpu.ExecuteBitwiseAndPreserveVfIns;
+            ? Chip8Cpu.ExecuteBitwiseAndResetVfIns
+            : Chip8Cpu.ExecuteBitwiseAndPreserveVfIns;
         ArithmeticTable[0x3] = _logicResetsVf
-            ? Cpu.ExecuteXorResetVfIns
-            : Cpu.ExecuteXorPreserveVfIns;
+            ? Chip8Cpu.ExecuteXorResetVfIns
+            : Chip8Cpu.ExecuteXorPreserveVfIns;
     }
 
     public IDisplay Display => _display;
@@ -483,7 +483,7 @@ internal sealed class Chip8Machine : IChip8Machine
             _instructionAcc += delta;
             while (_instructionAcc >= _ticksPerInstruction)
             {
-                Cpu.FetchDecodeExecute(this);
+                FetchDecodeExecute();
                 _instructionAcc -= _ticksPerInstruction;
                 if (_waitForVBlank || _isWaitingForKey)
                 {
@@ -535,7 +535,7 @@ internal sealed class Chip8Machine : IChip8Machine
 
         public void StepInstruction()
         {
-            Cpu.FetchDecodeExecute(machine);
+            machine.FetchDecodeExecute();
         }
     }
 }
