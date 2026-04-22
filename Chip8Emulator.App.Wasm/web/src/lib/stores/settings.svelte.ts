@@ -53,6 +53,7 @@ function load(): Settings {
       ...defaults,
       ...parsed,
       quirks: { ...defaults.quirks, ...(parsed.quirks ?? {}) },
+      debugOpen: false,
     };
   } catch {
     return structuredClone(defaults);
@@ -65,7 +66,8 @@ export function persistSettings(): () => void {
   return $effect.root(() => {
     $effect(() => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        const { debugOpen: _, ...persisted } = settings;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
       } catch {
         // Private mode / storage full — settings become session-only, no-op.
       }

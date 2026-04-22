@@ -10,6 +10,13 @@ export interface InteropExports {
   GetMemoryByte(address: number): number;
   DisassembleInstruction(ins: number): string;
 
+  GetVRegisters(): Uint8Array;
+  GetIndexRegister(): number;
+  GetDelayTimer(): number;
+  GetSoundTimer(): number;
+  GetStackPointer(): number;
+  GetStack(): Int32Array;
+
   GetPixelDataPtr(): number;
   GetPixelDataLength(): number;
   GetWidth(): number;

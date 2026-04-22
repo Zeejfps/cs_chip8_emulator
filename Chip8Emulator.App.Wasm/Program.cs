@@ -52,6 +52,24 @@ public static partial class Interop
     public static int GetMemoryByte(int address) => _machine!.Debugger.Memory[address];
 
     [JSExport]
+    public static byte[] GetVRegisters() => _machine!.Debugger.Registers.ToArray();
+
+    [JSExport]
+    public static int GetIndexRegister() => _machine!.Debugger.IndexRegister;
+
+    [JSExport]
+    public static int GetDelayTimer() => _machine!.Debugger.DelayTimer;
+
+    [JSExport]
+    public static int GetSoundTimer() => _machine!.Debugger.SoundTimer;
+
+    [JSExport]
+    public static int GetStackPointer() => _machine!.Debugger.StackPointer;
+
+    [JSExport]
+    public static int[] GetStack() => _machine!.Debugger.Stack.ToArray();
+
+    [JSExport]
     public static string DisassembleInstruction(int ins) => Chip8Disassembler.Disassemble(ins);
 
     [JSExport]

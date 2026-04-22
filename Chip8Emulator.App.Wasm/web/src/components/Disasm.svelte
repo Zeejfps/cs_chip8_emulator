@@ -34,7 +34,7 @@
   });
 </script>
 
-<div class="font-pixel flex flex-col gap-0.5 text-[12px]">
+<div class="font-pixel flex flex-col text-[12px]">
   {#if lines.length === 0}
     <span class="text-muted-foreground">Load a ROM to view disassembly.</span>
   {:else}
