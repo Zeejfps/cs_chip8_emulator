@@ -6,7 +6,6 @@ import App from './components/App.svelte';
 import './app.css';
 
 const boot = document.getElementById('boot');
-if (boot) boot.textContent = 'Loading runtime…';
 
 const { dotnet } = (await import(
   /* @vite-ignore */ new URL('_framework/dotnet.js', document.baseURI).href
@@ -27,7 +26,15 @@ const exports = await runtime.getAssemblyExports(config.mainAssemblyName);
 const api = exports.Interop as InteropExports;
 api.Init();
 
-boot?.remove();
+if (boot) {
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) {
+    boot.remove();
+  } else {
+    boot.addEventListener('transitionend', () => boot.remove(), { once: true });
+    boot.classList.add('fade-out');
+  }
+}
 
 const target = document.getElementById('app');
 if (!target) throw new Error('Missing #app mount target');
