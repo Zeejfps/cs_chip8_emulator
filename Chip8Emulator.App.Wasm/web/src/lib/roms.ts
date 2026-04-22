@@ -7,6 +7,7 @@ export interface RomEntry {
   license: string;
   file: string;
   preferredQuirks: QuirkFlags;
+  preferredIps?: number;
   description?: string;
 }
 

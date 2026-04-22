@@ -116,7 +116,8 @@
       "wrap": true,
       "dispWait": false,
       "vfResultLast": false
-    }
+    },
+    "preferredIps": 5000
   },
   {
     "id": "chipquarium",
@@ -133,7 +134,8 @@
       "wrap": false,
       "dispWait": true,
       "vfResultLast": false
-    }
+    },
+    "preferredIps": 900
   },
   {
     "id": "slipperyslope",
@@ -166,6 +168,112 @@
       "logicVf": false,
       "wrap": true,
       "dispWait": false,
+      "vfResultLast": false
+    }
+  },
+  {
+    "id": "superpong",
+    "title": "Super Pong",
+    "author": "offstatic",
+    "license": "CC0-1.0",
+    "description": "A fast pong-like.",
+    "file": "superpong.ch8",
+    "preferredQuirks": {
+      "shiftVy": true,
+      "jumpVx": false,
+      "lsIncI": true,
+      "logicVf": false,
+      "wrap": true,
+      "dispWait": false,
+      "vfResultLast": false
+    },
+    "preferredIps": 1800
+  },
+  {
+    "id": "caveexplorer",
+    "title": "Cave Explorer",
+    "author": "John Earnest",
+    "license": "CC0-1.0",
+    "description": "Side-view cave exploration.",
+    "file": "caveexplorer.ch8",
+    "preferredQuirks": {
+      "shiftVy": true,
+      "jumpVx": false,
+      "lsIncI": true,
+      "logicVf": false,
+      "wrap": true,
+      "dispWait": false,
+      "vfResultLast": false
+    },
+    "preferredIps": 1200
+  },
+  {
+    "id": "outlaw",
+    "title": "Outlaw",
+    "author": "John Earnest",
+    "license": "CC0-1.0",
+    "description": "Atari 2600 Outlaw, ported to CHIP-8.",
+    "file": "outlaw.ch8",
+    "preferredQuirks": {
+      "shiftVy": true,
+      "jumpVx": false,
+      "lsIncI": true,
+      "logicVf": false,
+      "wrap": true,
+      "dispWait": false,
+      "vfResultLast": false
+    },
+    "preferredIps": 900
+  },
+  {
+    "id": "pumpkindressup",
+    "title": "Pumpkin Dress Up",
+    "author": "SystemLogoff",
+    "license": "CC0-1.0",
+    "description": "Casual pumpkin dress-up.",
+    "file": "pumpkindressup.ch8",
+    "preferredQuirks": {
+      "shiftVy": true,
+      "jumpVx": false,
+      "lsIncI": true,
+      "logicVf": false,
+      "wrap": true,
+      "dispWait": false,
+      "vfResultLast": false
+    },
+    "preferredIps": 400
+  },
+  {
+    "id": "tetris",
+    "title": "Tetris",
+    "author": "Fran Dachille",
+    "license": "Freeware",
+    "description": "Classic falling-block puzzle (1991).",
+    "file": "tetris.ch8",
+    "preferredQuirks": {
+      "shiftVy": true,
+      "jumpVx": false,
+      "lsIncI": true,
+      "logicVf": true,
+      "wrap": false,
+      "dispWait": true,
+      "vfResultLast": false
+    }
+  },
+  {
+    "id": "invaders",
+    "title": "Space Invaders",
+    "author": "David Winter",
+    "license": "Freeware",
+    "description": "Space Invaders clone.",
+    "file": "invaders.ch8",
+    "preferredQuirks": {
+      "shiftVy": true,
+      "jumpVx": false,
+      "lsIncI": true,
+      "logicVf": true,
+      "wrap": false,
+      "dispWait": true,
       "vfResultLast": false
     }
   }

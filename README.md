@@ -34,7 +34,17 @@ Open the printed URL in a Chromium-based browser, then load a ROM.
 
 ## ROMs
 
-A large collection of public-domain CHIP-8 ROMs is available at [kripod/chip8-roms](https://github.com/kripod/chip8-roms/tree/master).
+The WASM build bundles a curated set of ROMs in
+`Chip8Emulator.App.Wasm/web/public/roms/`. Most come from the CC0-licensed
+[Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive); the
+two classics (Tetris by Fran Dachille, Space Invaders by David Winter) are
+freeware sourced via [kripod/chip8-roms](https://github.com/kripod/chip8-roms).
+See `Chip8Emulator.App.Wasm/web/public/roms/SOURCES.md` for per-ROM provenance.
+
+For more ROMs to load via the upload button, the
+[kripod/chip8-roms](https://github.com/kripod/chip8-roms/tree/master)
+collection and David Winter's [pong-story.com archive](http://pong-story.com/chip8/)
+are both good starting points.
 
 ## Keyboard
 

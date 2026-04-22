@@ -5,7 +5,7 @@
   import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '$lib/components/ui/sheet/index.js';
   import { Button } from '$lib/components/ui/button/index.js';
   import { getEmuContext } from '$lib/context.js';
-  import { settings } from '$lib/stores/settings.svelte.js';
+  import { settings, SPEED_PRESET_IPS, type SpeedPreset } from '$lib/stores/settings.svelte.js';
   import { loadManifest, loadRomBytes, type RomEntry } from '$lib/roms.js';
   import { matchingPreset } from '$lib/quirks.js';
   import { runRom } from '$lib/emulator-actions.js';
@@ -38,6 +38,12 @@
       const bytes = await loadRomBytes(entry);
       settings.quirks = { ...entry.preferredQuirks };
       settings.quirksPreset = matchingPreset(entry.preferredQuirks);
+      if (entry.preferredIps !== undefined) {
+        settings.ips = entry.preferredIps;
+        const preset = (Object.keys(SPEED_PRESET_IPS) as SpeedPreset[])
+          .find((p) => SPEED_PRESET_IPS[p] === entry.preferredIps);
+        if (preset) settings.speedPreset = preset;
+      }
       runRom(api, audio, bytes, entry.title, entry.id);
       open = false;
     } catch (err) {
