@@ -338,7 +338,7 @@ public class SuperChipTests
     }
 
     [Fact]
-    public void DxY0_CollisionSetsVf()
+    public void DxY0_VfIsNumberOfCollidingRows()
     {
         var emulator = CreateEmulator();
         emulator.ExecuteZeroBaseIns(0x00FF);
@@ -351,6 +351,46 @@ public class SuperChipTests
 
         emulator.ExeuteDrawToScreenIns(0xD000);
 
-        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
+        // All 16 rows of an all-on sprite collide on second draw.
+        Assert.Equal(16, emulator.Debugger.Registers[0xF]);
+    }
+
+    [Fact]
+    public void DxY0_VfCountsBottomClippedRows()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteZeroBaseIns(0x00FF);
+
+        var sprite = new byte[32];
+        for (var i = 0; i < 32; i++) sprite[i] = 0xFF;
+        emulator.WriteMemory(0x300, sprite);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExecuteSetRegisterValueIns(0x6000); // V0 = 0
+        emulator.ExecuteSetRegisterValueIns(0x6138); // V1 = 56 -> 8 rows fit, 8 clipped
+
+        emulator.ExeuteDrawToScreenIns(0xD010);
+
+        // No on-screen collision (fresh display), but 8 rows clipped off the bottom.
+        Assert.Equal(8, emulator.Debugger.Registers[0xF]);
+    }
+
+    [Fact]
+    public void DxY0_VfIsCollidingRowsPlusClippedRows()
+    {
+        var emulator = CreateEmulator();
+        emulator.ExecuteZeroBaseIns(0x00FF);
+
+        var sprite = new byte[32];
+        for (var i = 0; i < 32; i++) sprite[i] = 0xFF;
+        emulator.WriteMemory(0x300, sprite);
+        emulator.ExecuteSetIndexRegisterIns(0xA300);
+        emulator.ExecuteSetRegisterValueIns(0x6000); // V0 = 0
+        emulator.ExecuteSetRegisterValueIns(0x6138); // V1 = 56 -> 8 rows fit, 8 clipped
+
+        emulator.ExeuteDrawToScreenIns(0xD010);
+        emulator.ExeuteDrawToScreenIns(0xD010);
+
+        // 8 rows collide on second draw + 8 rows clipped off the bottom.
+        Assert.Equal(16, emulator.Debugger.Registers[0xF]);
     }
 }

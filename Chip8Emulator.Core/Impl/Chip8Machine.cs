@@ -683,17 +683,29 @@ internal sealed class Chip8Machine : IChip8Machine
 
     private void DrawHighResSprite(int x, int y)
     {
+        // S-CHIP 1.1 DXY0 hi-res collision semantics:
+        // VF = number of sprite rows with at least one collision
+        //    + number of sprite rows clipped off the bottom edge (when not wrapping).
         var displayPixels = _display.Pixels.Span;
-        byte collision = 0;
+        var collidedRows = 0;
+        var clippedRows = 0;
         for (var i = 0; i < 16; i++)
         {
             var dstY = y + i;
-            if (SpritesWrap) dstY %= Display.Height;
-            else if (dstY >= Display.Height) break;
+            if (SpritesWrap)
+            {
+                dstY %= Display.Height;
+            }
+            else if (dstY >= Display.Height)
+            {
+                clippedRows = 16 - i;
+                break;
+            }
 
             var offset = i * 2;
             var spritePixelsRow = (ushort)(_memory[(_indexRegister + offset) & 0xFFF] << 8 |
                                           _memory[(_indexRegister + offset + 1) & 0xFFF]);
+            var rowCollided = false;
             for (var bit = 0; bit < 16; bit++)
             {
                 var dstX = x + bit;
@@ -703,20 +715,13 @@ internal sealed class Chip8Machine : IChip8Machine
                 var spritePixel = (byte)((spritePixelsRow >> (15 - bit)) & 1);
                 var dstIndex = dstY * Display.Width + dstX;
                 var before = displayPixels[dstIndex];
-                collision |= (byte)(before & spritePixel);
+                if ((before & spritePixel) != 0) rowCollided = true;
                 displayPixels[dstIndex] = (byte)(before ^ spritePixel);
             }
+            if (rowCollided) collidedRows++;
         }
-        
-        var vf = collision != 0;
-        if (vf)
-        {
-            _vRegisters[0xF] = 1;
-        }
-        else
-        {
-            _vRegisters[0xF] = 0;
-        }
+
+        _vRegisters[0xF] = (byte)(collidedRows + clippedRows);
     }
 
     private void DrawLowResSprite(int sx, int sy, int height)
