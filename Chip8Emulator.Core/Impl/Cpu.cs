@@ -5,64 +5,33 @@ namespace Chip8Emulator.Core.Impl;
 
 internal static class Cpu
 {
+    private static readonly Action<Chip8Machine, int>[] OpcodeTable =
+    [
+        ExecuteZeroBaseIns,                                      // 0
+        ExecuteJumpToAddressIns,                                 // 1
+        ExecuteCallSubroutineIns,                                // 2
+        ExecuteSkipNextInsIfRegisterValueEqualsValueIns,         // 3
+        ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns,      // 4
+        ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue,    // 5
+        ExecuteSetRegisterValueIns,                              // 6
+        ExecuteAddValueToRegisterIns,                            // 7
+        ExecuteArithmeticOperationIns,                           // 8
+        ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue, // 9
+        ExecuteSetIndexRegisterIns,                              // A
+        ExecuteJumpWithOffsetIns,                                // B
+        ExecuteGenerateRandomNumIns,                             // C
+        ExeuteDrawToScreenIns,                                   // D
+        ExecuteSkipNextInsIfKeyIsPressedOrReleased,              // E
+        ExecuteTimerIns,                                         // F
+    ];
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void FetchDecodeExecute(Chip8Machine machine)
     {
         var ins = Fetch(machine);
         var opcode = (ins & 0xF000) >> 12;
-        switch (opcode)
-        {
-            case 0:
-                ExecuteZeroBaseIns(machine, ins);
-                break;
-            case 1:
-                ExecuteJumpToAddressIns(machine, ins);
-                break;
-            case 2:
-                ExecuteCallSubroutineIns(machine, ins);
-                break;
-            case 3:
-                ExecuteSkipNextInsIfRegisterValueEqualsValueIns(machine, ins);
-                break;
-            case 4:
-                ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(machine, ins);
-                break;
-            case 5:
-                ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(machine, ins);
-                break;
-            case 6:
-                ExecuteSetRegisterValueIns(machine, ins);
-                break;
-            case 7:
-                ExecuteAddValueToRegisterIns(machine, ins);
-                break;
-            case 8:
-                ExecuteArithmeticOperationIns(machine, ins);
-                break;
-            case 9:
-                ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(machine, ins);
-                break;
-            case 0xA:
-                ExecuteSetIndexRegisterIns(machine, ins);
-                break;
-            case 0xB:
-                ExecuteJumpWithOffsetIns(machine, ins);
-                break;
-            case 0xC:
-                ExecuteGenerateRandomNumIns(machine, ins);
-                break;
-            case 0xD:
-                ExeuteDrawToScreenIns(machine, ins);
-                break;
-            case 0xE:
-                ExecuteSkipNextInsIfKeyIsPressedOrReleased(machine, ins);
-                break;
-            case 0xF:
-                ExecuteTimerIns(machine, ins);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
-        }
+        var execute = OpcodeTable[opcode];
+        execute(machine, ins);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
