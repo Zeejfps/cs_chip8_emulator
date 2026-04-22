@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://chip8.builtbyzee.com/sitemap.xml
