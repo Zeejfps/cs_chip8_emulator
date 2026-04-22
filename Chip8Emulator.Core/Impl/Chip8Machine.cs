@@ -1,34 +1,35 @@
 using System.Runtime.CompilerServices;
-using static Chip8Emulator.Core.Chip8Disassembler;
 
 namespace Chip8Emulator.Core.Impl;
 
 internal sealed class Chip8Machine : IChip8Machine
 {
-    private const int LowResFontBaseAddress = 0x050;
-    private const int HighResFontBaseAddress = 0x0A0;
+    public const int LowResFontBaseAddress = 0x050;
+    public const int HighResFontBaseAddress = 0x0A0;
 
-    private const int LowRestFontCharWidth = 5;
-    private const int HighRestFontCharWidth = 10;
-    
-    private static ReadOnlySpan<byte> LowResFont =>             
+    public const int LowRestFontCharWidth = 5;
+    public const int HighRestFontCharWidth = 10;
+
+    public const int InstructionSizeInBytes = 2;
+
+    private static ReadOnlySpan<byte> LowResFont =>
     [
-        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0                
-        0x20, 0x60, 0x20, 0x20, 0x70, // 1                
-        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2              
-        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3                
-        0x90, 0x90, 0xF0, 0x10, 0x10, // 4              
-        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5                
-        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6              
-        0xF0, 0x10, 0x20, 0x40, 0x40, // 7                
-        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8              
-        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9                
-        0xF0, 0x90, 0xF0, 0x90, 0x90, // A                
-        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B              
-        0xF0, 0x80, 0x80, 0x80, 0xF0, // C                
-        0xE0, 0x90, 0x90, 0x90, 0xE0, // D              
-        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E                
-        0xF0, 0x80, 0xF0, 0x80, 0x80, // F              
+        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+        0x20, 0x60, 0x20, 0x20, 0x70, // 1
+        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+        0xF0, 0x80, 0xF0, 0x80, 0x80, // F
     ];
 
     private static ReadOnlySpan<byte> HighResFont => [
@@ -53,18 +54,16 @@ internal sealed class Chip8Machine : IChip8Machine
         // 9
         0x3C, 0x7E, 0xC3, 0xC3, 0x7F, 0x3F, 0x03, 0x03, 0x3E, 0x7C
     ];
-    
-    private const int InstructionSizeInBytes = 2;
 
     private int _instructionsPerSecond = 1000;
-    
+
     private readonly IRenderer _renderer;
     private readonly IAudio _audio;
     private readonly IClock _clock;
     private readonly IInput _input;
-    
+
     private readonly Display _display = new();
-    
+
     private readonly byte[] _memory = new byte[64 * 1024];
     private readonly byte[] _vRegisters = new byte[16];
 
@@ -85,7 +84,7 @@ internal sealed class Chip8Machine : IChip8Machine
     private bool _waitForVBlank;
     private int _keyRegisterIndex;
     private bool _running;
-    
+
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
     {
         _renderer = renderer;
@@ -122,16 +121,73 @@ internal sealed class Chip8Machine : IChip8Machine
     public bool DisplayWait { get; set; } = false;
     public bool VfResultWrittenLast { get; set; } = false;
 
-    private void PushStack(int value)
+    IDisplay IChip8Machine.Display => _display;
+    public Display Display => _display;
+    public IInput Input => _input;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public byte ReadRegister(int register) => _vRegisters[register];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void WriteRegister(int register, byte value) => _vRegisters[register] = value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public int ReadIndexRegister() => _indexRegister;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void WriteIndexRegister(int value) => _indexRegister = value & 0xFFFF;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public int ReadIndexRegisterWithOffset(int offset) => (_indexRegister + offset) & 0xFFFF;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public byte ReadMemory(int address) => _memory[address];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void WriteMemory(int address, byte value) => _memory[address] = value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public int ReadProgramCounter() => _programCounter;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void WriteProgramCounter(int value) => _programCounter = value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void AdvanceProgramCounter() => _programCounter += InstructionSizeInBytes;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public byte ReadDelayTimer() => _delayTimer;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public void WriteDelayTimer(byte value) => _delayTimer = value;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public byte ReadSoundTimer() => _soundTimer;
+
+    public void WriteSoundTimer(byte value)
+    {
+        var prev = _soundTimer;
+        _soundTimer = value;
+        if (prev == 0 && _soundTimer != 0)
+        {
+            _audio.PlaySound();
+        }
+        else if (prev != 0 && _soundTimer == 0)
+        {
+            _audio.StopSound();
+        }
+    }
+
+    public void PushStack(int value)
     {
         var nextStackPointer = _stackPointer + 1;
-        if(nextStackPointer >= _stack.Length)
+        if (nextStackPointer >= _stack.Length)
             throw new InvalidOperationException("Stack overflow");
         _stackPointer = nextStackPointer;
         _stack[_stackPointer] = value;
     }
 
-    private int PopStack()
+    public int PopStack()
     {
         if (_stackPointer < 0)
             throw new InvalidOperationException("Stack underflow");
@@ -141,25 +197,22 @@ internal sealed class Chip8Machine : IChip8Machine
         return value;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public int ReadIndexRegisterWithOffset(int offset)
+    public void BeginWaitForKey(int registerIndex)
     {
-        return (_indexRegister + offset) & 0xFFFF;
+        _isWaitingForKey = true;
+        _keyRegisterIndex = registerIndex;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void WriteIndexRegister(int value)
+    public void BeginWaitForVBlank()
     {
-        _indexRegister = value & 0xFFFF;
+        _waitForVBlank = true;
     }
 
-    public IDisplay Display => _display;
-    
     internal void WriteMemory(int address, ReadOnlySpan<byte> data)
     {
         data.CopyTo(_memory.AsSpan(address));
     }
-    
+
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         ResetMemory();
@@ -189,7 +242,7 @@ internal sealed class Chip8Machine : IChip8Machine
         _frameAcc = 0;
         _lastTimestamp = _clock.Timestamp;
     }
-    
+
     private void ResetTimers()
     {
         _delayTimer = 0;
@@ -199,7 +252,7 @@ internal sealed class Chip8Machine : IChip8Machine
             _audio.StopSound();
         }
     }
-    
+
     private void ResetMemory()
     {
         Array.Clear(_memory);
@@ -209,7 +262,7 @@ internal sealed class Chip8Machine : IChip8Machine
 
     private void ResetDisplay()
     {
-        _display.Reset();   
+        _display.Reset();
     }
 
     private void ResetRegisters()
@@ -273,22 +326,22 @@ internal sealed class Chip8Machine : IChip8Machine
 
         _frameAcc += delta;
 
-        if (_waitForVBlank || _isWaitingForKey)                            
-        {                                                                  
-            _instructionAcc = 0;                                           
-        }                                                               
+        if (_waitForVBlank || _isWaitingForKey)
+        {
+            _instructionAcc = 0;
+        }
         else
         {
             _instructionAcc += delta;
             while (_instructionAcc >= _ticksPerInstruction)
-            {                                                              
-                FetchDecodeExecute();
-                _instructionAcc -= _ticksPerInstruction;                   
-                if (_waitForVBlank || _isWaitingForKey)                 
-                {                                                          
+            {
+                Cpu.FetchDecodeExecute(this);
+                _instructionAcc -= _ticksPerInstruction;
+                if (_waitForVBlank || _isWaitingForKey)
+                {
                     _instructionAcc = 0;
-                    break;                                                 
-                }                                                       
+                    break;
+                }
             }
         }
 
@@ -319,726 +372,6 @@ internal sealed class Chip8Machine : IChip8Machine
         _waitForVBlank = false;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void FetchDecodeExecute()
-    {
-        var ins = Fetch();
-        //Console.WriteLine("Executing: {0:X4}", ins);
-        var opcode = (ins & 0xF000) >> 12;
-        //Console.WriteLine("Op Code: {0:X4}", opcode);
-        switch (opcode)
-        {
-            case 0:
-                ExecuteZeroBaseIns(ins);
-                break;
-            case 1:
-                ExecuteJumpToAddressIns(ins);
-                break;
-            case 2:
-                ExecuteCallSubroutineIns(ins);
-                break;
-            case 3:
-                ExecuteSkipNextInsIfRegisterValueEqualsValueIns(ins);
-                break;
-            case 4:
-                ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(ins);
-                break;
-            case 5:
-                ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(ins);
-                break;
-            case 6:
-                ExecuteSetRegisterValueIns(ins);
-                break;
-            case 7:
-                ExecuteAddValueToRegisterIns(ins);
-                break;
-            case 8:
-                ExecuteArithmeticOperationIns(ins);
-                break;
-            case 9:
-                ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(ins);
-                break;
-            case 0xA:
-                ExecuteSetIndexRegisterIns(ins);
-                break;
-            case 0xB:
-                ExecuteJumpWithOffsetIns(ins);
-                break;
-            case 0xC:
-                ExecuteGenerateRandomNumIns(ins);
-                break;
-            case 0xD:
-                ExeuteDrawToScreenIns(ins);
-                break;
-            case 0xE:
-                ExecuteSkipNextInsIfKeyIsPressedOrReleased(ins);
-                break;
-            case 0xF:
-                ExecuteTimerIns(ins);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(ins), ins, null);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteZeroBaseIns(int ins)
-    {
-        if ((ins & 0xFF00) != 0x0000) return;
-
-        var lo = ins & 0x00FF;
-
-        switch (lo)
-        {
-            case 0xE0: ExecuteClearDisplayIns();     return;
-            case 0xEE: ExecuteReturnFromSubroutineIns(); return;
-            case 0xFF: ExecuteEnableHiresModeIns();  return;
-            case 0xFE: ExecuteDisableHiresModeIns(); return;
-            case 0xFB: _display.ScrollRight(4);      return;
-            case 0xFC: _display.ScrollLeft(4);       return;
-        }
-
-        // 00CN — S-CHIP: scroll display down N rows.
-        if ((lo & 0xF0) == 0xC0)
-        {
-            _display.ScrollDown(lo & 0x0F);
-            return;
-        }
-
-        // 00DN — XO-CHIP: scroll display up N rows.
-        if ((lo & 0xF0) == 0xD0)
-        {
-            _display.ScrollUp(lo & 0x0F);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void ExecuteEnableHiresModeIns()
-    {
-        _display.EnableHighResMode();
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void ExecuteDisableHiresModeIns()
-    {
-        _display.DisableHighResMode();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteTimerIns(int ins)
-    {
-        var op = ins & 0x00FF;
-        switch (op)
-        {
-            case 0x00:
-                // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
-                if (ExtractX(ins) == 0) ExecuteLongLoadIndexRegister();
-                break;
-            case 0x07:
-                ExecuteReadDelayTimer(ins);
-                break;
-            case 0x0A:
-                ExecuteWaitForKeyPress(ins);
-                break;
-            case 0x15:
-                ExecuteSetDelayTimer(ins);
-                break;
-            case 0x18:
-                ExecuteSetSoundTimer(ins);
-                break;
-            case 0x1E:
-                ExecuteAddVxToI(ins);
-                break;
-            case 0x29:
-                ExecuteLoadLowResFontCharacter(ins);
-                break;
-            case 0x30:
-                ExecuteLoadHighResFontCharacter(ins);
-                break;
-            case 0x33:
-                ExecuteStoreBcdInMemory(ins);
-                break;
-            case 0x55:
-                ExecuteStoreRegisters(ins);
-                break;
-            case 0x65:
-                ExecuteLoadRegisters(ins);
-                break;
-            // Unknown FXnn: no-op so extended-variant ROMs don't halt.
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteLongLoadIndexRegister()
-    {
-        var hi = _memory[_programCounter];
-        var lo = _memory[_programCounter + 1];
-        WriteIndexRegister((hi << 8) | lo);
-        _programCounter += InstructionSizeInBytes;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteStoreBcdInMemory(int ins)
-    {
-        var x = ExtractX(ins);
-        var bcd = _vRegisters[x];
-        _memory[ReadIndexRegisterWithOffset(0)] = (byte)(bcd / 100);
-        _memory[ReadIndexRegisterWithOffset(1)] = (byte)(bcd / 10 % 10);
-        _memory[ReadIndexRegisterWithOffset(2)] = (byte)(bcd % 10);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteLoadRegisters(int ins)
-    {
-        var x = ExtractX(ins);
-        for (var i = 0; i <= x; i++)
-        {
-            _vRegisters[i] = _memory[ReadIndexRegisterWithOffset(i)];
-        }
-
-        if (LoadStoreIncrementsI)
-        {
-            WriteIndexRegister(_indexRegister + x + 1);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteStoreRegisters(int ins)
-    {
-        var x = ExtractX(ins);
-        for (var i = 0; i <= x; i++)
-        {
-            _memory[ReadIndexRegisterWithOffset(i)] = _vRegisters[i];
-        }
-
-        if (LoadStoreIncrementsI)
-        {
-            WriteIndexRegister(_indexRegister + x + 1);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteLoadLowResFontCharacter(int ins)
-    {
-        var x = ExtractX(ins);
-        var value = _vRegisters[x];
-        WriteIndexRegister((value & 0x0F) * LowRestFontCharWidth + LowResFontBaseAddress);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteLoadHighResFontCharacter(int ins)
-    {
-        var x = ExtractX(ins);
-        var value = _vRegisters[x];
-        WriteIndexRegister((value & 0x0F) * HighRestFontCharWidth + HighResFontBaseAddress);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteAddVxToI(int ins)
-    {
-        var x = ExtractX(ins);
-        WriteIndexRegister(_indexRegister + _vRegisters[x]);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteWaitForKeyPress(int ins)
-    {
-        _isWaitingForKey = true;
-        var x = ExtractX(ins);
-        _keyRegisterIndex = x;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSetSoundTimer(int ins)
-    {
-        var x = ExtractX(ins);
-        var prevSoundTimer = _soundTimer;
-        _soundTimer = _vRegisters[x];
-        if (prevSoundTimer == 0 && _soundTimer != 0)
-        {
-            _audio.PlaySound();
-        }
-        else if (prevSoundTimer != 0 && _soundTimer == 0)
-        {
-            _audio.StopSound();
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSetDelayTimer(int ins)
-    {
-        var x = ExtractX(ins);
-        _delayTimer = _vRegisters[x];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteReadDelayTimer(int ins)
-    {
-        var x = ExtractX(ins);
-        _vRegisters[x] = _delayTimer;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSkipNextInsIfKeyIsPressedOrReleased(int ins)
-    {
-        var op = ins & 0x00FF;
-        if (op == 0x9E)
-        {
-            ExecuteSkipNextInsIfKeyIsPressed(ins);
-        }
-        else if (op == 0xA1)
-        {
-            ExecuteSkipNextInsIfKeyIsReleased(ins);
-        }
-        // Unknown EXnn: no-op.
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSkipNextInsIfKeyIsPressed(int ins)
-    {
-        var x = ExtractX(ins);
-        var key = _vRegisters[x];
-        if (_input.IsKeyPressed(key))
-        {
-            _programCounter += InstructionSizeInBytes;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSkipNextInsIfKeyIsReleased(int ins)
-    {
-        var x = ExtractX(ins);
-        var key = _vRegisters[x];
-        if (!_input.IsKeyPressed(key))
-        {
-            _programCounter += InstructionSizeInBytes;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteGenerateRandomNumIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        var randNum = (byte)Random.Shared.Next(0, 256);
-        _vRegisters[x] = (byte)(randNum & nn);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(int ins)
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        if (_vRegisters[x] != _vRegisters[y])
-        {
-            _programCounter += InstructionSizeInBytes;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSkipNextInsIfRegisterValueEqualsValueIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        if (_vRegisters[x] == nn)
-        {
-            _programCounter += InstructionSizeInBytes;
-        }
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        if (_vRegisters[x] != nn)
-        {
-            _programCounter += InstructionSizeInBytes;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(int ins)
-    {
-        var n = ExtractN(ins);
-        switch (n)
-        {
-            case 0:
-                var x = ExtractX(ins);
-                var y = ExtractY(ins);
-                if (_vRegisters[x] == _vRegisters[y])
-                {
-                    _programCounter += InstructionSizeInBytes;
-                }
-                break;
-            case 2:
-                ExecuteStoreRegisterRange(ins);
-                break;
-            case 3:
-                Cpu.ExecuteLoadRegisterRange(this, ins);
-                break;
-        }
-    }
-    
-    private void ExecuteStoreRegisterRange(int ins)  // 5XY2
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        var step = x <= y ? 1 : -1;
-        var count = Math.Abs(y - x) + 1;
-        for (var k = 0; k < count; k++)
-        {
-            _memory[ReadIndexRegisterWithOffset(k)] =
-                _vRegisters[x + k * step];
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteCallSubroutineIns(int ins)
-    {
-        var address = ExtractNnn(ins);
-        PushStack(_programCounter);
-        _programCounter = address;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExeuteDrawToScreenIns(int ins)
-    {
-        //Console.WriteLine($"Draw to screen");
-        var x = _vRegisters[ExtractX(ins)] % Display.Width;
-        var y = _vRegisters[ExtractY(ins)] % Display.Height;
-        var n = ExtractN(ins);
-
-        if (n == 0)
-        {
-            if (_display.IsHighRes)
-                DrawHighResSprite(x, y);
-            else
-                DrawLowResSprite(x, y, 8);
-        }
-        else
-        {
-            DrawLowResSprite(x, y, n);
-        }
-
-        if (DisplayWait)
-        {
-            _waitForVBlank = true;
-        }
-    }
-
-    private void DrawHighResSprite(int x, int y)
-    {
-        // S-CHIP 1.1 DXY0 hi-res collision semantics:
-        // VF = number of sprite rows with at least one collision
-        //    + number of sprite rows clipped off the bottom edge (when not wrapping).
-        var displayPixels = _display.Pixels.Span;
-        var collidedRows = 0;
-        var clippedRows = 0;
-        for (var i = 0; i < 16; i++)
-        {
-            var dstY = y + i;
-            if (SpritesWrap)
-            {
-                dstY %= Display.Height;
-            }
-            else if (dstY >= Display.Height)
-            {
-                clippedRows = 16 - i;
-                break;
-            }
-
-            var offset = i * 2;
-            var spritePixelsRow = (ushort)(_memory[ReadIndexRegisterWithOffset(offset)] << 8 |
-                                          _memory[ReadIndexRegisterWithOffset(offset + 1)]);
-            var rowCollided = false;
-            for (var bit = 0; bit < 16; bit++)
-            {
-                var dstX = x + bit;
-                if (SpritesWrap) dstX %= Display.Width;
-                else if (dstX >= Display.Width) break;
-
-                var spritePixel = (byte)((spritePixelsRow >> (15 - bit)) & 1);
-                var dstIndex = dstY * Display.Width + dstX;
-                var before = displayPixels[dstIndex];
-                if ((before & spritePixel) != 0) rowCollided = true;
-                displayPixels[dstIndex] = (byte)(before ^ spritePixel);
-            }
-            if (rowCollided) collidedRows++;
-        }
-
-        _vRegisters[0xF] = (byte)(collidedRows + clippedRows);
-    }
-
-    private void DrawLowResSprite(int sx, int sy, int height)
-    {
-        var displayPixels = _display.Pixels.Span;
-        byte collision = 0;
-        for (var y = 0; y < height; y++)
-        {
-            var dstY = sy + y;
-            if (SpritesWrap) dstY %= Display.Height;
-            else if (dstY >= Display.Height) break;
-            
-            var spritePixelsRow = _memory[ReadIndexRegisterWithOffset(y)];
-            for (var bit = 0; bit < 8; bit++)
-            {
-                var dstX = sx + bit;
-                if (SpritesWrap) dstX %= Display.Width;
-                else if (dstX >= Display.Width) break;
-
-                var spritePixel = (byte)((spritePixelsRow >> (7 - bit)) & 1);
-                var dstIndex = dstY * Display.Width + dstX;
-                var before = displayPixels[dstIndex];
-                collision |= (byte)(before & spritePixel);
-                displayPixels[dstIndex] = (byte)(before ^ spritePixel);
-            }
-        }
-
-        var vf = collision != 0;
-        if (vf)
-        {
-            _vRegisters[0xF] = 1;
-        }
-        else
-        {
-            _vRegisters[0xF] = 0;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSetRegisterValueIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        _vRegisters[x] = nn;
-        //Console.WriteLine($"Set Register Value: {x:X}, Value: {nn:X}");
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteArithmeticOperationIns(int ins)
-    {
-        var lo = ins & 0x000F;
-        switch (lo)
-        {
-            case 0:
-                ExecuteSetRegisterValueFromRegisterIns(ins);
-                break;
-            case 1:
-                ExecuteBitwiseOrOnRegistersIns(ins);
-                break;
-            case 2:
-                ExecuteBitwiseAndOnRegistersIns(ins);
-                break;
-            case 3:
-                ExecuteXorRegisterValueFromRegisterIns(ins);
-                break;
-            case 4:
-                ExecuteAddValueToRegisterWithCarryIns(ins);
-                break;
-            case 5:
-                ExecuteVxSubVyIns(ins);
-                break;
-            case 6:
-                ExecuteShiftRightIns(ins);
-                break;
-            case 7:
-                ExecuteVySubVxIns(ins);
-                break;
-            case 0xE:
-                ExecuteShiftLeftIns(ins);
-                break;
-            // Unknown 8XYn: no-op.
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteShiftRightIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var value = _vRegisters[x];
-        
-        if (ShiftUsesVy)
-        {
-            var y = ExtractY(ins);
-            value = _vRegisters[y];
-        }
-        
-        var flag = (byte)(value & 0x1);
-        var result = (byte)(value >> 1);
-        _vRegisters[x] = result;
-        _vRegisters[0xF] = flag;
-        if (VfResultWrittenLast) _vRegisters[x] = result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteShiftLeftIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var value = _vRegisters[x];
-        
-        if (ShiftUsesVy)
-        {
-            var y = ExtractY(ins);
-            value = _vRegisters[y];
-        }
-        
-        var flag = (byte)((value >> 7) & 0x1);
-        var result = (byte)(value << 1);
-        _vRegisters[x] = result;
-        _vRegisters[0xF] = flag;
-        if (VfResultWrittenLast) _vRegisters[x] = result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteVxSubVyIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        var minuend = _vRegisters[x];
-        var subtrahend = _vRegisters[y];
-        var flag = (byte)(minuend >= subtrahend ? 1 : 0);
-        var result = (byte)(minuend - subtrahend);
-        _vRegisters[x] = result;
-        _vRegisters[0xF] = flag;
-        if (VfResultWrittenLast) _vRegisters[x] = result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteVySubVxIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        // NOTE(Zee): y first
-        var minuend = _vRegisters[y];
-        var subtrahend = _vRegisters[x];
-        var flag = (byte)(minuend >= subtrahend ? 1 : 0);
-        var result = (byte)(minuend - subtrahend);
-        _vRegisters[x] = result;
-        _vRegisters[0xF] = flag;
-        if (VfResultWrittenLast) _vRegisters[x] = result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteAddValueToRegisterWithCarryIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        var sum = _vRegisters[x] + _vRegisters[y];
-        var carry = (byte)(sum > 0xFF ? 1 : 0);
-        var result = (byte)sum;
-        _vRegisters[x] = result;
-        _vRegisters[0xF] = carry;
-        if (VfResultWrittenLast) _vRegisters[x] = result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteBitwiseOrOnRegistersIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        _vRegisters[x] |= _vRegisters[y];
-
-        if (LogicResetsVf)
-        {
-            _vRegisters[0xF] = 0;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteBitwiseAndOnRegistersIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        _vRegisters[x] &= _vRegisters[y]; 
-        
-        if (LogicResetsVf)
-        {
-            _vRegisters[0xF] = 0;
-        }
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSetRegisterValueFromRegisterIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        _vRegisters[x] = _vRegisters[y];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteXorRegisterValueFromRegisterIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        _vRegisters[x] ^= _vRegisters[y];  
-        
-        if (LogicResetsVf)
-        {
-            _vRegisters[0xF] = 0;
-        }
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteAddValueToRegisterIns(int ins)
-    {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        //Console.WriteLine($"Add Value To Register: {x:X}, Value: {nn:X}");
-        _vRegisters[x] += nn;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteSetIndexRegisterIns(int ins)
-    {
-        var nnn = ExtractNnn(ins);
-        //Console.WriteLine($"Set Index Register: {nnn:X}");
-        WriteIndexRegister(nnn);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteJumpToAddressIns(int ins)
-    {
-        var address = ExtractNnn(ins);
-        _programCounter = address;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteJumpWithOffsetIns(int ins)
-    {
-        var address = ExtractNnn(ins);
-        if (JumpUsesVx)
-        {
-            var x = ExtractX(ins);
-            _programCounter = address + _vRegisters[x];
-        }
-        else
-        {
-            _programCounter = address + _vRegisters[0];
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteReturnFromSubroutineIns()
-    {
-        var address = PopStack();
-        _programCounter = address;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void ExecuteClearDisplayIns()
-    {
-        _display.Clear();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private int Fetch()
-    {
-        var ins = _memory[_programCounter] << 8 | _memory[_programCounter+1];
-        _programCounter += InstructionSizeInBytes;
-        return ins;
-    }
-
     private sealed class Chip8MachineDebugger(Chip8Machine machine) : IMachineDebugger
     {
         public ReadOnlySpan<byte> Memory => machine._memory;
@@ -1054,17 +387,7 @@ internal sealed class Chip8Machine : IChip8Machine
 
         public void StepInstruction()
         {
-            machine.FetchDecodeExecute();
+            Cpu.FetchDecodeExecute(machine);
         }
-    }
-
-    public byte ReadMemory(int address)
-    {
-        return _memory[address];
-    }
-
-    public void WriteRegister(int register, byte value)
-    {
-        _vRegisters[register] = value;
     }
 }
