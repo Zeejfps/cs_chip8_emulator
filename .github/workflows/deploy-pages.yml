@@ -45,14 +45,8 @@ jobs:
       - name: Disable Jekyll
         run: touch publish/wwwroot/.nojekyll
 
-      - name: Debug — list publish output
-        run: |
-          echo "=== publish/wwwroot root ==="
-          ls -la publish/wwwroot
-          echo "=== sitemap/robots/favicon presence ==="
-          ls -la publish/wwwroot/sitemap.xml publish/wwwroot/robots.txt publish/wwwroot/favicon.svg || true
-          echo "=== every .xml in publish/wwwroot ==="
-          find publish/wwwroot -name '*.xml'
+      - name: Copy sitemap into bundle
+        run: cp Chip8Emulator.App.Wasm/web/public/sitemap.xml publish/wwwroot/sitemap.xml
 
       - uses: actions/configure-pages@v5
 
