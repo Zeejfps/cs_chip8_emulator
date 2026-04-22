@@ -31,13 +31,9 @@ jobs:
       - name: Install wasm-tools workload
         run: dotnet workload install wasm-tools
 
-      - name: Install TypeScript deps
+      - name: Install frontend deps
         working-directory: Chip8Emulator.App.Wasm/web
         run: npm ci
-
-      - name: Build TypeScript
-        working-directory: Chip8Emulator.App.Wasm/web
-        run: npm run build
 
       - name: Publish
         run: dotnet publish Chip8Emulator.App.Wasm/Chip8Emulator.App.Wasm.csproj -c Release -o publish

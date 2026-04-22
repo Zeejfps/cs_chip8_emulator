@@ -8,12 +8,10 @@
     "noUnusedParameters": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
-    "sourceMap": true,
-    "rootDir": "./src",
-    "outDir": "../wwwroot",
-    "declaration": false,
+    "noEmit": true,
     "skipLibCheck": true,
+    "isolatedModules": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "vite.config.ts"]
 }

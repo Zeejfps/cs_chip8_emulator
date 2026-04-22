@@ -14,20 +14,34 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TypeScriptInputs Include="web/src/**/*.ts" />
-    <TypeScriptInputs Include="web/tsconfig.json" />
-    <TypeScriptInputs Include="web/package.json" />
+    <FrontendInputs Include="web/src/**/*.ts" />
+    <FrontendInputs Include="web/index.html" />
+    <FrontendInputs Include="web/styles.css" />
+    <FrontendInputs Include="web/public/**/*" />
+    <FrontendInputs Include="web/tsconfig.json" />
+    <FrontendInputs Include="web/vite.config.ts" />
+    <FrontendInputs Include="web/package.json" />
   </ItemGroup>
 
-  <Target Name="BuildTypeScript"
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\assets\index-BoLWVScL.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\assets\index-BoLWVScL.js.map" />
+    <_ContentIncludedByDefault Remove="wwwroot\assets\index-g16qCtAV.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <Target Name="BuildFrontend"
           BeforeTargets="BeforeBuild"
-          Inputs="@(TypeScriptInputs)"
-          Outputs="$(IntermediateOutputPath)tsbuild.stamp">
+          Inputs="@(FrontendInputs)"
+          Outputs="$(IntermediateOutputPath)frontend.stamp">
     <Exec WorkingDirectory="web"
           Command="npm ci"
           Condition="!Exists('web/node_modules/.package-lock.json')" />
     <Exec WorkingDirectory="web" Command="npm run build" />
     <MakeDir Directories="$(IntermediateOutputPath)" />
-    <Touch Files="$(IntermediateOutputPath)tsbuild.stamp" AlwaysCreate="true" />
+    <Touch Files="$(IntermediateOutputPath)frontend.stamp" AlwaysCreate="true" />
   </Target>
 </Project>

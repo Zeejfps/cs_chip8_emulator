@@ -1,4 +1,4 @@
-import { dotnet } from './_framework/dotnet.js';
+import type { DotnetBuilder } from './_framework/dotnet.js';
 import { Audio } from './audio.js';
 import { Disassembler } from './disasm.js';
 import { installKeyListeners } from './input.js';
@@ -7,6 +7,10 @@ import { AppUi } from './ui.js';
 
 const statusEl = document.getElementById('status');
 if (statusEl) statusEl.textContent = 'Loading runtime...';
+
+const { dotnet } = (await import(
+  /* @vite-ignore */ new URL('_framework/dotnet.js', document.baseURI).href
+)) as { dotnet: DotnetBuilder };
 
 const runtime = await dotnet.withApplicationArgumentsFromQuery().create();
 
