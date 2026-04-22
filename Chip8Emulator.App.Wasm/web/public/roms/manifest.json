@@ -1,0 +1,92 @@
+[
+  {
+    "id": "br8kout",
+    "title": "BR8KOUT",
+    "author": "SharpenedSpoon",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Breakout clone.",
+    "file": "br8kout.ch8"
+  },
+  {
+    "id": "octojam1title",
+    "title": "Octojam 1 Title",
+    "author": "John Earnest",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Octojam intro animation.",
+    "file": "octojam1title.ch8"
+  },
+  {
+    "id": "snake",
+    "title": "Snake",
+    "author": "TomR",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Snake.",
+    "file": "snake.ch8"
+  },
+  {
+    "id": "rockto",
+    "title": "Rockto",
+    "author": "SupSuper",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Rock, paper, scissors vs. CPU.",
+    "file": "rockto.ch8"
+  },
+  {
+    "id": "flightrunner",
+    "title": "Flight Runner",
+    "author": "TodPunk",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Side-scrolling avoider.",
+    "file": "flightrunner.ch8"
+  },
+  {
+    "id": "glitchGhost",
+    "title": "Glitch Ghost",
+    "author": "LillianV",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Puzzle platformer.",
+    "file": "glitchGhost.ch8"
+  },
+  {
+    "id": "danm8ku",
+    "title": "danm8ku",
+    "author": "buffis",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Bullet-hell demo.",
+    "file": "danm8ku.ch8"
+  },
+  {
+    "id": "chipquarium",
+    "title": "Chipquarium",
+    "author": "Silvervice",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Virtual fish tank.",
+    "file": "chipquarium.ch8"
+  },
+  {
+    "id": "slipperyslope",
+    "title": "Slippery Slope",
+    "author": "John Earnest",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Downhill skier.",
+    "file": "slipperyslope.ch8"
+  },
+  {
+    "id": "RPS",
+    "title": "RPS",
+    "author": "SystemLogoff",
+    "license": "CC0-1.0",
+    "preferredQuirks": "chip48",
+    "description": "Rock paper scissors.",
+    "file": "RPS.ch8"
+  }
+]

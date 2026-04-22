@@ -15,18 +15,17 @@
 
   <ItemGroup>
     <FrontendInputs Include="web/src/**/*.ts" />
+    <FrontendInputs Include="web/src/**/*.svelte" />
+    <FrontendInputs Include="web/src/**/*.svelte.ts" />
+    <FrontendInputs Include="web/src/**/*.css" />
     <FrontendInputs Include="web/index.html" />
-    <FrontendInputs Include="web/styles.css" />
     <FrontendInputs Include="web/public/**/*" />
     <FrontendInputs Include="web/tsconfig.json" />
     <FrontendInputs Include="web/vite.config.ts" />
+    <FrontendInputs Include="web/svelte.config.js" />
+    <FrontendInputs Include="web/components.json" />
     <FrontendInputs Include="web/package.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="wwwroot\assets\index-BoLWVScL.js" />
-    <_ContentIncludedByDefault Remove="wwwroot\assets\index-BoLWVScL.js.map" />
-    <_ContentIncludedByDefault Remove="wwwroot\assets\index-g16qCtAV.css" />
+    <FrontendInputs Include="web/package-lock.json" />
   </ItemGroup>
 
   <ItemGroup>
