@@ -7,25 +7,8 @@ internal static class Cpu
 {
     private static void NoOp(Chip8Machine machine, int ins) { }
 
-    private static readonly Action<Chip8Machine, int>[] OpcodeTable =
-    [
-        ExecuteZeroBaseIns,                                      // 0
-        ExecuteJumpToAddressIns,                                 // 1
-        ExecuteCallSubroutineIns,                                // 2
-        ExecuteSkipNextInsIfRegisterValueEqualsValueIns,         // 3
-        ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns,      // 4
-        ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue,    // 5
-        ExecuteSetRegisterValueIns,                              // 6
-        ExecuteAddValueToRegisterIns,                            // 7
-        ExecuteArithmeticOperationIns,                           // 8
-        ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue, // 9
-        ExecuteSetIndexRegisterIns,                              // A
-        ExecuteJumpWithOffsetIns,                                // B
-        ExecuteGenerateRandomNumIns,                             // C
-        ExeuteDrawToScreenIns,                                   // D
-        ExecuteSkipNextInsIfKeyIsPressedOrReleased,              // E
-        ExecuteTimerIns,                                         // F
-    ];
+    // Top-level dispatch — indexed by the high nibble of the instruction.
+    private static readonly Action<Chip8Machine, int>[] RootOpcodeTable = BuildRootOpcodeTable();
 
     // 00nn — dispatched on low byte.
     private static readonly Action<Chip8Machine, int>[] SystemInsTable = BuildSystemInsTable();
@@ -41,6 +24,28 @@ internal static class Cpu
     
     // 8XYN — dispatched on low nibble.
     private static readonly Action<Chip8Machine, int>[] ArithmeticTable = BuildArithmeticTable();
+    
+    private static Action<Chip8Machine, int>[] BuildRootOpcodeTable()
+    {
+        var table = new Action<Chip8Machine, int>[16];
+        table[0x0] = ExecuteZeroBaseIns;
+        table[0x1] = ExecuteJumpToAddressIns;
+        table[0x2] = ExecuteCallSubroutineIns;
+        table[0x3] = ExecuteSkipNextInsIfRegisterValueEqualsValueIns;
+        table[0x4] = ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns;
+        table[0x5] = ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue;
+        table[0x6] = ExecuteSetRegisterValueIns;
+        table[0x7] = ExecuteAddValueToRegisterIns;
+        table[0x8] = ExecuteArithmeticOperationIns;
+        table[0x9] = ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue;
+        table[0xA] = ExecuteSetIndexRegisterIns;
+        table[0xB] = ExecuteJumpWithOffsetIns;
+        table[0xC] = ExecuteGenerateRandomNumIns;
+        table[0xD] = ExeuteDrawToScreenIns;
+        table[0xE] = ExecuteSkipNextInsIfKeyIsPressedOrReleased;
+        table[0xF] = ExecuteTimerIns;
+        return table;
+    }
     
     private static Action<Chip8Machine, int>[] BuildSystemInsTable()
     {
@@ -142,7 +147,7 @@ internal static class Cpu
         var ins = Fetch(machine);
         machine.AdvanceProgramCounter();
         var opcode = (ins & 0xF000) >> 12;
-        var execute = OpcodeTable[opcode];
+        var execute = RootOpcodeTable[opcode];
         execute(machine, ins);
     }
 
