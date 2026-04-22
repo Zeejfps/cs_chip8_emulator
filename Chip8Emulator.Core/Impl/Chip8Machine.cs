@@ -660,11 +660,49 @@ internal sealed class Chip8Machine : IChip8Machine
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(int ins)
     {
+        var n = ExtractN(ins);
+        switch (n)
+        {
+            case 0:
+                var x = ExtractX(ins);
+                var y = ExtractY(ins);
+                if (_vRegisters[x] == _vRegisters[y])
+                {
+                    _programCounter += InstructionSizeInBytes;
+                }
+                break;
+            case 2:
+                ExecuteStoreRegisterRange(ins);
+                break;
+            case 3:
+                ExecuteLoadRegisterRange(ins);
+                break;
+        }
+    }
+    
+    private void ExecuteLoadRegisterRange(int ins)  // 5XY3       
+    {                                  
+        var x = ExtractX(ins);                                    
+        var y = ExtractY(ins);
+        var step = x <= y ? 1 : -1;                               
+        var count = Math.Abs(y - x) + 1;                          
+        for (var k = 0; k < count; k++)
+        {                                                         
+            _vRegisters[x + k * step] =                   
+                _memory[ReadIndexRegisterWithOffset(k)];                      
+        }
+    }       
+    
+    private void ExecuteStoreRegisterRange(int ins)  // 5XY2
+    {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        if (_vRegisters[x] == _vRegisters[y])
+        var step = x <= y ? 1 : -1;
+        var count = Math.Abs(y - x) + 1;
+        for (var k = 0; k < count; k++)
         {
-            _programCounter += InstructionSizeInBytes;
+            _memory[ReadIndexRegisterWithOffset(k)] =
+                _vRegisters[x + k * step];
         }
     }
 
