@@ -26,7 +26,9 @@
   <Button
     variant="outline"
     size="icon-sm"
-    onclick={() => { romPickerOpen = !romPickerOpen; }}
+    onclick={() => {
+      romPickerOpen = !romPickerOpen;
+    }}
     title="Load ROM"
     aria-label="Load ROM"
   >
@@ -59,7 +61,9 @@
   <Button
     variant="ghost"
     size="icon-sm"
-    onclick={() => { settings.debugOpen = !settings.debugOpen; }}
+    onclick={() => {
+      settings.debugOpen = !settings.debugOpen;
+    }}
     title={settings.debugOpen ? 'Hide debug' : 'Show debug'}
     aria-label="Toggle debug panel"
     aria-pressed={settings.debugOpen}
@@ -70,7 +74,9 @@
   <Button
     variant="ghost"
     size="icon-sm"
-    onclick={() => { settingsOpen = true; }}
+    onclick={() => {
+      settingsOpen = true;
+    }}
     title="Settings"
     aria-label="Open settings"
   >

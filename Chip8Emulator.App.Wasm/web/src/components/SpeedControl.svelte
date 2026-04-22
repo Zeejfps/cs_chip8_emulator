@@ -33,13 +33,15 @@
 <div class="flex flex-col gap-2">
   <div class="flex items-center justify-between">
     <Label class="font-pixel text-xs tracking-wider">Speed</Label>
-    <span class="font-pixel text-[11px] text-muted-foreground">{settings.ips} IPS</span>
+    <span class="font-pixel text-muted-foreground text-[11px]">{settings.ips} IPS</span>
   </div>
   <div class="grid grid-cols-4 gap-1">
     {#each PRESETS as preset (preset)}
       <button
         type="button"
-        class="rounded border px-2 py-1 text-xs {settings.speedPreset === preset ? 'bg-primary/20 border-primary/60 phosphor-text' : 'border-border/60'}"
+        class="rounded border px-2 py-1 text-xs {settings.speedPreset === preset
+          ? 'bg-primary/20 border-primary/60 phosphor-text'
+          : 'border-border/60'}"
         onclick={() => applyPreset(preset)}
       >
         {preset}

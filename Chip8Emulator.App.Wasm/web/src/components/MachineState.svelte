@@ -6,7 +6,24 @@
 
   const { api } = getEmuContext();
 
-  const REG_LABELS = ['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','VA','VB','VC','VD','VE','VF'];
+  const REG_LABELS = [
+    'V0',
+    'V1',
+    'V2',
+    'V3',
+    'V4',
+    'V5',
+    'V6',
+    'V7',
+    'V8',
+    'V9',
+    'VA',
+    'VB',
+    'VC',
+    'VD',
+    'VE',
+    'VF',
+  ];
 
   interface Snapshot {
     registers: Uint8Array;
@@ -33,13 +50,13 @@
   });
 </script>
 
-<div class="font-pixel text-[12px] tabular-nums rounded-md border border-border/60 overflow-hidden">
+<div class="font-pixel border-border/60 overflow-hidden rounded-md border text-[12px] tabular-nums">
   {#if snap === null}
-    <div class="p-3 text-muted-foreground">Load a ROM to view machine state.</div>
+    <div class="text-muted-foreground p-3">Load a ROM to view machine state.</div>
   {:else}
     <div class="flex">
       <!-- Stack panel -->
-      <div class="flex flex-col border-r border-border/60 p-3">
+      <div class="border-border/60 flex flex-col border-r p-3">
         <span class="text-muted-foreground">STACK</span>
         {#each { length: 14 } as _, i}
           <span class={i === snap.stackPointer ? 'phosphor-text' : 'text-muted-foreground'}>
@@ -50,12 +67,12 @@
 
       <!-- Right panel -->
       <div class="flex min-w-0 flex-1 flex-col p-3">
-        <div class="grid grid-cols-16 gap-x-1 text-muted-foreground">
+        <div class="text-muted-foreground grid grid-cols-16 gap-x-1">
           {#each REG_LABELS as label}
             <span>{label}</span>
           {/each}
         </div>
-        <div class="grid grid-cols-16 gap-x-1 phosphor-text">
+        <div class="phosphor-text grid grid-cols-16 gap-x-1">
           {#each snap.registers as v}
             <span>{hex2(v)}</span>
           {/each}
@@ -80,7 +97,7 @@
           <span class="phosphor-text">{snap.stackPointer}</span>
         </span>
         <span>
-          <span class="text-muted-foreground">I  = </span>
+          <span class="text-muted-foreground">I = </span>
           <span class="phosphor-text">{hex4(snap.indexRegister)}</span>
         </span>
 

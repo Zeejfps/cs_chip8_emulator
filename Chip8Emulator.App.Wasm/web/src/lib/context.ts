@@ -17,6 +17,9 @@ export function setEmuContext(ctx: EmuContext): void {
 
 export function getEmuContext(): EmuContext {
   const ctx = getContext<EmuContext | undefined>(EMU_KEY);
-  if (!ctx) throw new Error('EmuContext not provided — ensure App.svelte mounted with api/runtime/audio props');
+  if (!ctx)
+    throw new Error(
+      'EmuContext not provided — ensure App.svelte mounted with api/runtime/audio props',
+    );
   return ctx;
 }

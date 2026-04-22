@@ -14,10 +14,42 @@ export type PresetName = 'cosmac' | 'chip48' | 'schip' | 'xochip';
 export type PresetOrCustom = PresetName | 'custom';
 
 export const QUIRK_PRESETS: Record<PresetName, QuirkFlags> = {
-  cosmac: { shiftVy: true,  jumpVx: false, lsIncI: true,  logicVf: true,  wrap: false, dispWait: true,  vfResultLast: false },
-  chip48: { shiftVy: false, jumpVx: true,  lsIncI: false, logicVf: false, wrap: false, dispWait: false, vfResultLast: false },
-  schip:  { shiftVy: false, jumpVx: true,  lsIncI: false, logicVf: false, wrap: false, dispWait: false, vfResultLast: false },
-  xochip: { shiftVy: false, jumpVx: false, lsIncI: true,  logicVf: false, wrap: true,  dispWait: false, vfResultLast: false },
+  cosmac: {
+    shiftVy: true,
+    jumpVx: false,
+    lsIncI: true,
+    logicVf: true,
+    wrap: false,
+    dispWait: true,
+    vfResultLast: false,
+  },
+  chip48: {
+    shiftVy: false,
+    jumpVx: true,
+    lsIncI: false,
+    logicVf: false,
+    wrap: false,
+    dispWait: false,
+    vfResultLast: false,
+  },
+  schip: {
+    shiftVy: false,
+    jumpVx: true,
+    lsIncI: false,
+    logicVf: false,
+    wrap: false,
+    dispWait: false,
+    vfResultLast: false,
+  },
+  xochip: {
+    shiftVy: false,
+    jumpVx: false,
+    lsIncI: true,
+    logicVf: false,
+    wrap: true,
+    dispWait: false,
+    vfResultLast: false,
+  },
 };
 
 export const PRESET_LABELS: Record<PresetName, string> = {

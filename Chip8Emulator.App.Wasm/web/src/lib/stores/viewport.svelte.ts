@@ -3,7 +3,9 @@ export const viewport = $state({
 });
 
 export function initViewport(): () => void {
-  const onResize = () => { viewport.width = window.innerWidth; };
+  const onResize = () => {
+    viewport.width = window.innerWidth;
+  };
   window.addEventListener('resize', onResize, { passive: true });
   return () => window.removeEventListener('resize', onResize);
 }

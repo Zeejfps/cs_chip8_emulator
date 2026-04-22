@@ -66,7 +66,11 @@
 
 {#if isMobile}
   <Sheet bind:open={settings.debugOpen}>
-    <SheetContent side="bottom" class="h-[70vh] gap-0" overlayClass="bg-transparent supports-backdrop-filter:backdrop-blur-none">
+    <SheetContent
+      side="bottom"
+      class="h-[70vh] gap-0"
+      overlayClass="bg-transparent supports-backdrop-filter:backdrop-blur-none"
+    >
       <SheetHeader>
         <SheetTitle class="font-pixel phosphor-text tracking-wider">Debug</SheetTitle>
       </SheetHeader>
@@ -81,14 +85,16 @@
 {:else}
   <Collapsible bind:open={settings.debugOpen}>
     <CollapsibleContent>
-      <div class="flex flex-col gap-3 rounded-md border border-border/60 bg-card/40 p-3">
+      <div class="border-border/60 bg-card/40 flex flex-col gap-3 rounded-md border p-3">
         <div class="flex items-center gap-2">
           <h2 class="font-pixel phosphor-text text-xs tracking-wider">Debug</h2>
           <Button
             variant="ghost"
             size="icon-sm"
             class="ml-auto"
-            onclick={() => { settings.debugOpen = false; }}
+            onclick={() => {
+              settings.debugOpen = false;
+            }}
             title="Hide debug"
             aria-label="Hide debug"
           >

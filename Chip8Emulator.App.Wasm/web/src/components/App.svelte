@@ -30,9 +30,7 @@
   let settingsOpen = $state(false);
   let romPickerOpen = $state(false);
 
-  const touchKeypadVisible = $derived(
-    settings.touchKeypadManual ?? viewport.width < 768,
-  );
+  const touchKeypadVisible = $derived(settings.touchKeypadManual ?? viewport.width < 768);
 
   onMount(() => {
     writeQuirksToApi(api, settings.quirks);
@@ -91,7 +89,7 @@
 </script>
 
 <div class="flex min-h-svh flex-col">
-  <header class="border-b border-border/50 px-3 py-2 sm:px-4">
+  <header class="border-border/50 border-b px-3 py-2 sm:px-4">
     <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-3">
       <h1 class="font-pixel phosphor-text text-base tracking-[0.2em] sm:text-lg">CHIP-8</h1>
       <Toolbar bind:settingsOpen bind:romPickerOpen />
@@ -99,7 +97,11 @@
   </header>
 
   <main class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-3 px-3 py-3 sm:px-4 sm:py-4">
-    <Canvas onOpenRomPicker={() => { romPickerOpen = true; }} />
+    <Canvas
+      onOpenRomPicker={() => {
+        romPickerOpen = true;
+      }}
+    />
     <StatusBar />
     {#if touchKeypadVisible}
       <TouchKeypad />

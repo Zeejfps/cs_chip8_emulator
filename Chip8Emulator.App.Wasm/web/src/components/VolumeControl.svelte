@@ -29,7 +29,9 @@
     <Button
       variant="ghost"
       size="icon-sm"
-      onclick={() => { settings.muted = !settings.muted; }}
+      onclick={() => {
+        settings.muted = !settings.muted;
+      }}
       aria-pressed={settings.muted}
       aria-label={settings.muted ? 'Unmute' : 'Mute'}
     >
@@ -48,7 +50,7 @@
       onValueChange={onChange}
       class="flex-1"
     />
-    <span class="font-pixel w-10 text-right text-[11px] text-muted-foreground">
+    <span class="font-pixel text-muted-foreground w-10 text-right text-[11px]">
       {Math.round(settings.volume * 100)}%
     </span>
   </div>

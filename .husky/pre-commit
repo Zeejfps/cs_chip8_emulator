@@ -1,0 +1,1 @@
+cd Chip8Emulator.App.Wasm/web && npx lint-staged

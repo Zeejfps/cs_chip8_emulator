@@ -41,7 +41,7 @@
     {#each row as hex (hex)}
       <button
         type="button"
-        class="font-pixel phosphor-text flex aspect-square items-center justify-center rounded border border-border/60 bg-muted/30 text-xl tracking-wider active:bg-primary/30 active:translate-y-px"
+        class="font-pixel phosphor-text border-border/60 bg-muted/30 active:bg-primary/30 flex aspect-square items-center justify-center rounded border text-xl tracking-wider active:translate-y-px"
         onpointerdown={(e) => onPointerDown(e, hex)}
         onpointerup={onPointerUp}
         onpointercancel={onPointerUp}

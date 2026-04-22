@@ -73,7 +73,6 @@
           lastPc = pc;
           emulator.pc = pc;
         }
-
       }
 
       const palette = PHOSPHOR_COLORS[settings.phosphor];
@@ -100,7 +99,7 @@
 
 <div
   bind:this={wrapperEl}
-  class="crt-screen relative mx-auto w-full overflow-hidden rounded-md border border-border/60 bg-black"
+  class="crt-screen border-border/60 relative mx-auto w-full overflow-hidden rounded-md border bg-black"
   style="aspect-ratio: {WIDTH} / {HEIGHT};"
 >
   <canvas

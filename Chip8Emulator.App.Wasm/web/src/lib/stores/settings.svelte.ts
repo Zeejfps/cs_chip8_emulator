@@ -28,7 +28,7 @@ export const SPEED_PRESET_IPS: Record<SpeedPreset, number> = {
   '0.5x': 500,
   '1x': 1000,
   '2x': 2000,
-  'max': IPS_MAX,
+  max: IPS_MAX,
 };
 
 const defaults: Settings = {
@@ -38,7 +38,15 @@ const defaults: Settings = {
   muted: false,
   phosphor: 'green',
   scanlines: true,
-  quirks: { shiftVy: false, jumpVx: true, lsIncI: false, logicVf: false, wrap: false, dispWait: false, vfResultLast: false },
+  quirks: {
+    shiftVy: false,
+    jumpVx: true,
+    lsIncI: false,
+    logicVf: false,
+    wrap: false,
+    dispWait: false,
+    vfResultLast: false,
+  },
   quirksPreset: 'chip48',
   touchKeypadManual: null,
   debugOpen: false,

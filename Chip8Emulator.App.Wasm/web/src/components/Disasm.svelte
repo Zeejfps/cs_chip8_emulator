@@ -40,7 +40,9 @@
   {:else}
     {#each lines as line (line.pc)}
       <div
-        class="grid grid-cols-[4rem_3.5rem_1fr] items-baseline gap-2 {line.current ? 'phosphor-text' : 'text-muted-foreground'}"
+        class="grid grid-cols-[4rem_3.5rem_1fr] items-baseline gap-2 {line.current
+          ? 'phosphor-text'
+          : 'text-muted-foreground'}"
       >
         <span class="tabular-nums">{hex4(line.pc)}</span>
         <span class="tabular-nums">{line.bytes}</span>

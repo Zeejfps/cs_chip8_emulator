@@ -2,7 +2,13 @@
   import { onMount } from 'svelte';
   import Upload from 'phosphor-svelte/lib/Upload';
   import File from 'phosphor-svelte/lib/File';
-  import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '$lib/components/ui/sheet/index.js';
+  import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
+  } from '$lib/components/ui/sheet/index.js';
   import { Button } from '$lib/components/ui/button/index.js';
   import { getEmuContext } from '$lib/context.js';
   import { settings, SPEED_PRESET_IPS, type SpeedPreset } from '$lib/stores/settings.svelte.js';
@@ -25,7 +31,9 @@
 
   onMount(() => {
     loadManifest()
-      .then((entries) => { roms = entries; })
+      .then((entries) => {
+        roms = entries;
+      })
       .catch((err) => {
         console.warn('ROM manifest unavailable', err);
         manifestError = 'Bundled ROMs unavailable.';
@@ -40,8 +48,9 @@
       settings.quirksPreset = matchingPreset(entry.preferredQuirks);
       if (entry.preferredIps !== undefined) {
         settings.ips = entry.preferredIps;
-        const preset = (Object.keys(SPEED_PRESET_IPS) as SpeedPreset[])
-          .find((p) => SPEED_PRESET_IPS[p] === entry.preferredIps);
+        const preset = (Object.keys(SPEED_PRESET_IPS) as SpeedPreset[]).find(
+          (p) => SPEED_PRESET_IPS[p] === entry.preferredIps,
+        );
         if (preset) settings.speedPreset = preset;
       }
       runRom(api, audio, bytes, entry.title, entry.id);
@@ -72,7 +81,9 @@
   <SheetContent side="left" class="gap-0">
     <SheetHeader>
       <SheetTitle class="font-pixel phosphor-text tracking-wider">Load ROM</SheetTitle>
-      <SheetDescription>Pick a bundled title or upload your own <code>.ch8</code> file.</SheetDescription>
+      <SheetDescription
+        >Pick a bundled title or upload your own <code>.ch8</code> file.</SheetDescription
+      >
     </SheetHeader>
 
     <div class="flex flex-col gap-4 overflow-y-auto px-4 pb-6">
@@ -95,28 +106,28 @@
       {/if}
 
       <div class="flex flex-col gap-1">
-        <h3 class="font-pixel text-xs tracking-wider text-muted-foreground">Bundled</h3>
+        <h3 class="font-pixel text-muted-foreground text-xs tracking-wider">Bundled</h3>
         {#if manifestError}
-          <p class="text-xs text-muted-foreground">{manifestError}</p>
+          <p class="text-muted-foreground text-xs">{manifestError}</p>
         {:else if roms.length === 0}
-          <p class="text-xs text-muted-foreground">Loading…</p>
+          <p class="text-muted-foreground text-xs">Loading…</p>
         {:else}
-          <ul class="flex flex-col divide-y divide-border/40">
+          <ul class="divide-border/40 flex flex-col divide-y">
             {#each roms as rom (rom.id)}
               <li>
                 <button
                   type="button"
-                  class="flex w-full items-start gap-2 py-2 text-left hover:bg-muted/30"
+                  class="hover:bg-muted/30 flex w-full items-start gap-2 py-2 text-left"
                   onclick={() => loadBundled(rom)}
                 >
-                  <File class="mt-0.5 shrink-0 text-muted-foreground" />
+                  <File class="text-muted-foreground mt-0.5 shrink-0" />
                   <span class="flex min-w-0 flex-col">
                     <span class="font-pixel phosphor-text text-sm tracking-wide">{rom.title}</span>
-                    <span class="text-xs text-muted-foreground truncate">
+                    <span class="text-muted-foreground truncate text-xs">
                       {rom.author} — {rom.license}
                     </span>
                     {#if rom.description}
-                      <span class="text-[11px] text-muted-foreground/80">{rom.description}</span>
+                      <span class="text-muted-foreground/80 text-[11px]">{rom.description}</span>
                     {/if}
                   </span>
                 </button>
