@@ -80,6 +80,14 @@
   $effect(() => {
     document.documentElement.classList.toggle('phosphor-amber', settings.phosphor === 'amber');
   });
+
+  $effect(() => {
+    if (!emulator.running) return;
+    emulator.paused = settings.debugOpen;
+    emulator.status = settings.debugOpen
+      ? 'Paused (debug)'
+      : `Running ${emulator.lastRomName ?? 'program'}`;
+  });
 </script>
 
 <div class="flex min-h-svh flex-col">

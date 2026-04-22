@@ -34,13 +34,20 @@ export function resetEmulator(api: InteropExports): void {
   writeQuirksToApi(api, settings.quirks);
   api.SetInstructionsPerSecond(settings.ips);
   if (emulator.lastRomBytes) api.LoadProgram(emulator.lastRomBytes);
-  emulator.running = false;
-  emulator.paused = true;
+  api.Start();
+  emulator.running = emulator.lastRomBytes !== null;
+  emulator.paused = settings.debugOpen;
   emulator.pc = api.GetProgramCounter();
   emulator.prevInsLine = null;
   emulator.status = emulator.lastRomName
-    ? `Reset. Press Start to run ${emulator.lastRomName}.`
+    ? `Running ${emulator.lastRomName}`
     : 'Reset. Load a ROM to begin.';
+}
+
+export function stepEmulator(api: InteropExports): void {
+  if (!emulator.running) return;
+  api.Step();
+  emulator.pc = api.GetProgramCounter();
 }
 
 let fullscreenFn: (() => void) | null = null;
