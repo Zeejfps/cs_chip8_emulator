@@ -1,5 +1,7 @@
 # CHIP-8 Emulator
 
+![CHIP-8 Emulator](Chip8Emulator.App.Wasm/web/public/og-image.png)
+
 A CHIP-8 emulator written in C# / .NET 10, with three front-ends sharing a common core.
 
 Live demo: [chip8.builtbyzee.com](https://chip8.builtbyzee.com/)
