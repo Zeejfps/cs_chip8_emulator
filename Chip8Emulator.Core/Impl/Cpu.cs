@@ -28,7 +28,7 @@ internal static class Cpu
     ];
 
     // 00nn — dispatched on low byte.
-    private static readonly Action<Chip8Machine, int>[] ZeroBaseTable = BuildZeroBaseTable();
+    private static readonly Action<Chip8Machine, int>[] SystemInsTable = BuildSystemInsTable();
     
     // FXnn — dispatched on low byte.
     private static readonly Action<Chip8Machine, int>[] TimerTable = BuildTimerTable();
@@ -42,7 +42,7 @@ internal static class Cpu
     // 8XYN — dispatched on low nibble.
     private static readonly Action<Chip8Machine, int>[] ArithmeticTable = BuildArithmeticTable();
     
-    private static Action<Chip8Machine, int>[] BuildZeroBaseTable()
+    private static Action<Chip8Machine, int>[] BuildSystemInsTable()
     {
         var table = new Action<Chip8Machine, int>[256];
         Array.Fill(table, NoOp);
@@ -116,25 +116,21 @@ internal static class Cpu
         return table;
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteScrollRightIns(Chip8Machine machine, int ins)
     {
         machine.ScrollDisplayRight(4);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteScrollLeftIns(Chip8Machine machine, int ins)
     {
         machine.ScrollDisplayLeft(4);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteScrollDownIns(Chip8Machine machine, int ins)
     {
         machine.ScrollDisplayDown(ins & 0x0F);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteScrollUpIns(Chip8Machine machine, int ins)
     {
         machine.ScrollDisplayUp(ins & 0x0F);
@@ -158,33 +154,28 @@ internal static class Cpu
         return ins;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteZeroBaseIns(Chip8Machine machine, int ins)
     {
         // 0NNN (SYS call) — ignore on modern interpreters.
         if ((ins & 0xFF00) != 0x0000) return;
-        ZeroBaseTable[ins & 0x00FF](machine, ins);
+        SystemInsTable[ins & 0x00FF](machine, ins);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteEnableHiresModeIns(Chip8Machine machine, int ins)
     {
         machine.EnableHighResMode();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteDisableHiresModeIns(Chip8Machine machine, int ins)
     {
         machine.DisableHighResMode();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteTimerIns(Chip8Machine machine, int ins)
     {
         TimerTable[ins & 0x00FF](machine, ins);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteLongLoadIndexRegister(Chip8Machine machine, int ins)
     {
         // F000 NNNN matches only when X is 0; ignore F1nn–FFnn slotted here.
@@ -196,7 +187,6 @@ internal static class Cpu
         machine.AdvanceProgramCounter();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteStoreBcdInMemory(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -206,7 +196,6 @@ internal static class Cpu
         machine.WriteMemory(machine.ReadIndexRegisterWithOffset(2), (byte)(bcd % 10));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteLoadRegisters(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -221,7 +210,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteStoreRegisters(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -236,7 +224,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteLoadLowResFontCharacter(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -244,7 +231,6 @@ internal static class Cpu
         machine.WriteIndexRegister((value & 0x0F) * Chip8Machine.LowRestFontCharWidth + Chip8Machine.LowResFontBaseAddress);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteLoadHighResFontCharacter(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -252,7 +238,6 @@ internal static class Cpu
         machine.WriteIndexRegister((value & 0x0F) * Chip8Machine.HighRestFontCharWidth + Chip8Machine.HighResFontBaseAddress);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteAddVxToI(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -261,41 +246,35 @@ internal static class Cpu
         machine.WriteIndexRegister(i + vx);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteWaitForKeyPress(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         machine.BeginWaitForKey(x);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSetSoundTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         machine.WriteSoundTimer(machine.ReadGeneralPurposeRegister(x));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSetDelayTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         machine.WriteDelayTimer(machine.ReadGeneralPurposeRegister(x));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteReadDelayTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         machine.WriteGeneralPurposeRegister(x, machine.ReadDelayTimer());
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfKeyIsPressedOrReleased(Chip8Machine machine, int ins)
     {
         KeyCheckTable[ins & 0x00FF](machine, ins);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfKeyIsPressed(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -306,7 +285,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfKeyIsReleased(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -317,7 +295,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteGenerateRandomNumIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -326,7 +303,6 @@ internal static class Cpu
         machine.WriteGeneralPurposeRegister(x, (byte)(randNum & nn));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -337,7 +313,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfRegisterValueEqualsValueIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -348,7 +323,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -359,13 +333,11 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(Chip8Machine machine, int ins)
     {
         FiveOpTable[ExtractN(ins)](machine, ins);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private static void ExecuteSkipIfVxEqualsVy(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -390,7 +362,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteStoreRegisterRange(Chip8Machine machine, int ins)  // 5XY2
     {
         var x = ExtractX(ins);
@@ -405,7 +376,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteCallSubroutineIns(Chip8Machine machine, int ins)
     {
         var address = ExtractNnn(ins);
@@ -413,7 +383,6 @@ internal static class Cpu
         machine.WriteProgramCounter(address);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExeuteDrawToScreenIns(Chip8Machine machine, int ins)
     {
         var display = machine.Display;
@@ -439,7 +408,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void DrawHighResSprite(Chip8Machine machine, int x, int y)
     {
         // S-CHIP 1.1 DXY0 hi-res collision semantics:
@@ -519,7 +487,6 @@ internal static class Cpu
         machine.WriteGeneralPurposeRegister(0xF, collision != 0 ? (byte)1 : (byte)0);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSetRegisterValueIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -527,13 +494,11 @@ internal static class Cpu
         machine.WriteGeneralPurposeRegister(x, nn);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteArithmeticOperationIns(Chip8Machine machine, int ins)
     {
         ArithmeticTable[ins & 0x000F](machine, ins);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteShiftRightIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -552,7 +517,6 @@ internal static class Cpu
         if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteShiftLeftIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -571,7 +535,6 @@ internal static class Cpu
         if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteVxSubVyIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -585,7 +548,6 @@ internal static class Cpu
         if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteVySubVxIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -600,7 +562,6 @@ internal static class Cpu
         if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteAddValueToRegisterWithCarryIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -613,7 +574,6 @@ internal static class Cpu
         if (machine.VfResultWrittenLast) machine.WriteGeneralPurposeRegister(x, result);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteBitwiseOrOnRegistersIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -626,7 +586,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteBitwiseAndOnRegistersIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -639,7 +598,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSetRegisterValueFromRegisterIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -647,7 +605,6 @@ internal static class Cpu
         machine.WriteGeneralPurposeRegister(x, machine.ReadGeneralPurposeRegister(y));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteXorRegisterValueFromRegisterIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -660,7 +617,6 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteAddValueToRegisterIns(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
@@ -668,21 +624,18 @@ internal static class Cpu
         machine.WriteGeneralPurposeRegister(x, (byte)(machine.ReadGeneralPurposeRegister(x) + nn));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSetIndexRegisterIns(Chip8Machine machine, int ins)
     {
         var nnn = ExtractNnn(ins);
         machine.WriteIndexRegister(nnn);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteJumpToAddressIns(Chip8Machine machine, int ins)
     {
         var address = ExtractNnn(ins);
         machine.WriteProgramCounter(address);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteJumpWithOffsetIns(Chip8Machine machine, int ins)
     {
         var address = ExtractNnn(ins);
@@ -697,14 +650,12 @@ internal static class Cpu
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteReturnFromSubroutineIns(Chip8Machine machine, int ins)
     {
         var address = machine.PopStack();
         machine.WriteProgramCounter(address);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteClearDisplayIns(Chip8Machine machine, int ins)
     {
         machine.ClearDisplay();
