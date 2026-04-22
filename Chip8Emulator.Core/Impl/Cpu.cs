@@ -5,6 +5,8 @@ namespace Chip8Emulator.Core.Impl;
 
 internal static class Cpu
 {
+    private static void NoOp(Chip8Machine machine, int ins) { }
+
     private static readonly Action<Chip8Machine, int>[] OpcodeTable =
     [
         ExecuteZeroBaseIns,                                      // 0
@@ -24,6 +26,119 @@ internal static class Cpu
         ExecuteSkipNextInsIfKeyIsPressedOrReleased,              // E
         ExecuteTimerIns,                                         // F
     ];
+
+    // 00nn — dispatched on low byte.
+    private static readonly Action<Chip8Machine, int>[] ZeroBaseTable = BuildZeroBaseTable();
+    
+    // FXnn — dispatched on low byte.
+    private static readonly Action<Chip8Machine, int>[] TimerTable = BuildTimerTable();
+
+    // EXnn — dispatched on low byte.
+    private static readonly Action<Chip8Machine, int>[] KeyCheckTable = BuildKeyCheckTable();
+    
+    private static Action<Chip8Machine, int>[] BuildZeroBaseTable()
+    {
+        var table = new Action<Chip8Machine, int>[256];
+        Array.Fill(table, NoOp);
+        table[0xE0] = ExecuteClearDisplayIns;
+        table[0xEE] = ExecuteReturnFromSubroutineIns;
+        table[0xFF] = ExecuteEnableHiresModeIns;
+        table[0xFE] = ExecuteDisableHiresModeIns;
+        table[0xFB] = ExecuteScrollRightIns;
+        table[0xFC] = ExecuteScrollLeftIns;
+        for (var n = 0; n < 16; n++)
+        {
+            // 00CN — S-CHIP: scroll display down N rows.
+            table[0xC0 + n] = ExecuteScrollDownIns;
+            // 00DN — XO-CHIP: scroll display up N rows.
+            table[0xD0 + n] = ExecuteScrollUpIns;
+        }
+        return table;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void ExecuteScrollRightIns(Chip8Machine machine, int ins)
+    {
+        machine.ScrollDisplayRight(4);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void ExecuteScrollLeftIns(Chip8Machine machine, int ins)
+    {
+        machine.ScrollDisplayLeft(4);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void ExecuteScrollDownIns(Chip8Machine machine, int ins)
+    {
+        machine.ScrollDisplayDown(ins & 0x0F);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void ExecuteScrollUpIns(Chip8Machine machine, int ins)
+    {
+        machine.ScrollDisplayUp(ins & 0x0F);
+    }
+    
+    private static Action<Chip8Machine, int>[] BuildTimerTable()
+    {
+        var table = new Action<Chip8Machine, int>[256];
+        Array.Fill(table, NoOp);
+        // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
+        table[0x00] = ExecuteLongLoadIndexRegister;
+        table[0x07] = ExecuteReadDelayTimer;
+        table[0x0A] = ExecuteWaitForKeyPress;
+        table[0x15] = ExecuteSetDelayTimer;
+        table[0x18] = ExecuteSetSoundTimer;
+        table[0x1E] = ExecuteAddVxToI;
+        table[0x29] = ExecuteLoadLowResFontCharacter;
+        table[0x30] = ExecuteLoadHighResFontCharacter;
+        table[0x33] = ExecuteStoreBcdInMemory;
+        table[0x55] = ExecuteStoreRegisters;
+        table[0x65] = ExecuteLoadRegisters;
+        return table;
+    }
+    
+    private static Action<Chip8Machine, int>[] BuildKeyCheckTable()
+    {
+        var table = new Action<Chip8Machine, int>[256];
+        Array.Fill(table, NoOp);
+        table[0x9E] = ExecuteSkipNextInsIfKeyIsPressed;
+        table[0xA1] = ExecuteSkipNextInsIfKeyIsReleased;
+        return table;
+    }
+
+    // 5XYN — dispatched on low nibble.
+    private static readonly Action<Chip8Machine, int>[] FiveOpTable = BuildFiveOpTable();
+
+    private static Action<Chip8Machine, int>[] BuildFiveOpTable()
+    {
+        var table = new Action<Chip8Machine, int>[16];
+        Array.Fill(table, NoOp);
+        table[0] = ExecuteSkipIfVxEqualsVy;
+        table[2] = ExecuteStoreRegisterRange;
+        table[3] = ExecuteLoadRegisterRange;
+        return table;
+    }
+
+    // 8XYN — dispatched on low nibble.
+    private static readonly Action<Chip8Machine, int>[] ArithmeticTable = BuildArithmeticTable();
+
+    private static Action<Chip8Machine, int>[] BuildArithmeticTable()
+    {
+        var table = new Action<Chip8Machine, int>[16];
+        Array.Fill(table, NoOp);
+        table[0x0] = ExecuteSetRegisterValueFromRegisterIns;
+        table[0x1] = ExecuteBitwiseOrOnRegistersIns;
+        table[0x2] = ExecuteBitwiseAndOnRegistersIns;
+        table[0x3] = ExecuteXorRegisterValueFromRegisterIns;
+        table[0x4] = ExecuteAddValueToRegisterWithCarryIns;
+        table[0x5] = ExecuteVxSubVyIns;
+        table[0x6] = ExecuteShiftRightIns;
+        table[0x7] = ExecuteVySubVxIns;
+        table[0xE] = ExecuteShiftLeftIns;
+        return table;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void FetchDecodeExecute(Chip8Machine machine)
@@ -46,42 +161,19 @@ internal static class Cpu
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteZeroBaseIns(Chip8Machine machine, int ins)
     {
+        // 0NNN (SYS call) — ignore on modern interpreters.
         if ((ins & 0xFF00) != 0x0000) return;
-
-        var lo = ins & 0x00FF;
-
-        switch (lo)
-        {
-            case 0xE0: ExecuteClearDisplayIns(machine);           return;
-            case 0xEE: ExecuteReturnFromSubroutineIns(machine);   return;
-            case 0xFF: ExecuteEnableHiresModeIns(machine);        return;
-            case 0xFE: ExecuteDisableHiresModeIns(machine);       return;
-            case 0xFB: machine.ScrollDisplayRight(4);             return;
-            case 0xFC: machine.ScrollDisplayLeft(4);              return;
-        }
-
-        // 00CN — S-CHIP: scroll display down N rows.
-        if ((lo & 0xF0) == 0xC0)
-        {
-            machine.ScrollDisplayDown(lo & 0x0F);
-            return;
-        }
-
-        // 00DN — XO-CHIP: scroll display up N rows.
-        if ((lo & 0xF0) == 0xD0)
-        {
-            machine.ScrollDisplayUp(lo & 0x0F);
-        }
+        ZeroBaseTable[ins & 0x00FF](machine, ins);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private static void ExecuteEnableHiresModeIns(Chip8Machine machine)
+    public static void ExecuteEnableHiresModeIns(Chip8Machine machine, int ins)
     {
         machine.EnableHighResMode();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private static void ExecuteDisableHiresModeIns(Chip8Machine machine)
+    public static void ExecuteDisableHiresModeIns(Chip8Machine machine, int ins)
     {
         machine.DisableHighResMode();
     }
@@ -89,50 +181,14 @@ internal static class Cpu
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteTimerIns(Chip8Machine machine, int ins)
     {
-        var op = ins & 0x00FF;
-        switch (op)
-        {
-            case 0x00:
-                // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
-                if (ExtractX(ins) == 0) ExecuteLongLoadIndexRegister(machine);
-                break;
-            case 0x07:
-                ExecuteReadDelayTimer(machine, ins);
-                break;
-            case 0x0A:
-                ExecuteWaitForKeyPress(machine, ins);
-                break;
-            case 0x15:
-                ExecuteSetDelayTimer(machine, ins);
-                break;
-            case 0x18:
-                ExecuteSetSoundTimer(machine, ins);
-                break;
-            case 0x1E:
-                ExecuteAddVxToI(machine, ins);
-                break;
-            case 0x29:
-                ExecuteLoadLowResFontCharacter(machine, ins);
-                break;
-            case 0x30:
-                ExecuteLoadHighResFontCharacter(machine, ins);
-                break;
-            case 0x33:
-                ExecuteStoreBcdInMemory(machine, ins);
-                break;
-            case 0x55:
-                ExecuteStoreRegisters(machine, ins);
-                break;
-            case 0x65:
-                ExecuteLoadRegisters(machine, ins);
-                break;
-            // Unknown FXnn: no-op so extended-variant ROMs don't halt.
-        }
+        TimerTable[ins & 0x00FF](machine, ins);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static void ExecuteLongLoadIndexRegister(Chip8Machine machine)
+    public static void ExecuteLongLoadIndexRegister(Chip8Machine machine, int ins)
     {
+        // F000 NNNN matches only when X is 0; ignore F1nn–FFnn slotted here.
+        if (ExtractX(ins) != 0) return;
         var pc = machine.ReadProgramCounter();
         var hi = machine.ReadMemory(pc);
         var lo = machine.ReadMemory(pc + 1);
@@ -236,16 +292,7 @@ internal static class Cpu
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfKeyIsPressedOrReleased(Chip8Machine machine, int ins)
     {
-        var op = ins & 0x00FF;
-        if (op == 0x9E)
-        {
-            ExecuteSkipNextInsIfKeyIsPressed(machine, ins);
-        }
-        else if (op == 0xA1)
-        {
-            ExecuteSkipNextInsIfKeyIsReleased(machine, ins);
-        }
-        // Unknown EXnn: no-op.
+        KeyCheckTable[ins & 0x00FF](machine, ins);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -315,23 +362,17 @@ internal static class Cpu
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(Chip8Machine machine, int ins)
     {
-        var n = ExtractN(ins);
-        switch (n)
+        FiveOpTable[ExtractN(ins)](machine, ins);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static void ExecuteSkipIfVxEqualsVy(Chip8Machine machine, int ins)
+    {
+        var x = ExtractX(ins);
+        var y = ExtractY(ins);
+        if (machine.ReadGeneralPurposeRegister(x) == machine.ReadGeneralPurposeRegister(y))
         {
-            case 0:
-                var x = ExtractX(ins);
-                var y = ExtractY(ins);
-                if (machine.ReadGeneralPurposeRegister(x) == machine.ReadGeneralPurposeRegister(y))
-                {
-                    machine.AdvanceProgramCounter();
-                }
-                break;
-            case 2:
-                ExecuteStoreRegisterRange(machine, ins);
-                break;
-            case 3:
-                ExecuteLoadRegisterRange(machine, ins);
-                break;
+            machine.AdvanceProgramCounter();
         }
     }
 
@@ -487,38 +528,7 @@ internal static class Cpu
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteArithmeticOperationIns(Chip8Machine machine, int ins)
     {
-        var lo = ins & 0x000F;
-        switch (lo)
-        {
-            case 0:
-                ExecuteSetRegisterValueFromRegisterIns(machine, ins);
-                break;
-            case 1:
-                ExecuteBitwiseOrOnRegistersIns(machine, ins);
-                break;
-            case 2:
-                ExecuteBitwiseAndOnRegistersIns(machine, ins);
-                break;
-            case 3:
-                ExecuteXorRegisterValueFromRegisterIns(machine, ins);
-                break;
-            case 4:
-                ExecuteAddValueToRegisterWithCarryIns(machine, ins);
-                break;
-            case 5:
-                ExecuteVxSubVyIns(machine, ins);
-                break;
-            case 6:
-                ExecuteShiftRightIns(machine, ins);
-                break;
-            case 7:
-                ExecuteVySubVxIns(machine, ins);
-                break;
-            case 0xE:
-                ExecuteShiftLeftIns(machine, ins);
-                break;
-            // Unknown 8XYn: no-op.
-        }
+        ArithmeticTable[ins & 0x000F](machine, ins);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -686,14 +696,14 @@ internal static class Cpu
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static void ExecuteReturnFromSubroutineIns(Chip8Machine machine)
+    public static void ExecuteReturnFromSubroutineIns(Chip8Machine machine, int ins)
     {
         var address = machine.PopStack();
         machine.WriteProgramCounter(address);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static void ExecuteClearDisplayIns(Chip8Machine machine)
+    public static void ExecuteClearDisplayIns(Chip8Machine machine, int ins)
     {
         machine.ClearDisplay();
     }

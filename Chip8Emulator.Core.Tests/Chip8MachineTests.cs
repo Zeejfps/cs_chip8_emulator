@@ -234,7 +234,7 @@ public class Chip8MachineTests
         Cpu.ExecuteJumpToAddressIns(emulator, 0x1246);
         Cpu.ExecuteCallSubroutineIns(emulator, 0x2ABC);
 
-        Cpu.ExecuteReturnFromSubroutineIns(emulator);
+        Cpu.ExecuteReturnFromSubroutineIns(emulator, 0x00EE);
 
         Assert.Equal(0x246, emulator.Debugger.ProgramCounter);
     }
@@ -991,7 +991,7 @@ public class Chip8MachineTests
         Cpu.ExeuteDrawToScreenIns(emulator, 0xD001);
         Assert.Contains(emulator.Display.Pixels.ToArray(), p => p == 1);
 
-        Cpu.ExecuteClearDisplayIns(emulator);
+        Cpu.ExecuteClearDisplayIns(emulator, 0x00E0);
 
         foreach (var p in emulator.Display.Pixels.Span)
             Assert.Equal(0, p);
