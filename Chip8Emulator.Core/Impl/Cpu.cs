@@ -87,34 +87,34 @@ internal static class Cpu
             case 0xEE: ExecuteReturnFromSubroutineIns(machine);   return;
             case 0xFF: ExecuteEnableHiresModeIns(machine);        return;
             case 0xFE: ExecuteDisableHiresModeIns(machine);       return;
-            case 0xFB: machine.Display.ScrollRight(4);            return;
-            case 0xFC: machine.Display.ScrollLeft(4);             return;
+            case 0xFB: machine.ScrollDisplayRight(4);             return;
+            case 0xFC: machine.ScrollDisplayLeft(4);              return;
         }
 
         // 00CN — S-CHIP: scroll display down N rows.
         if ((lo & 0xF0) == 0xC0)
         {
-            machine.Display.ScrollDown(lo & 0x0F);
+            machine.ScrollDisplayDown(lo & 0x0F);
             return;
         }
 
         // 00DN — XO-CHIP: scroll display up N rows.
         if ((lo & 0xF0) == 0xD0)
         {
-            machine.Display.ScrollUp(lo & 0x0F);
+            machine.ScrollDisplayUp(lo & 0x0F);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private static void ExecuteEnableHiresModeIns(Chip8Machine machine)
     {
-        machine.Display.EnableHighResMode();
+        machine.EnableHighResMode();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private static void ExecuteDisableHiresModeIns(Chip8Machine machine)
     {
-        machine.Display.DisableHighResMode();
+        machine.DisableHighResMode();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -726,6 +726,6 @@ internal static class Cpu
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void ExecuteClearDisplayIns(Chip8Machine machine)
     {
-        machine.Display.Clear();
+        machine.ClearDisplay();
     }
 }
