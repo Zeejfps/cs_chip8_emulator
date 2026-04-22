@@ -6,57 +6,9 @@ internal sealed partial class Chip8Machine : IChip8Machine
 {
     public const int LowResFontBaseAddress = 0x050;
     public const int HighResFontBaseAddress = 0x0A0;
-
     public const int LowRestFontCharWidth = 5;
     public const int HighRestFontCharWidth = 10;
-
     public const int InstructionSizeInBytes = 2;
-
-    private static ReadOnlySpan<byte> LowResFont =>
-    [
-        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-        0x20, 0x60, 0x20, 0x20, 0x70, // 1
-        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-        0xF0, 0x80, 0xF0, 0x80, 0x80, // F
-    ];
-
-    private static ReadOnlySpan<byte> HighResFont => [
-        // 0
-        0x3C, 0x7E, 0xE7, 0xC3, 0xC3, 0xC3, 0xC3, 0xE7, 0x7E, 0x3C,
-        // 1
-        0x18, 0x38, 0x58, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x3C,
-        // 2
-        0x3E, 0x7F, 0xC3, 0x06, 0x0C, 0x18, 0x30, 0x60, 0xFF, 0xFF,
-        // 3
-        0x3C, 0x7E, 0xC3, 0x03, 0x0E, 0x0E, 0x03, 0xC3, 0x7E, 0x3C,
-        // 4
-        0x06, 0x0E, 0x1E, 0x36, 0x66, 0xC6, 0xFF, 0xFF, 0x06, 0x06,
-        // 5
-        0xFF, 0xFF, 0xC0, 0xC0, 0xFC, 0xFE, 0x03, 0xC3, 0x7E, 0x3C,
-        // 6
-        0x3E, 0x7C, 0xC0, 0xC0, 0xFC, 0xFE, 0xC3, 0xC3, 0x7E, 0x3C,
-        // 7
-        0xFF, 0xFF, 0x03, 0x06, 0x0C, 0x18, 0x30, 0x60, 0x60, 0x60,
-        // 8
-        0x3C, 0x7E, 0xC3, 0xC3, 0x7E, 0x7E, 0xC3, 0xC3, 0x7E, 0x3C,
-        // 9
-        0x3C, 0x7E, 0xC3, 0xC3, 0x7F, 0x3F, 0x03, 0x03, 0x3E, 0x7C
-    ];
-
-    private int _instructionsPerSecond = 1000;
-
     private const int AudioPatternSize = 16;
     private const byte DefaultPitch = 64;
 
@@ -65,9 +17,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
     private readonly IClock _clock;
     private readonly IInput _input;
     private readonly IPersistentFlags _persistentFlags;
-
     private readonly Display _display = new();
-
     private readonly byte[] _memory = new byte[64 * 1024];
     private readonly byte[] _vRegisters = new byte[16];
 
@@ -77,12 +27,14 @@ internal sealed partial class Chip8Machine : IChip8Machine
     private readonly byte[] _audioPattern = new byte[AudioPatternSize];
     private byte _pitch = DefaultPitch;
 
+    private readonly long _ticksPerFrame;
+    
+    private int _instructionsPerSecond = 1000;
     private byte _delayTimer;
     private byte _soundTimer;
     private int _programCounter;
     private int _indexRegister;
 
-    private readonly long _ticksPerFrame;
     private long _ticksPerInstruction;
     private long _lastTimestamp;
     private long _instructionAcc;
@@ -91,7 +43,6 @@ internal sealed partial class Chip8Machine : IChip8Machine
     private bool _waitForVBlank;
     private int _keyRegisterIndex;
     private bool _running;
-
     private bool _jumpUsesVx = true;
     private bool _loadStoreIncrementsI;
     private bool _logicResetsVf;
@@ -219,6 +170,24 @@ internal sealed partial class Chip8Machine : IChip8Machine
         set => _display.SelectedPlanes = (byte)(value & Impl.Display.AllPlanesMask);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void FetchDecodeExecute()
+    {
+        var ins = Fetch();
+        AdvanceProgramCounter();
+        var opcode = (ins & 0xF000) >> 12;
+        var execute = RootOpcodeTable[opcode];
+        execute(this, ins);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private int Fetch()
+    {
+        var pc = ReadProgramCounter();
+        var ins = ReadMemory(pc) << 8 | ReadMemory(pc + 1);
+        return ins;
+    }
+    
     public void LoadAudioPattern()
     {
         for (var i = 0; i < AudioPatternSize; i++)
