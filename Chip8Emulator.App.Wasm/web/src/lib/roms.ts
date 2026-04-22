@@ -1,4 +1,4 @@
-import type { PresetName } from './quirks.js';
+import type { QuirkFlags } from './quirks.js';
 
 export interface RomEntry {
   id: string;
@@ -6,7 +6,7 @@ export interface RomEntry {
   author: string;
   license: string;
   file: string;
-  preferredQuirks: PresetName;
+  preferredQuirks: QuirkFlags;
   description?: string;
 }
 

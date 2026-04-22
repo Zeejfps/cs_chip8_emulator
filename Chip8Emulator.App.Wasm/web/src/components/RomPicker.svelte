@@ -7,7 +7,7 @@
   import { getEmuContext } from '$lib/context.js';
   import { settings } from '$lib/stores/settings.svelte.js';
   import { loadManifest, loadRomBytes, type RomEntry } from '$lib/roms.js';
-  import { QUIRK_PRESETS } from '$lib/quirks.js';
+  import { matchingPreset } from '$lib/quirks.js';
   import { runRom } from '$lib/emulator-actions.js';
 
   interface Props {
@@ -36,8 +36,8 @@
     loadError = null;
     try {
       const bytes = await loadRomBytes(entry);
-      settings.quirks = { ...QUIRK_PRESETS[entry.preferredQuirks] };
-      settings.quirksPreset = entry.preferredQuirks;
+      settings.quirks = { ...entry.preferredQuirks };
+      settings.quirksPreset = matchingPreset(entry.preferredQuirks);
       runRom(api, audio, bytes, entry.title, entry.id);
       open = false;
     } catch (err) {
