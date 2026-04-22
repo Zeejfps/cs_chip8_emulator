@@ -65,7 +65,7 @@ internal sealed class Chip8Machine : IChip8Machine
     
     private readonly Display _display = new();
     
-    private readonly byte[] _memory = new byte[4096];
+    private readonly byte[] _memory = new byte[64 * 1024];
     private readonly byte[] _vRegisters = new byte[16];
 
     private readonly int[] _stack = new int[16];
