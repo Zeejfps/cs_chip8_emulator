@@ -7,6 +7,7 @@
   import QuirksPanel from './QuirksPanel.svelte';
   import SpeedControl from './SpeedControl.svelte';
   import VolumeControl from './VolumeControl.svelte';
+  import GithubLogo from 'phosphor-svelte/lib/GithubLogo';
 
   interface Props {
     open: boolean;
@@ -94,6 +95,15 @@
           </TabsContent>
 
           <TabsContent value="about" class="mt-0 flex flex-col gap-3 text-xs text-muted-foreground">
+            <a
+              href="https://github.com/Zeejfps/cs_chip8_emulator"
+              target="_blank"
+              rel="noreferrer"
+              class="flex w-fit items-center gap-1.5 underline"
+            >
+              <GithubLogo size={13} />
+              Zeejfps/cs_chip8_emulator
+            </a>
             <p>
               CHIP-8 emulator written in C# and compiled to WebAssembly. UI built with Svelte 5,
               Tailwind v4, and shadcn-svelte.
