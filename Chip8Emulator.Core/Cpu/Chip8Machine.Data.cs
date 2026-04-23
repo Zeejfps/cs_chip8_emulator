@@ -52,22 +52,22 @@ internal sealed partial class Chip8Machine
     private Routine[] LoadMainRoutines()
     {
         var table = new Routine[16];
-        table[0x0] = (cpu, ins) => { if ((ins & 0xFF00) == 0x0000) SystemRoutines[ins & 0x00FF].Invoke(cpu, ins); };
+        table[0x0] = (cpu, ins) => { if ((ins & 0xFF00) == 0x0000) SystemRoutines[ins & 0x00FF](cpu, ins); };
         table[0x1] = Chip8InstructionSet.JumpToAddress;
         table[0x2] = Chip8InstructionSet.CallSubroutine;
         table[0x3] = Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsValue;
         table[0x4] = Chip8InstructionSet.SkipNextInsIfRegisterValueNotEqualsValue;
-        table[0x5] = (cpu, ins) => FiveOpRoutines[ins & 0x000F].Invoke(cpu, ins);
+        table[0x5] = (cpu, ins) => FiveOpRoutines[ins & 0x000F](cpu, ins);
         table[0x6] = Chip8InstructionSet.SetRegisterValue;
         table[0x7] = Chip8InstructionSet.AddValueToRegister;
-        table[0x8] = (cpu, ins) => ArithmeticRoutines[ins & 0x000F].Invoke(cpu, ins);
+        table[0x8] = (cpu, ins) => ArithmeticRoutines[ins & 0x000F](cpu, ins);
         table[0x9] = Chip8InstructionSet.SkipNextInsIfRegisterValueNotEqualsRegisterValue;
         table[0xA] = Chip8InstructionSet.SetIndexRegisterIns;
         table[0xB] = Chip8InstructionSet.JumpWithOffsetIns;
         table[0xC] = Chip8InstructionSet.GenerateRandomNum;
         table[0xD] = Chip8InstructionSet.DrawToScreen;
-        table[0xE] = (cpu, ins) => KeyCheckRoutines[ins & 0x00FF].Invoke(cpu, ins);
-        table[0xF] = (cpu, ins) => TimerRoutines[ins & 0x00FF].Invoke(cpu, ins);
+        table[0xE] = (cpu, ins) => KeyCheckRoutines[ins & 0x00FF](cpu, ins);
+        table[0xF] = (cpu, ins) => TimerRoutines[ins & 0x00FF](cpu, ins);
         return table;
     }
 

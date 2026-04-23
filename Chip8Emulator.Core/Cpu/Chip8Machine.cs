@@ -303,13 +303,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     {
         _waitForVBlank = true;
     }
-
-    public void DispatchSystemInstruction(int ins) => SystemRoutines[ins & 0x00FF](this, ins);
-    public void DispatchArithmeticInstruction(int ins) => ArithmeticRoutines[ins & 0x000F](this, ins);
-    public void DispatchKeyCheckInstruction(int ins) => KeyCheckRoutines[ins & 0x00FF](this, ins);
-    public void DispatchTimerInstruction(int ins) => TimerRoutines[ins & 0x00FF](this, ins);
-    public void DispatchFiveOpInstruction(int ins) => FiveOpRoutines[ins & 0x000F](this, ins);
-
+    
     public void WriteMemory(int address, ReadOnlySpan<byte> data)
     {
         _memory.Write(address, data);
