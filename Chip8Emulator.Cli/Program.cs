@@ -1,4 +1,3 @@
-using Chip8Emulator.App;
 using Chip8Emulator.Cli;
 using Chip8Emulator.Core;
 
