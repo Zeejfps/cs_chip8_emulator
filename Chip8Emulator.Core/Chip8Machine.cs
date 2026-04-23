@@ -69,17 +69,21 @@ internal sealed partial class Chip8Machine : IChip8Machine
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         ResetMemory();
-        Cpu.Reset();
+        Cpu.Registers.Clear();
+        Cpu.Stack.Clear();
         Cpu.WriteProgramCounter(0x200);
+        Memory.Write(0x200, program);
+        
         _audio.Reset();
+        Display.Reset();
+        
         _isWaitingForKey = false;
         _keyRegisterIndex = 0;
         _waitForVBlank = false;
         _instructionAcc = 0;
         _frameAcc = 0;
         _lastTimestamp = _clock.Timestamp;
-        Memory.Write(0x200, program);
-
+        
         // Classic CHIP-8 HIRES signature: programs starting with `1260` (JP 0x260)
         // switch the display to a 64x64 canvas. See Hans Christian Egeberg / David Winter.
         if (program.Length >= 2 && program[0] == 0x12 && program[1] == 0x60)

@@ -105,13 +105,6 @@ internal sealed class EmulatedCpu : ICpu
         return Memory.Read(pc) << 8 | Memory.Read(pc + 1);
     }
 
-    public void Reset()
-    {
-        Registers.Clear();
-        Stack.Clear();
-        Display.Reset();
-    }
-
     public void SaveFlags(int count)
     {
         Span<byte> buffer = stackalloc byte[IPersistentFlags.Capacity];

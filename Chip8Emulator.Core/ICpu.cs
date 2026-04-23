@@ -18,5 +18,4 @@ public interface ICpu
     void AdvanceProgramCounter();
 
     void FetchDecodeExecute();
-    void Reset();
 }
