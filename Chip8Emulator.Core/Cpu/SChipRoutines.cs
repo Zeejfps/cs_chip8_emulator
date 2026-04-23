@@ -4,7 +4,7 @@ namespace Chip8Emulator.Core.Cpu;
 
 // SUPER-CHIP 1.1 additions: hi-res mode, 4-pixel scrolls, scroll down N,
 // 16x16 sprite drawing (DXY0), 10-byte high-res font, persistent user flags.
-internal static class SChipInstructionSet
+internal static class SChipRoutines
 {
     // ---- 00FF / 00FE : high-res mode toggle ---------------------------------
 

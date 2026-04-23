@@ -4,7 +4,7 @@ namespace Chip8Emulator.Core.Cpu;
 
 // XO-Chip additions: scroll up N, 16-bit I register (long load), bitplane
 // selection, audio pattern buffer + pitch, register range load/store.
-internal static class XoChipInstructionSet
+internal static class XoChipRoutines
 {
     // ---- 00DN : scroll display up N rows ------------------------------------
 
