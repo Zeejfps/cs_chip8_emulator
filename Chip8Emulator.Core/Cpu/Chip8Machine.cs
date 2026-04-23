@@ -45,13 +45,13 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private bool _loadStoreIncrementsI;
     private bool _logicResetsVf;
 
-    public InstructionHandler[] TimerRoutines { get; }
+    public Routine[] TimerRoutines { get; }
 
-    internal readonly InstructionHandler[] RootOpcodeTable;
-    internal readonly InstructionHandler[] SystemInsTable;
-    internal readonly InstructionHandler[] KeyCheckTable;
-    internal readonly InstructionHandler[] FiveOpTable;
-    internal readonly InstructionHandler[] ArithmeticTable;
+    internal readonly Routine[] MainRoutines;
+    internal readonly Routine[] SystemRoutines;
+    internal readonly Routine[] KeyCheckRoutines;
+    internal readonly Routine[] FiveOpRoutines;
+    internal readonly Routine[] ArithmeticRoutines;
 
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
         : this(renderer, audio, clock, input, new InMemoryPersistentFlags())
@@ -74,12 +74,12 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _memory.Write(HighResFontBaseAddress, HighResFont);
         Debugger = new Chip8MachineDebugger(this);
 
-        RootOpcodeTable = BuildRootOpcodeTable();
-        SystemInsTable = BuildSystemInsTable();
-        TimerRoutines = BuildTimerTable();
-        KeyCheckTable = BuildKeyCheckTable();
-        FiveOpTable = BuildFiveOpTable();
-        ArithmeticTable = BuildArithmeticTable();
+        MainRoutines = LoadMainRoutines();
+        SystemRoutines = LoadSystemRoutines();
+        TimerRoutines = LoadTimerRoutines();
+        KeyCheckRoutines = LoadKeyCheckRoutines();
+        FiveOpRoutines = LoadFiveOpRoutines();
+        ArithmeticRoutines = LoadArithmeticRoutines();
 
         // Specialize quirk-sensitive slots to match current flag defaults.
         ApplyJumpUsesVx();
@@ -129,7 +129,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private void ApplyJumpUsesVx()
     {
-        RootOpcodeTable[0xB] = _jumpUsesVx
+        MainRoutines[0xB] = _jumpUsesVx
             ? Chip8InstructionSet.ExecuteJumpWithVxOffsetIns
             : Chip8InstructionSet.ExecuteJumpWithV0OffsetIns;
     }
@@ -146,13 +146,13 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private void ApplyLogicResetsVf()
     {
-        ArithmeticTable[0x1] = _logicResetsVf
+        ArithmeticRoutines[0x1] = _logicResetsVf
             ? Chip8InstructionSet.ExecuteBitwiseOrResetVfIns
             : Chip8InstructionSet.ExecuteBitwiseOrPreserveVfIns;
-        ArithmeticTable[0x2] = _logicResetsVf
+        ArithmeticRoutines[0x2] = _logicResetsVf
             ? Chip8InstructionSet.ExecuteBitwiseAndResetVfIns
             : Chip8InstructionSet.ExecuteBitwiseAndPreserveVfIns;
-        ArithmeticTable[0x3] = _logicResetsVf
+        ArithmeticRoutines[0x3] = _logicResetsVf
             ? Chip8InstructionSet.ExecuteXorResetVfIns
             : Chip8InstructionSet.ExecuteXorPreserveVfIns;
     }
@@ -180,7 +180,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         var ins = Fetch();
         AdvanceProgramCounter();
         var opcode = (ins & 0xF000) >> 12;
-        var execute = RootOpcodeTable[opcode];
+        var execute = MainRoutines[opcode];
         execute(this, ins);
     }
 
@@ -304,11 +304,11 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _waitForVBlank = true;
     }
 
-    public void DispatchSystemInstruction(int ins) => SystemInsTable[ins & 0x00FF](this, ins);
-    public void DispatchArithmeticInstruction(int ins) => ArithmeticTable[ins & 0x000F](this, ins);
-    public void DispatchKeyCheckInstruction(int ins) => KeyCheckTable[ins & 0x00FF](this, ins);
+    public void DispatchSystemInstruction(int ins) => SystemRoutines[ins & 0x00FF](this, ins);
+    public void DispatchArithmeticInstruction(int ins) => ArithmeticRoutines[ins & 0x000F](this, ins);
+    public void DispatchKeyCheckInstruction(int ins) => KeyCheckRoutines[ins & 0x00FF](this, ins);
     public void DispatchTimerInstruction(int ins) => TimerRoutines[ins & 0x00FF](this, ins);
-    public void DispatchFiveOpInstruction(int ins) => FiveOpTable[ins & 0x000F](this, ins);
+    public void DispatchFiveOpInstruction(int ins) => FiveOpRoutines[ins & 0x000F](this, ins);
 
     public void WriteMemory(int address, ReadOnlySpan<byte> data)
     {

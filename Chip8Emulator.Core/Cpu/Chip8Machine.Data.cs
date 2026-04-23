@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core.Cpu;
 
-internal delegate void InstructionHandler(ICpu cpu, int ins);
+internal delegate void Routine(ICpu cpu, int ins);
 
 internal sealed partial class Chip8Machine
 {
@@ -49,31 +49,31 @@ internal sealed partial class Chip8Machine
     
     private static void NoOp(ICpu cpu, int ins) { }
 
-    private InstructionHandler[] BuildRootOpcodeTable()
+    private Routine[] LoadMainRoutines()
     {
-        var table = new InstructionHandler[16];
-        table[0x0] = static (cpu, ins) => { if ((ins & 0xFF00) == 0x0000) cpu.DispatchSystemInstruction(ins); };
+        var table = new Routine[16];
+        table[0x0] = (cpu, ins) => { if ((ins & 0xFF00) == 0x0000) SystemRoutines[ins & 0x00FF].Invoke(cpu, ins); };
         table[0x1] = Chip8InstructionSet.JumpToAddress;
         table[0x2] = Chip8InstructionSet.CallSubroutine;
         table[0x3] = Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsValue;
         table[0x4] = Chip8InstructionSet.SkipNextInsIfRegisterValueNotEqualsValue;
-        table[0x5] = Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsRegisterValue;
+        table[0x5] = (cpu, ins) => FiveOpRoutines[ins & 0x000F].Invoke(cpu, ins);
         table[0x6] = Chip8InstructionSet.SetRegisterValue;
         table[0x7] = Chip8InstructionSet.AddValueToRegister;
-        table[0x8] = static (cpu, ins) => cpu.DispatchArithmeticInstruction(ins);
+        table[0x8] = (cpu, ins) => ArithmeticRoutines[ins & 0x000F].Invoke(cpu, ins);
         table[0x9] = Chip8InstructionSet.SkipNextInsIfRegisterValueNotEqualsRegisterValue;
         table[0xA] = Chip8InstructionSet.SetIndexRegisterIns;
         table[0xB] = Chip8InstructionSet.JumpWithOffsetIns;
         table[0xC] = Chip8InstructionSet.GenerateRandomNum;
         table[0xD] = Chip8InstructionSet.DrawToScreen;
-        table[0xE] = Chip8InstructionSet.SkipNextInsIfKeyIsPressedOrReleased;
+        table[0xE] = (cpu, ins) => KeyCheckRoutines[ins & 0x00FF].Invoke(cpu, ins);
         table[0xF] = (cpu, ins) => TimerRoutines[ins & 0x00FF].Invoke(cpu, ins);
         return table;
     }
 
-    private InstructionHandler[] BuildSystemInsTable()
+    private Routine[] LoadSystemRoutines()
     {
-        var table = new InstructionHandler[256];
+        var table = new Routine[256];
         Array.Fill(table, NoOp);
         table[0xE0] = Chip8InstructionSet.ClearDisplay;
         table[0xEE] = Chip8InstructionSet.ReturnFromSubroutine;
@@ -91,9 +91,9 @@ internal sealed partial class Chip8Machine
         return table;
     }
 
-    private InstructionHandler[] BuildTimerTable()
+    private Routine[] LoadTimerRoutines()
     {
-        var table = new InstructionHandler[256];
+        var table = new Routine[256];
         Array.Fill(table, NoOp);
         // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
         table[0x00] = XoChipInstructionSet.LongLoadIndexRegister;
@@ -119,18 +119,18 @@ internal sealed partial class Chip8Machine
         return table;
     }
 
-    private InstructionHandler[] BuildKeyCheckTable()
+    private Routine[] LoadKeyCheckRoutines()
     {
-        var table = new InstructionHandler[256];
+        var table = new Routine[256];
         Array.Fill(table, NoOp);
         table[0x9E] = Chip8InstructionSet.SkipNextInsIfKeyIsPressed;
         table[0xA1] = Chip8InstructionSet.SkipNextInsIfKeyIsReleased;
         return table;
     }
 
-    private InstructionHandler[] BuildFiveOpTable()
+    private Routine[] LoadFiveOpRoutines()
     {
-        var table = new InstructionHandler[16];
+        var table = new Routine[16];
         Array.Fill(table, NoOp);
         table[0] = Chip8InstructionSet.SkipIfVxEqualsVy;
         table[2] = XoChipInstructionSet.StoreRegisterRange;
@@ -138,9 +138,9 @@ internal sealed partial class Chip8Machine
         return table;
     }
 
-    private InstructionHandler[] BuildArithmeticTable()
+    private Routine[] LoadArithmeticRoutines()
     {
-        var table = new InstructionHandler[16];
+        var table = new Routine[16];
         Array.Fill(table, NoOp);
         table[0x0] = Chip8InstructionSet.ExecuteSetRegisterValueFromRegisterIns;
         table[0x1] = Chip8InstructionSet.ExecuteBitwiseOrOnRegistersIns;

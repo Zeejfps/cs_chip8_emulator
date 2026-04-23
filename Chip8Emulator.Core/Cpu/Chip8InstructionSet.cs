@@ -9,18 +9,6 @@ namespace Chip8Emulator.Core.Cpu;
 // them at flag-set time.
 internal static class Chip8InstructionSet
 {
-    // ---- Sub-table dispatchers (CHIP-8 fan-outs) ----------------------------
-
-    public static void SkipNextInsIfKeyIsPressedOrReleased(ICpu cpu, int ins)
-    {
-        cpu.DispatchKeyCheckInstruction(ins);
-    }
-
-    public static void SkipNextInsIfRegisterValueEqualsRegisterValue(ICpu cpu, int ins)
-    {
-        cpu.DispatchFiveOpInstruction(ins);
-    }
-
     // ---- 0x0*** system ops --------------------------------------------------
 
     public static void ClearDisplay(ICpu cpu, int ins)

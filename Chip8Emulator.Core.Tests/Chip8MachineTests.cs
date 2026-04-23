@@ -195,7 +195,7 @@ public class Chip8MachineTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6242);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsRegisterValue(emulator, 0x5120);
+        emulator.FiveOpRoutines[0x5120 & 0x000F](emulator, 0x5120);
 
         Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
@@ -208,7 +208,7 @@ public class Chip8MachineTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6201);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsRegisterValue(emulator, 0x5120);
+        emulator.FiveOpRoutines[0x5120 & 0x000F](emulator, 0x5120);
 
         Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
@@ -552,7 +552,7 @@ public class Chip8MachineTests
         input.Press(0x7);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.SkipNextInsIfKeyIsPressedOrReleased(emulator, 0xE19E);
+        emulator.KeyCheckRoutines[0xE19E & 0x00FF](emulator, 0xE19E);
 
         Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
@@ -564,7 +564,7 @@ public class Chip8MachineTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6107);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.SkipNextInsIfKeyIsPressedOrReleased(emulator, 0xE1A1);
+        emulator.KeyCheckRoutines[0xE1A1 & 0x00FF](emulator, 0xE1A1);
 
         Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
@@ -577,7 +577,7 @@ public class Chip8MachineTests
         input.Press(0x7);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.SkipNextInsIfKeyIsPressedOrReleased(emulator, 0xE100);
+        emulator.KeyCheckRoutines[0xE100 & 0x00FF](emulator, 0xE100);
 
         Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }

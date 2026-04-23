@@ -1,5 +1,3 @@
-using Chip8Emulator.Core.Cpu;
-
 namespace Chip8Emulator.Core;
 
 public interface ICpu
@@ -42,8 +40,4 @@ public interface ICpu
     void LoadFlags(int count);
     void LoadAudioPattern();
     void SetPitch(byte pitch);
-    void DispatchSystemInstruction(int ins);
-    void DispatchArithmeticInstruction(int ins);
-    void DispatchKeyCheckInstruction(int ins);
-    void DispatchFiveOpInstruction(int ins);
 }
