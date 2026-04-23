@@ -31,7 +31,6 @@ namespace Chip8Emulator.Web
             var registers = new EmulatedRegisters(size => _vRegistersBuffer.AsMemory(0, size));
             var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
             _machine = Chip8.Builder()
-                .WithRenderer(new BrowserRenderer())
                 .WithDisplay(display)
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)

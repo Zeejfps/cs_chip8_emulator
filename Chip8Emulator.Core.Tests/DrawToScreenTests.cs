@@ -12,7 +12,7 @@ public class DrawToScreenTests
 
     private Chip8Machine CreateEmulator()
         => new(new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size)),
-            new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
+            new FakeAudio(), new FakeClock(), new FakeInput(),
             new EmulatedStack(size => new int[size]),
             new EmulatedMemory(size => new byte[size]),
             new EmulatedRegisters(size => new byte[size]),

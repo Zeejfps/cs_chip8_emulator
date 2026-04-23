@@ -18,4 +18,5 @@ public interface IDisplay
     void ScrollUp(int n);
     void ScrollLeft(int n);
     void ScrollRight(int n);
+    void Render();
 }

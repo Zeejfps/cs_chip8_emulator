@@ -149,6 +149,11 @@ public sealed class EmulatedDisplay : IDisplay
         }
     }
 
+    public void Render()
+    {
+        // Does nothing.
+    }
+
     public void ScrollDown(int n)
     {
         if (n <= 0) return;

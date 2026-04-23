@@ -14,16 +14,6 @@ public class Chip8MachineBuilderTests
     }
 
     [Fact]
-    public void WithRenderer_ReturnsSameBuilder()
-    {
-        var builder = Chip8.Builder();
-
-        var result = builder.WithRenderer(new FakeRenderer());
-
-        Assert.Same(builder, result);
-    }
-
-    [Fact]
     public void WithAudio_ReturnsSameBuilder()
     {
         var builder = Chip8.Builder();
@@ -57,7 +47,6 @@ public class Chip8MachineBuilderTests
     public void Build_ReturnsChip8Emulator()
     {
         var chip = Chip8.Builder()
-            .WithRenderer(new FakeRenderer())
             .WithDisplay(new EmulatedDisplay(size => new byte[size]))
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())

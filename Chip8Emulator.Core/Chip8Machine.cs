@@ -11,7 +11,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public const int HighRestFontCharWidth = 10;
     public const int InstructionSizeInBytes = 2;
 
-    private readonly IRenderer _renderer;
     private readonly IAudio _audio;
     private readonly IClock _clock;
     private readonly IInput _input;
@@ -47,7 +46,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     public Chip8Machine(
         IDisplay display,
-        IRenderer renderer, 
         IAudio audio,
         IClock clock, 
         IInput input, 
@@ -57,7 +55,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         IPersistentFlags persistentFlags)
     {
         _display = display;
-        _renderer = renderer;
         _audio = audio;
         _clock = clock;
         _input = input;
@@ -376,7 +373,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
             }
         }
 
-        _renderer.Render();
+        _display.Render();
         _frameAcc -= _ticksPerFrame;
         _waitForVBlank = false;
     }

@@ -2,7 +2,6 @@ namespace Chip8Emulator.Core;
 
 internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
 {
-    private IRenderer? _renderer;
     private IDisplay? _display;
     private IAudio? _audio;
     private IClock? _clock;
@@ -11,12 +10,6 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
     private IMemory? _memory;
     private IRegisters? _registers;
     private IPersistentFlags? _persistentFlags;
-
-    public IChip8MachineBuilder WithRenderer(IRenderer renderer)
-    {
-        _renderer = renderer;
-        return this;
-    }
 
     public IChip8MachineBuilder WithInput(IInput input)
     {
@@ -68,8 +61,6 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
 
     public IChip8Machine Build()
     {
-        var renderer = _renderer ?? throw new InvalidOperationException(
-            $"{nameof(WithRenderer)} must be called before {nameof(Build)}.");
         var audio = _audio ?? throw new InvalidOperationException(
             $"{nameof(WithAudio)} must be called before {nameof(Build)}.");
         var clock = _clock ?? throw new InvalidOperationException(
@@ -87,7 +78,6 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
         var persistentFlags = _persistentFlags ?? new EmulatedPersistentFlags();
         return new Chip8Machine(
             display,
-            renderer,
             audio, 
             clock,
             input, 
