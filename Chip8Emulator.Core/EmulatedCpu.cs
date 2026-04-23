@@ -11,9 +11,6 @@ internal sealed class EmulatedCpu : ICpu
 
     private readonly IPersistentFlags _persistentFlags;
 
-    private bool _waitForVBlank;
-    private int _keyRegisterIndex;
-
     private bool _jumpUsesVx = true;
     private bool _loadStoreIncrementsI;
     private bool _logicResetsVf;
@@ -28,18 +25,16 @@ internal sealed class EmulatedCpu : ICpu
     public EmulatedCpu(
         IMemory memory,
         IDisplay display,
-        IInput input,
-        IAudio audio,
         IRegisters registers,
         IStack stack,
-        IPersistentFlags persistentFlags)
+        IPersistentFlags persistentFlags,
+        IBus bus)
     {
         Memory = memory;
         Display = display;
-        Input = input;
-        Audio = audio;
         Registers = registers;
         Stack = stack;
+        Bus = bus;
         _persistentFlags = persistentFlags;
 
         MainRoutines = LoadMainRoutines();
@@ -56,13 +51,11 @@ internal sealed class EmulatedCpu : ICpu
 
     public IMemory Memory { get; }
     public IDisplay Display { get; }
-    public IInput Input { get; }
-    public IAudio Audio { get; }
     public IRegisters Registers { get; }
     public IStack Stack { get; }
+    public IBus Bus { get; }
 
     public int ProgramCounter { get; private set; }
-    public bool IsWaitingForKey { get; private set; }
     public bool ShiftUsesVy { get; set; }
     public bool SpritesWrap { get; set; }
     public bool DisplayWait { get; set; }
@@ -95,24 +88,6 @@ internal sealed class EmulatedCpu : ICpu
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void AdvanceProgramCounter() => ProgramCounter += InstructionSizeInBytes;
 
-    public void BeginWaitForKey(int registerIndex)
-    {
-        IsWaitingForKey = true;
-        _keyRegisterIndex = registerIndex;
-    }
-
-    public void BeginWaitForVBlank()
-    {
-        _waitForVBlank = true;
-    }
-
-    public void ClearVBlankWait()
-    {
-        _waitForVBlank = false;
-    }
-
-    public bool CanExecute => !_waitForVBlank && !IsWaitingForKey;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void FetchDecodeExecute()
     {
@@ -130,26 +105,12 @@ internal sealed class EmulatedCpu : ICpu
         return Memory.Read(pc) << 8 | Memory.Read(pc + 1);
     }
 
-    public void TryResumeFromKeyPress()
-    {
-        if (!IsWaitingForKey) return;
-        if (Input.WasAnyKeyPressedAndReleased(out var key))
-        {
-            Registers.WriteV(_keyRegisterIndex, key);
-            IsWaitingForKey = false;
-        }
-    }
-
     public void Reset(int programCounter)
     {
         Registers.Clear();
         Stack.Clear();
-        Audio.Reset();
         Display.Reset();
         ProgramCounter = programCounter;
-        IsWaitingForKey = false;
-        _waitForVBlank = false;
-        _keyRegisterIndex = 0;
     }
 
     public void SaveFlags(int count)

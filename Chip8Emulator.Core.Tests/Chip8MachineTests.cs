@@ -16,8 +16,9 @@ public class Chip8MachineTests
         var stack = new EmulatedStack(size => new int[size]);
         var memory = new EmulatedMemory(size => new byte[size]);
         var registers = new EmulatedRegisters(size => new byte[size]);
-        var cpu = new EmulatedCpu(memory, display, input, audio, registers, stack, new EmulatedPersistentFlags());
-        return new Chip8Machine(clock, display, memory, cpu);
+        var bus = new EmulatorBus();
+        var cpu = new EmulatedCpu(memory, display, registers, stack, new EmulatedPersistentFlags(), bus);
+        return new Chip8Machine(clock, display, memory, audio, input, bus, cpu);
     }
 
     private Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _);
@@ -735,7 +736,7 @@ public class Chip8MachineTests
 
         Chip8Routines.WaitForKeyPressAndRelease(emulator.Cpu, 0xF20A);
 
-        Assert.True(emulator.Cpu.IsWaitingForKey);
+        Assert.True(emulator.IsWaitingForKey);
     }
 
     [Fact]
@@ -758,7 +759,7 @@ public class Chip8MachineTests
 
         clock.Tick();
 
-        Assert.True(emulator.Cpu.IsWaitingForKey);
+        Assert.True(emulator.IsWaitingForKey);
         Assert.Equal(0, emulator.Cpu.Registers.ReadV(2));
     }
 
@@ -774,7 +775,7 @@ public class Chip8MachineTests
 
         clock.Tick();
 
-        Assert.False(emulator.Cpu.IsWaitingForKey);
+        Assert.False(emulator.IsWaitingForKey);
         Assert.Equal(0xA, emulator.Cpu.Registers.ReadV(2));
     }
 
@@ -791,7 +792,7 @@ public class Chip8MachineTests
         clock.Tick();
 
         Assert.Equal(9, emulator.Cpu.Registers.ReadDt());
-        Assert.True(emulator.Cpu.IsWaitingForKey);
+        Assert.True(emulator.IsWaitingForKey);
     }
 
     [Fact]
@@ -816,7 +817,7 @@ public class Chip8MachineTests
 
         emulator.Cpu.UtilityRoutines[0xF10A & 0x00FF](emulator.Cpu, 0xF10A);
 
-        Assert.True(emulator.Cpu.IsWaitingForKey);
+        Assert.True(emulator.IsWaitingForKey);
     }
 
     [Fact]

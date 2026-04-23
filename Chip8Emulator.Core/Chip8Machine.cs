@@ -7,37 +7,13 @@ internal sealed partial class Chip8Machine : IChip8Machine
     public const int LowRestFontCharWidth = 5;
     public const int HighRestFontCharWidth = 10;
 
-    private readonly IClock _clock;
-    private readonly IDisplay _display;
-    private readonly IMemory _memory;
-    private readonly EmulatedCpu _cpu;
+    public IDisplay Display { get; }
+    public IMemory Memory { get; }
+    public EmulatedCpu Cpu { get; }
 
-    private readonly long _ticksPerFrame;
-    private long _ticksPerInstruction;
-    private int _instructionsPerSecond = 1000;
-    private long _lastTimestamp;
-    private long _instructionAcc;
-    private long _frameAcc;
-    private bool _running;
+    ICpu IChip8Machine.Cpu => Cpu;
 
-    public Chip8Machine(IClock clock, IDisplay display, IMemory memory, EmulatedCpu cpu)
-    {
-        _clock = clock;
-        _display = display;
-        _memory = memory;
-        _cpu = cpu;
-
-        _ticksPerFrame = clock.Frequency / 60;
-        _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
-        _lastTimestamp = clock.Timestamp;
-
-        ResetMemory();
-    }
-
-    public IDisplay Display => _display;
-    public IMemory Memory => _memory;
-    public EmulatedCpu Cpu => _cpu;
-    ICpu IChip8Machine.Cpu => _cpu;
+    public bool IsWaitingForKey => _isWaitingForKey;
 
     public int InstructionsPerSecond
     {
@@ -50,29 +26,74 @@ internal sealed partial class Chip8Machine : IChip8Machine
             _instructionAcc = 0;
         }
     }
+    
+    private readonly IClock _clock;
+    private readonly IAudio _audio;
+    private readonly IInput _input;
+    private readonly IBus _bus;
+
+    private readonly long _ticksPerFrame;
+    private long _ticksPerInstruction;
+    private int _instructionsPerSecond = 1000;
+    private long _lastTimestamp;
+    private long _instructionAcc;
+    private long _frameAcc;
+    private bool _running;
+
+    private bool _isWaitingForKey;
+    private int _keyRegisterIndex;
+    private bool _waitForVBlank;
+
+    public Chip8Machine(IClock clock, IDisplay display, IMemory memory, IAudio audio, IInput input, IBus bus, EmulatedCpu cpu)
+    {
+        _clock = clock;
+        Display = display;
+        Memory = memory;
+        _audio = audio;
+        _input = input;
+        _bus = bus;
+        Cpu = cpu;
+
+        _ticksPerFrame = clock.Frequency / 60;
+        _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
+        _lastTimestamp = clock.Timestamp;
+
+        _bus.Subscribe<SetPitchEvent>(OnSetPitch);
+        _bus.Subscribe<LoadAudioPatternEvent>(OnLoadAudioPattern);
+        _bus.Subscribe<KeyIsPressedSkipEvent>(OnKeyIsPressedSkip);
+        _bus.Subscribe<KeyIsReleasedSkipEvent>(OnKeyIsReleasedSkip);
+        _bus.Subscribe<BeginWaitForKeyEvent>(OnBeginWaitForKey);
+        _bus.Subscribe<BeginWaitForVBlankEvent>(OnBeginWaitForVBlank);
+
+        ResetMemory();
+    }
 
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         ResetMemory();
-        _cpu.Reset(programCounter: 0x200);
+        Cpu.Reset(programCounter: 0x200);
+        _audio.Reset();
+        _isWaitingForKey = false;
+        _keyRegisterIndex = 0;
+        _waitForVBlank = false;
         _instructionAcc = 0;
         _frameAcc = 0;
         _lastTimestamp = _clock.Timestamp;
-        _memory.Write(0x200, program);
+        Memory.Write(0x200, program);
 
         // Classic CHIP-8 HIRES signature: programs starting with `1260` (JP 0x260)
         // switch the display to a 64x64 canvas. See Hans Christian Egeberg / David Winter.
         if (program.Length >= 2 && program[0] == 0x12 && program[1] == 0x60)
         {
-            _display.EnableClassicHiresMode();
+            Display.EnableClassicHiresMode();
         }
     }
 
     private void ResetMemory()
     {
-        _memory.Clear();
-        _memory.Write(LowResFontBaseAddress, LowResFont);
-        _memory.Write(HighResFontBaseAddress, HighResFont);
+        Memory.Clear();
+        Memory.Write(LowResFontBaseAddress, LowResFont);
+        Memory.Write(HighResFontBaseAddress, HighResFont);
     }
 
     public void Start()
@@ -81,7 +102,6 @@ internal sealed partial class Chip8Machine : IChip8Machine
         _lastTimestamp = _clock.Timestamp;
         _clock.Ticked += OnTicked;
         _running = true;
-        if (_cpu.Registers.ReadSt() > 0) _cpu.Audio.PlaySound();
     }
 
     public void Stop()
@@ -89,7 +109,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
         if (!_running) return;
         _clock.Ticked -= OnTicked;
         _running = false;
-        if (_cpu.Registers.ReadSt() > 0) _cpu.Audio.StopSound();
+        if (_audio.IsPlaying) _audio.StopSound();
     }
 
     private void OnTicked(object? sender, EventArgs e)
@@ -102,11 +122,15 @@ internal sealed partial class Chip8Machine : IChip8Machine
         var maxDelta = _ticksPerFrame * 2;
         if (delta > maxDelta) delta = maxDelta;
 
-        _cpu.TryResumeFromKeyPress();
+        if (_isWaitingForKey && _input.WasAnyKeyPressedAndReleased(out var key))
+        {
+            Cpu.Registers.WriteV(_keyRegisterIndex, key);
+            _isWaitingForKey = false;
+        }
 
         _frameAcc += delta;
 
-        if (!_cpu.CanExecute)
+        if (_isWaitingForKey || _waitForVBlank)
         {
             _instructionAcc = 0;
         }
@@ -115,9 +139,9 @@ internal sealed partial class Chip8Machine : IChip8Machine
             _instructionAcc += delta;
             while (_instructionAcc >= _ticksPerInstruction)
             {
-                _cpu.FetchDecodeExecute();
+                Cpu.FetchDecodeExecute();
                 _instructionAcc -= _ticksPerInstruction;
-                if (!_cpu.CanExecute)
+                if (_isWaitingForKey || _waitForVBlank)
                 {
                     _instructionAcc = 0;
                     break;
@@ -129,25 +153,60 @@ internal sealed partial class Chip8Machine : IChip8Machine
         {
             StepFrame();
         }
+
+        var st = Cpu.Registers.ReadSt();
+        if (st > 0 && !_audio.IsPlaying) _audio.PlaySound();
+        else if (st == 0 && _audio.IsPlaying) _audio.StopSound();
     }
 
     private void StepFrame()
     {
-        var registers = _cpu.Registers;
+        var registers = Cpu.Registers;
 
         var dt = registers.ReadDt();
         if (dt > 0) registers.WriteDt((byte)(dt - 1));
 
         var st = registers.ReadSt();
-        if (st > 0)
-        {
-            st--;
-            registers.WriteSt(st);
-            if (st == 0) _cpu.Audio.StopSound();
-        }
+        if (st > 0) registers.WriteSt((byte)(st - 1));
 
-        _display.Render();
+        Display.Render();
         _frameAcc -= _ticksPerFrame;
-        _cpu.ClearVBlankWait();
+        _waitForVBlank = false;
+    }
+
+    private void OnSetPitch(SetPitchEvent evt) => _audio.Pitch = evt.Pitch;
+
+    private void OnLoadAudioPattern(LoadAudioPatternEvent _)
+    {
+        _audio.WritePattern(span =>
+        {
+            var registers = Cpu.Registers;
+            var memory = Cpu.Memory;
+            for (var i = 0; i < span.Length; i++)
+            {
+                span[i] = memory.Read(registers.ReadIWithOffset(i));
+            }
+        });
+    }
+
+    private void OnKeyIsPressedSkip(KeyIsPressedSkipEvent evt)
+    {
+        if (_input.IsKeyPressed(evt.Key)) Cpu.AdvanceProgramCounter();
+    }
+
+    private void OnKeyIsReleasedSkip(KeyIsReleasedSkipEvent evt)
+    {
+        if (!_input.IsKeyPressed(evt.Key)) Cpu.AdvanceProgramCounter();
+    }
+
+    private void OnBeginWaitForKey(BeginWaitForKeyEvent evt)
+    {
+        _isWaitingForKey = true;
+        _keyRegisterIndex = evt.RegisterIndex;
+    }
+
+    private void OnBeginWaitForVBlank(BeginWaitForVBlankEvent _)
+    {
+        _waitForVBlank = true;
     }
 }

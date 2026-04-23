@@ -77,7 +77,8 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
             $"{nameof(WithDisplay)} must be called before {nameof(Build)}.");
         var persistentFlags = _persistentFlags ?? new EmulatedPersistentFlags();
 
-        var cpu = new EmulatedCpu(memory, display, input, audio, registers, stack, persistentFlags);
-        return new Chip8Machine(clock, display, memory, cpu);
+        var bus = new EmulatorBus();
+        var cpu = new EmulatedCpu(memory, display, registers, stack, persistentFlags, bus);
+        return new Chip8Machine(clock, display, memory, audio, input, bus, cpu);
     }
 }

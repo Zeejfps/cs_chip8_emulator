@@ -37,14 +37,16 @@ internal sealed partial class BrowserAudio : IAudio
         SetPatternJs(_patternBuffer, _audioFrequencyHz);
     }
 
-    public void PlaySound() => PlaySoundJs();
-    public void StopSound() => StopSoundJs();
+    public bool IsPlaying { get; private set; }
+    public void PlaySound() { PlaySoundJs(); IsPlaying = true; }
+    public void StopSound() { StopSoundJs(); IsPlaying = false; }
     public void Reset()
     {
         _pitch = DefaultPitch;
         _audioFrequencyHz = CalculateAudioFrequency(_pitch);
         Array.Clear(_patternBuffer);
         SetPatternJs(_patternBuffer, _audioFrequencyHz);
+        IsPlaying = false;
     }
 
     private static double CalculateAudioFrequency(byte pitch)

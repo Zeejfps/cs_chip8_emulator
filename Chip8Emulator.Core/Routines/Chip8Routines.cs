@@ -296,7 +296,7 @@ internal static class Chip8Routines
         if (planeMask == 0)
         {
             cpu.Registers.WriteV(0xF, 0);
-            if (cpu.DisplayWait) cpu.BeginWaitForVBlank();
+            if (cpu.DisplayWait) cpu.Bus.Publish<BeginWaitForVBlankEvent>();
             return;
         }
 
@@ -314,7 +314,7 @@ internal static class Chip8Routines
 
         if (cpu.DisplayWait)
         {
-            cpu.BeginWaitForVBlank();
+            cpu.Bus.Publish<BeginWaitForVBlankEvent>();
         }
     }
 
@@ -370,20 +370,14 @@ internal static class Chip8Routines
     {
         var x = ExtractX(ins);
         var key = cpu.Registers.ReadV(x);
-        if (cpu.Input.IsKeyPressed(key))
-        {
-            cpu.AdvanceProgramCounter();
-        }
+        cpu.Bus.Publish(new KeyIsPressedSkipEvent(key));
     }
 
     public static void SkipNextInsIfKeyIsReleased(EmulatedCpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var key = cpu.Registers.ReadV(x);
-        if (!cpu.Input.IsKeyPressed(key))
-        {
-            cpu.AdvanceProgramCounter();
-        }
+        cpu.Bus.Publish(new KeyIsReleasedSkipEvent(key));
     }
 
     // ---- 0xFX** timer / system ops ------------------------------------------
@@ -397,7 +391,7 @@ internal static class Chip8Routines
     public static void WaitForKeyPressAndRelease(EmulatedCpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        cpu.BeginWaitForKey(x);
+        cpu.Bus.Publish(new BeginWaitForKeyEvent(x));
     }
 
     public static void SetDelayTimer(EmulatedCpu cpu, int ins)
@@ -409,18 +403,7 @@ internal static class Chip8Routines
     public static void SetSoundTimer(EmulatedCpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var prevValue = cpu.Registers.ReadSt();
-        var newValue = cpu.Registers.ReadV(x);
-        cpu.Registers.WriteSt(newValue);
-        
-        if (prevValue == 0 && newValue != 0)
-        {
-            cpu.Audio.PlaySound();
-        }
-        else if (prevValue != 0 && newValue == 0)
-        {
-            cpu.Audio.StopSound();
-        }
+        cpu.Registers.WriteSt(cpu.Registers.ReadV(x));
     }
 
     public static void AddVxToI(EmulatedCpu cpu, int ins)

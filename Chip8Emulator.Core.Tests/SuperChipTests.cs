@@ -16,13 +16,16 @@ public class SuperChipTests
     {
         var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
         var memory = new EmulatedMemory(size => new byte[size]);
+        var audio = new FakeAudio();
+        var input = new FakeInput();
+        var bus = new EmulatorBus();
         var cpu = new EmulatedCpu(
             memory, display,
-            new FakeInput(), new FakeAudio(),
             new EmulatedRegisters(size => new byte[size]),
             new EmulatedStack(size => new int[size]),
-            new EmulatedPersistentFlags());
-        return new Chip8Machine(new FakeClock(), display, memory, cpu);
+            new EmulatedPersistentFlags(),
+            bus);
+        return new Chip8Machine(new FakeClock(), display, memory, audio, input, bus, cpu);
     }
 
     private byte PixelAt(Chip8Machine emulator, int x, int y)

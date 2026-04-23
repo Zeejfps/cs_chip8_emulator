@@ -19,13 +19,15 @@ public class XoChipTests
     {
         var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
         var memory = new EmulatedMemory(size => new byte[size]);
+        var input = new FakeInput();
+        var bus = new EmulatorBus();
         var cpu = new EmulatedCpu(
             memory, display,
-            new FakeInput(), audio,
             new EmulatedRegisters(size => new byte[size]),
             new EmulatedStack(size => new int[size]),
-            flags);
-        return new Chip8Machine(new FakeClock(), display, memory, cpu);
+            flags,
+            bus);
+        return new Chip8Machine(new FakeClock(), display, memory, audio, input, bus, cpu);
     }
 
     private byte PixelAt(Chip8Machine emulator, int x, int y)
