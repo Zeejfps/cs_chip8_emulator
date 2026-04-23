@@ -46,22 +46,23 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     internal readonly Routine[] FiveOpRoutines;
     internal readonly Routine[] ArithmeticRoutines;
 
-    public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
-        : this(renderer, audio, clock, input, new EmulatedPersistentFlags())
-    {
-    }
-
-    public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input, IPersistentFlags persistentFlags)
+    public Chip8Machine(
+        IRenderer renderer, 
+        IAudio audio,
+        IClock clock, 
+        IInput input, 
+        IStack stack, 
+        IPersistentFlags persistentFlags)
     {
         _renderer = renderer;
         _audio = audio;
         _clock = clock;
         _input = input;
+        _stack = stack;
         _persistentFlags = persistentFlags;
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
-        _stack = new EmulatedStack();
         _memory = new EmulatedMemory();
         _memory.Write(LowResFontBaseAddress, LowResFont);
         _memory.Write(HighResFontBaseAddress, HighResFont);
@@ -156,7 +157,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public byte SelectedPlanes
     {
         get => _display.SelectedPlanes;
-        set => _display.SelectedPlanes = (byte)(value & Core.EmulatedDisplay.AllPlanesMask);
+        set => _display.SelectedPlanes = (byte)(value & EmulatedDisplay.AllPlanesMask);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

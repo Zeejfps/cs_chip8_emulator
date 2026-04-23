@@ -9,10 +9,11 @@ public class XoChipTests
 
     private static Chip8Machine CreateEmulator(IPersistentFlags? flags = null)
         => new(new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
-            flags ?? new EmulatedPersistentFlags());
+            new EmulatedStack(size => new int[size]), flags ?? new EmulatedPersistentFlags());
 
     private static Chip8Machine CreateEmulator(FakeAudio audio)
-        => new(new FakeRenderer(), audio, new FakeClock(), new FakeInput(), new EmulatedPersistentFlags());
+        => new(new FakeRenderer(), audio, new FakeClock(), new FakeInput(),
+            new EmulatedStack(size => new int[size]), new EmulatedPersistentFlags());
 
     private static byte PixelAt(Chip8Machine emulator, int x, int y)
         => emulator.Display.Pixels.Span[y * emulator.Display.Width + x];

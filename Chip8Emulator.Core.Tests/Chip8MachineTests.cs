@@ -11,7 +11,8 @@ public class Chip8MachineTests
         audio = new FakeAudio();
         clock = new FakeClock();
         input = new FakeInput();
-        return new Chip8Machine(renderer, audio, clock, input);
+        var stack = new EmulatedStack(size => new int[size]);
+        return new Chip8Machine(renderer, audio, clock, input, stack, new EmulatedPersistentFlags());
     }
 
     private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _, out _);
@@ -224,7 +225,7 @@ public class Chip8MachineTests
 
         Assert.Equal(0xABC, emulator.Debugger.ProgramCounter);
         Assert.Equal(spBefore + 1, emulator.Stack.StackPointer);
-        Assert.Equal(0x246, emulator.Stack.AsReadOnlySpan()[emulator.Stack.StackPointer]);
+        Assert.Equal(0x246, emulator.Stack.Pop());
     }
 
     [Fact]

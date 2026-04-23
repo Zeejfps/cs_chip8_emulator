@@ -12,17 +12,21 @@ namespace Chip8Emulator.Web
         private static BrowserInput? _input;
         private static StopwatchClock? _clock;
         private static MemoryHandle _pixelsHandle;
+        private static int[]? _stackBuffer;
 
         [JSExport]
         public static void Init()
         {
             _input = new BrowserInput();
             _clock = new StopwatchClock();
+            _stackBuffer = new int[16];
+            var stack = new EmulatedStack(size => _stackBuffer.AsMemory(0, size));
             _machine = Chip8.Builder()
                 .WithRenderer(new BrowserRenderer())
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
+                .WithStack(stack)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
             _pixelsHandle = _machine.Display.Pixels.Pin();
@@ -68,7 +72,7 @@ namespace Chip8Emulator.Web
         public static int GetStackPointer() => _machine!.Stack.StackPointer;
 
         [JSExport]
-        public static int[] GetStack() => _machine!.Stack.AsReadOnlySpan().ToArray();
+        public static int[] GetStack() => _stackBuffer!;
 
         [JSExport]
         public static string DisassembleInstruction(int ins) => Chip8Disassembler.Disassemble(ins);

@@ -3,9 +3,14 @@ namespace Chip8Emulator.Core;
 public sealed class EmulatedStack : IStack
 {
     public int StackPointer => _stackPointer;
-    
-    private readonly int[] _buffer = new int[16];
+
+    private readonly Memory<int> _buffer;
     private int _stackPointer = -1;
+
+    public EmulatedStack(Func<int, Memory<int>> alloc)
+    {
+        _buffer = alloc(16);
+    }
     
     public void Push(int value)
     {
@@ -13,7 +18,7 @@ public sealed class EmulatedStack : IStack
         if (nextStackPointer >= _buffer.Length)
             throw new InvalidOperationException("Stack overflow");
         _stackPointer = nextStackPointer;
-        _buffer[_stackPointer] = value;
+        _buffer.Span[_stackPointer] = value;
     }
 
     public int Pop()
@@ -21,19 +26,14 @@ public sealed class EmulatedStack : IStack
         if (_stackPointer < 0)
             throw new InvalidOperationException("Stack underflow");
 
-        var value = _buffer[_stackPointer];
+        var value = _buffer.Span[_stackPointer];
         _stackPointer--;
         return value;
     }
 
     public void Clear()
     {
-        Array.Clear(_buffer);
+        _buffer.Span.Clear();
         _stackPointer = -1;
-    }
-
-    public ReadOnlySpan<int> AsReadOnlySpan()
-    {
-        return _buffer;
     }
 }

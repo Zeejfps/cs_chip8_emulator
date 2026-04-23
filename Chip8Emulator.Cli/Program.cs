@@ -35,6 +35,7 @@ try
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
+        .WithStack(new EmulatedStack(size => new int[size]))
         .WithPersistentFlags(new FilePersistentFlags())
         .Build();
 

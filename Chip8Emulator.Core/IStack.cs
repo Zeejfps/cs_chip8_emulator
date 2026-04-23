@@ -6,5 +6,4 @@ public interface IStack
     void Push(int value);
     int Pop();
     void Clear();
-    ReadOnlySpan<int> AsReadOnlySpan();
 }
