@@ -1,9 +1,0 @@
-namespace Chip8Emulator.Core;
-
-public interface IMachineDebugger
-{
-    int ProgramCounter { get; }
-    bool IsWaitingForKey { get; }
-
-    void StepInstruction();
-}

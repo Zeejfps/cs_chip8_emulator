@@ -36,7 +36,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        Assert.Equal(0, emulator.Debugger.ProgramCounter);
+        Assert.Equal(0, emulator.ReadProgramCounter());
         Assert.Equal(0, emulator.Registers.ReadI());
         Assert.Equal(0, emulator.Registers.ReadDt());
         Assert.Equal(0, emulator.Registers.ReadSt());
@@ -148,7 +148,7 @@ public class Chip8MachineTests
 
         Chip8Routines.JumpToAddress(emulator, instruction);
 
-        Assert.Equal(expected, emulator.Debugger.ProgramCounter);
+        Assert.Equal(expected, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -156,11 +156,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x6242);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfRegisterValueEqualsValue(emulator, 0x3242);
 
-        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -168,11 +168,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x6242);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfRegisterValueEqualsValue(emulator, 0x3201);
 
-        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -180,11 +180,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x6242);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfRegisterValueNotEqualsValue(emulator, 0x4201);
 
-        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -192,11 +192,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x6242);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfRegisterValueNotEqualsValue(emulator, 0x4242);
 
-        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -205,11 +205,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x6142);
         Chip8Routines.SetRegisterValue(emulator, 0x6242);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         emulator.FiveOpRoutines[0x5120 & 0x000F](emulator, 0x5120);
 
-        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -218,11 +218,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x6142);
         Chip8Routines.SetRegisterValue(emulator, 0x6201);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         emulator.FiveOpRoutines[0x5120 & 0x000F](emulator, 0x5120);
 
-        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -234,7 +234,7 @@ public class Chip8MachineTests
 
         Chip8Routines.CallSubroutine(emulator, 0x2ABC);
 
-        Assert.Equal(0xABC, emulator.Debugger.ProgramCounter);
+        Assert.Equal(0xABC, emulator.ReadProgramCounter());
         Assert.Equal(spBefore + 1, emulator.Stack.StackPointer);
         Assert.Equal(0x246, emulator.Stack.Pop());
     }
@@ -248,7 +248,7 @@ public class Chip8MachineTests
 
         Chip8Routines.ReturnFromSubroutine(emulator, 0x00EE);
 
-        Assert.Equal(0x246, emulator.Debugger.ProgramCounter);
+        Assert.Equal(0x246, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -468,11 +468,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x6142);
         Chip8Routines.SetRegisterValue(emulator, 0x6201);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfRegisterValueNotEqualsRegisterValue(emulator, 0x9120);
 
-        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -481,11 +481,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x6142);
         Chip8Routines.SetRegisterValue(emulator, 0x6242);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfRegisterValueNotEqualsRegisterValue(emulator, 0x9120);
 
-        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Theory]
@@ -510,11 +510,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         Chip8Routines.SetRegisterValue(emulator, 0x6105);
         input.Press(0x5);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfKeyIsPressed(emulator, 0xE19E);
 
-        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -523,11 +523,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         Chip8Routines.SetRegisterValue(emulator, 0x6105);
         input.Press(0x3);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfKeyIsPressed(emulator, 0xE19E);
 
-        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -536,11 +536,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         Chip8Routines.SetRegisterValue(emulator, 0x6105);
         input.Press(0x3);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfKeyIsReleased(emulator, 0xE1A1);
 
-        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -549,11 +549,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         Chip8Routines.SetRegisterValue(emulator, 0x6105);
         input.Press(0x5);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         Chip8Routines.SkipNextInsIfKeyIsReleased(emulator, 0xE1A1);
 
-        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -562,11 +562,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         Chip8Routines.SetRegisterValue(emulator, 0x6107);
         input.Press(0x7);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         emulator.KeyCheckRoutines[0xE19E & 0x00FF](emulator, 0xE19E);
 
-        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -574,11 +574,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator(out var input);
         Chip8Routines.SetRegisterValue(emulator, 0x6107);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         emulator.KeyCheckRoutines[0xE1A1 & 0x00FF](emulator, 0xE1A1);
 
-        Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -587,11 +587,11 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var input);
         Chip8Routines.SetRegisterValue(emulator, 0x6107);
         input.Press(0x7);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         emulator.KeyCheckRoutines[0xE100 & 0x00FF](emulator, 0xE100);
 
-        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -667,11 +667,11 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator, 0x61AA);
-        var pcBefore = emulator.Debugger.ProgramCounter;
+        var pcBefore = emulator.ReadProgramCounter();
 
         emulator.TimerRoutines[0xF100 & 0x00FF](emulator, 0xF100);
 
-        Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
@@ -734,7 +734,7 @@ public class Chip8MachineTests
 
         Chip8Routines.WaitForKeyPressAndRelease(emulator, 0xF20A);
 
-        Assert.True(emulator.Debugger.IsWaitingForKey);
+        Assert.True(emulator.IsWaitingForKey);
     }
 
     [Fact]
@@ -757,7 +757,7 @@ public class Chip8MachineTests
 
         clock.Tick();
 
-        Assert.True(emulator.Debugger.IsWaitingForKey);
+        Assert.True(emulator.IsWaitingForKey);
         Assert.Equal(0, emulator.Registers.ReadV(2));
     }
 
@@ -773,7 +773,7 @@ public class Chip8MachineTests
 
         clock.Tick();
 
-        Assert.False(emulator.Debugger.IsWaitingForKey);
+        Assert.False(emulator.IsWaitingForKey);
         Assert.Equal(0xA, emulator.Registers.ReadV(2));
     }
 
@@ -790,7 +790,7 @@ public class Chip8MachineTests
         clock.Tick();
 
         Assert.Equal(9, emulator.Registers.ReadDt());
-        Assert.True(emulator.Debugger.IsWaitingForKey);
+        Assert.True(emulator.IsWaitingForKey);
     }
 
     [Fact]
@@ -815,7 +815,7 @@ public class Chip8MachineTests
 
         emulator.TimerRoutines[0xF10A & 0x00FF](emulator, 0xF10A);
 
-        Assert.True(emulator.Debugger.IsWaitingForKey);
+        Assert.True(emulator.IsWaitingForKey);
     }
 
     [Fact]

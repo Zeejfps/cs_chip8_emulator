@@ -16,7 +16,9 @@ public interface ICpu
     bool JumpUsesVx { get; }
     bool LoadStoreIncrementsI { get; }
     bool LogicResetsVf { get; }
-    
+    bool IsWaitingForKey { get; }
+
+    void FetchDecodeExecute();
     int ReadProgramCounter();
     void WriteProgramCounter(int value);
     void AdvanceProgramCounter();

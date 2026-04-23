@@ -69,8 +69,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
         ResetMemory();
 
-        Debugger = new Chip8MachineDebugger(this);
-
         MainRoutines = LoadMainRoutines();
         SystemRoutines = LoadSystemRoutines();
         TimerRoutines = LoadTimerRoutines();
@@ -90,7 +88,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public IRegisters Registers => _registers;
     public IDisplay Display => _display;
     public IInput Input => _input;
-    public IMachineDebugger Debugger { get; }
 
     public int InstructionsPerSecond
     {
@@ -126,6 +123,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         get => _logicResetsVf;
         set { _logicResetsVf = value; ApplyLogicResetsVf(); }
     }
+
+    public bool IsWaitingForKey => _isWaitingForKey;
 
     private void ApplyJumpUsesVx()
     {
@@ -164,7 +163,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private void FetchDecodeExecute()
+    public void FetchDecodeExecute()
     {
         var ins = Fetch();
         AdvanceProgramCounter();
@@ -376,16 +375,5 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _display.Render();
         _frameAcc -= _ticksPerFrame;
         _waitForVBlank = false;
-    }
-
-    private sealed class Chip8MachineDebugger(Chip8Machine machine) : IMachineDebugger
-    {
-        public int ProgramCounter => machine._programCounter;
-        public bool IsWaitingForKey => machine._isWaitingForKey;
-
-        public void StepInstruction()
-        {
-            machine.FetchDecodeExecute();
-        }
     }
 }

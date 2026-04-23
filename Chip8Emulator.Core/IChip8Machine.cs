@@ -2,7 +2,6 @@ namespace Chip8Emulator.Core;
 
 public interface IChip8Machine
 {
-    IMachineDebugger Debugger { get; }
     IDisplay Display { get; }
     IMemory Memory { get; }
     IRegisters Registers { get; }

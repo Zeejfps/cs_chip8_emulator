@@ -9,6 +9,7 @@ namespace Chip8Emulator.Web
     public static partial class Interop
     {
         private static IChip8Machine? _machine;
+        private static ICpu? _cpu;
         private static BrowserInput? _input;
         private static StopwatchClock? _clock;
         private static MemoryHandle _pixelsHandle;
@@ -40,6 +41,7 @@ namespace Chip8Emulator.Web
                 .WithRegisters(registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
+            _cpu = (ICpu)_machine;
             _pixelsHandle = _pixelBuffer.AsMemory().Pin();
         }
 
@@ -59,10 +61,10 @@ namespace Chip8Emulator.Web
         public static void Stop() => _machine!.Stop();
 
         [JSExport]
-        public static void Step() => _machine!.Debugger.StepInstruction();
+        public static void Step() => _cpu!.FetchDecodeExecute();
 
         [JSExport]
-        public static int GetProgramCounter() => _machine!.Debugger.ProgramCounter;
+        public static int GetProgramCounter() => _cpu!.ReadProgramCounter();
 
         [JSExport]
         public static int GetMemoryByte(int address) => _machine!.Memory.Read(address);
