@@ -31,8 +31,6 @@ dotnet workload install wasm-tools
 dotnet run --project Chip8Emulator.Web
 ```
 
-Open the printed URL in a Chromium-based browser, then load a ROM.
-
 ## ROMs
 
 The Web build bundles a curated set of ROMs in
@@ -46,16 +44,6 @@ For more ROMs to load via the upload button, the
 [kripod/chip8-roms](https://github.com/kripod/chip8-roms/tree/master)
 collection and David Winter's [pong-story.com archive](http://pong-story.com/chip8/)
 are both good starting points.
-
-## Keyboard
-
-```
-CHIP-8 keypad    Your keyboard
-1 2 3 C          1 2 3 4
-4 5 6 D          Q W E R
-7 8 9 E          A S D F
-A 0 B F          Z X C V
-```
 
 ## Tests
 
