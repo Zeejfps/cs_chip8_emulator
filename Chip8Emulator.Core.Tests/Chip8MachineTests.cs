@@ -16,7 +16,7 @@ public class Chip8MachineTests
         var stack = new EmulatedStack(size => new int[size]);
         var memory = new EmulatedMemory(size => new byte[size]);
         var registers = new EmulatedRegisters(size => new byte[size]);
-        var cpu = new Cpu(memory, display, input, audio, registers, stack, new EmulatedPersistentFlags());
+        var cpu = new EmulatedCpu(memory, display, input, audio, registers, stack, new EmulatedPersistentFlags());
         return new Chip8Machine(clock, display, memory, cpu);
     }
 

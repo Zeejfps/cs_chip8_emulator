@@ -14,7 +14,7 @@ public class DrawToScreenTests
     {
         var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
         var memory = new EmulatedMemory(size => new byte[size]);
-        var cpu = new Cpu(
+        var cpu = new EmulatedCpu(
             memory, display,
             new FakeInput(), new FakeAudio(),
             new EmulatedRegisters(size => new byte[size]),

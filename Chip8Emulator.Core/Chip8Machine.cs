@@ -10,7 +10,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
     private readonly IClock _clock;
     private readonly IDisplay _display;
     private readonly IMemory _memory;
-    private readonly Cpu _cpu;
+    private readonly EmulatedCpu _cpu;
 
     private readonly long _ticksPerFrame;
     private long _ticksPerInstruction;
@@ -20,7 +20,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
     private long _frameAcc;
     private bool _running;
 
-    public Chip8Machine(IClock clock, IDisplay display, IMemory memory, Cpu cpu)
+    public Chip8Machine(IClock clock, IDisplay display, IMemory memory, EmulatedCpu cpu)
     {
         _clock = clock;
         _display = display;
@@ -36,7 +36,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
 
     public IDisplay Display => _display;
     public IMemory Memory => _memory;
-    public Cpu Cpu => _cpu;
+    public EmulatedCpu Cpu => _cpu;
     ICpu IChip8Machine.Cpu => _cpu;
 
     public int InstructionsPerSecond

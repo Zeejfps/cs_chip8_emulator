@@ -3,7 +3,7 @@ using Chip8Emulator.Core.Routines;
 
 namespace Chip8Emulator.Core;
 
-internal sealed partial class Cpu : ICpu
+internal sealed partial class EmulatedCpu : ICpu
 {
     public const int InstructionSizeInBytes = 2;
 
@@ -31,7 +31,7 @@ internal sealed partial class Cpu : ICpu
     internal readonly Routine[] FiveOpRoutines;
     internal readonly Routine[] ArithmeticRoutines;
 
-    public Cpu(
+    public EmulatedCpu(
         IMemory memory,
         IDisplay display,
         IInput input,
@@ -120,7 +120,6 @@ internal sealed partial class Cpu : ICpu
 
     public bool CanExecute => !_waitForVBlank && !_isWaitingForKey;
 
-    public void StepInstruction() => FetchDecodeExecute();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void FetchDecodeExecute()

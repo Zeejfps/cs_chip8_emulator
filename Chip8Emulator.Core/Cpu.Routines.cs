@@ -2,11 +2,11 @@ using Chip8Emulator.Core.Routines;
 
 namespace Chip8Emulator.Core;
 
-internal delegate void Routine(Cpu cpu, int ins);
+internal delegate void Routine(EmulatedCpu cpu, int ins);
 
-internal sealed partial class Cpu
+internal sealed partial class EmulatedCpu
 {
-    private static void NoOp(Cpu cpu, int ins) { }
+    private static void NoOp(EmulatedCpu cpu, int ins) { }
 
     private Routine[] LoadMainRoutines()
     {

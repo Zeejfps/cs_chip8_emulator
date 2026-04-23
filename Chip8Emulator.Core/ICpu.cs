@@ -3,7 +3,6 @@ namespace Chip8Emulator.Core;
 public interface ICpu
 {
     int ProgramCounter { get; }
-    bool IsWaitingForKey { get; }
     IRegisters Registers { get; }
     IStack Stack { get; }
 
@@ -15,5 +14,5 @@ public interface ICpu
     bool DisplayWait { get; set; }
     bool VfResultWrittenLast { get; set; }
 
-    void StepInstruction();
+    void FetchDecodeExecute();
 }
