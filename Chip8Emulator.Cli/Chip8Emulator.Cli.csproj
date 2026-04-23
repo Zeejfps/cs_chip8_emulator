@@ -10,4 +10,8 @@
         <AssemblyName>chip8_emulator</AssemblyName>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Chip8Emulator.Core\Chip8Emulator.Core.csproj" />
+    </ItemGroup>
+
 </Project>
