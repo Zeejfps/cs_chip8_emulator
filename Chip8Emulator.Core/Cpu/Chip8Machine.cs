@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Chip8Emulator.Core.Cpu;
 
-internal sealed partial class Chip8Machine : IChip8Machine
+internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 {
     public const int LowResFontBaseAddress = 0x050;
     public const int HighResFontBaseAddress = 0x0A0;
@@ -317,6 +317,12 @@ internal sealed partial class Chip8Machine : IChip8Machine
     {
         _waitForVBlank = true;
     }
+
+    public void DispatchSystemInstruction(int ins) => SystemInsTable[ins & 0x00FF](this, ins);
+    public void DispatchArithmeticInstruction(int ins) => ArithmeticTable[ins & 0x000F](this, ins);
+    public void DispatchKeyCheckInstruction(int ins) => KeyCheckTable[ins & 0x00FF](this, ins);
+    public void DispatchTimerInstruction(int ins) => TimerTable[ins & 0x00FF](this, ins);
+    public void DispatchFiveOpInstruction(int ins) => FiveOpTable[ins & 0x000F](this, ins);
 
     public void WriteMemory(int address, ReadOnlySpan<byte> data)
     {

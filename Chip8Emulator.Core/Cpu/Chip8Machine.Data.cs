@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core.Cpu;
 
-internal delegate void InstructionHandler(Chip8Machine machine, int ins);
+internal delegate void InstructionHandler(ICpu cpu, int ins);
 
 internal sealed partial class Chip8Machine
 {
@@ -47,7 +47,7 @@ internal sealed partial class Chip8Machine
         0x3C, 0x7E, 0xC3, 0xC3, 0x7F, 0x3F, 0x03, 0x03, 0x3E, 0x7C
     ];
     
-    private static void NoOp(Chip8Machine machine, int ins) { }
+    private static void NoOp(ICpu cpu, int ins) { }
 
     private InstructionHandler[] BuildRootOpcodeTable()
     {
@@ -101,14 +101,14 @@ internal sealed partial class Chip8Machine
         table[0x01] = XoChipInstructionSet.SelectPlane;
         // F002 — XO-CHIP copy 16 bytes at [I] into audio pattern buffer.
         table[0x02] = XoChipInstructionSet.LoadAudioPattern;
-        table[0x07] = Chip8InstructionSet.ReadDelayTimer;
-        table[0x0A] = Chip8InstructionSet.WaitForKeyPress;
-        table[0x15] = Chip8InstructionSet.SetDelayTimer;
-        table[0x18] = Chip8InstructionSet.SetSoundTimer;
-        table[0x1E] = Chip8InstructionSet.AddVxToI;
-        table[0x29] = Chip8InstructionSet.LoadLowResFontCharacter;
+        table[0x07] = Chip8InstructionSet.ExecuteReadDelayTimer;
+        table[0x0A] = Chip8InstructionSet.ExecuteWaitForKeyPress;
+        table[0x15] = Chip8InstructionSet.ExecuteSetDelayTimer;
+        table[0x18] = Chip8InstructionSet.ExecuteSetSoundTimer;
+        table[0x1E] = Chip8InstructionSet.ExecuteAddVxToI;
+        table[0x29] = Chip8InstructionSet.ExecuteLoadLowResFontCharacter;
         table[0x30] = SChipInstructionSet.LoadHighResFontCharacter;
-        table[0x33] = Chip8InstructionSet.StoreBcdInMemory;
+        table[0x33] = Chip8InstructionSet.ExecuteStoreBcdInMemory;
         // FX3A — XO-CHIP set audio playback pitch from Vx.
         table[0x3A] = XoChipInstructionSet.SetPitch;
         table[0x55] = Chip8InstructionSet.ExecuteStoreRegisters;
@@ -123,8 +123,8 @@ internal sealed partial class Chip8Machine
     {
         var table = new InstructionHandler[256];
         Array.Fill(table, NoOp);
-        table[0x9E] = Chip8InstructionSet.SkipNextInsIfKeyIsPressed;
-        table[0xA1] = Chip8InstructionSet.SkipNextInsIfKeyIsReleased;
+        table[0x9E] = Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsPressed;
+        table[0xA1] = Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsReleased;
         return table;
     }
 

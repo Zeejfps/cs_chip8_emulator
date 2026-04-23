@@ -8,47 +8,47 @@ internal static class SChipInstructionSet
 {
     // ---- 00FF / 00FE : high-res mode toggle ---------------------------------
 
-    public static void EnableHiresMode(Chip8Machine machine, int ins)
+    public static void EnableHiresMode(ICpu cpu, int ins)
     {
-        machine.EnableHighResMode();
+        cpu.EnableHighResMode();
     }
 
-    public static void DisableHiresMode(Chip8Machine machine, int ins)
+    public static void DisableHiresMode(ICpu cpu, int ins)
     {
-        machine.DisableHighResMode();
+        cpu.DisableHighResMode();
     }
 
     // ---- 00FB / 00FC / 00CN : scroll ----------------------------------------
 
-    public static void ScrollRight(Chip8Machine machine, int ins)
+    public static void ScrollRight(ICpu cpu, int ins)
     {
-        machine.ScrollDisplayRight(4);
+        cpu.ScrollDisplayRight(4);
     }
 
-    public static void ScrollLeft(Chip8Machine machine, int ins)
+    public static void ScrollLeft(ICpu cpu, int ins)
     {
-        machine.ScrollDisplayLeft(4);
+        cpu.ScrollDisplayLeft(4);
     }
 
-    public static void ScrollDown(Chip8Machine machine, int ins)
+    public static void ScrollDown(ICpu cpu, int ins)
     {
-        machine.ScrollDisplayDown(ins & 0x0F);
+        cpu.ScrollDisplayDown(ins & 0x0F);
     }
 
     // ---- DXY0 : 16x16 hi-res sprite -----------------------------------------
 
     // Called from Chip8Cpu.ExeuteDrawToScreenIns when the display is in hi-res
     // mode and N == 0. Extended for XO-Chip bitplanes (mask param).
-    public static void DrawHighResSprite(Chip8Machine machine, int x, int y, byte planeMask)
+    public static void DrawHighResSprite(ICpu cpu, int x, int y, byte planeMask)
     {
         // S-CHIP 1.1 DXY0 hi-res collision semantics (extended for XO-Chip bitplanes):
         // VF = number of sprite rows with at least one collision in any selected plane
         //    + number of sprite rows clipped off the bottom edge (when not wrapping).
-        var display = machine.Display;
+        var display = cpu.Display;
         var displayPixels = display.Pixels.Span;
         var width = display.Width;
         var height = display.Height;
-        var wrap = machine.SpritesWrap;
+        var wrap = cpu.SpritesWrap;
         var collidedRows = 0;
         var clippedRows = 0;
 
@@ -79,8 +79,8 @@ internal static class SChipInstructionSet
                 }
 
                 var offset = spriteBase + i * 2;
-                var spritePixelsRow = (ushort)(machine.ReadMemory(machine.ReadIndexRegisterWithOffset(offset)) << 8 |
-                                               machine.ReadMemory(machine.ReadIndexRegisterWithOffset(offset + 1)));
+                var spritePixelsRow = (ushort)(cpu.ReadMemory(cpu.ReadIndexRegisterWithOffset(offset)) << 8 |
+                                               cpu.ReadMemory(cpu.ReadIndexRegisterWithOffset(offset + 1)));
                 for (var bit = 0; bit < 16; bit++)
                 {
                     var dstX = x + bit;
@@ -104,27 +104,27 @@ internal static class SChipInstructionSet
             if (rowCollisions[i]) collidedRows++;
         clippedRows = anyClipped;
 
-        machine.WriteGeneralPurposeRegister(0xF, (byte)(collidedRows + clippedRows));
+        cpu.WriteGeneralPurposeRegister(0xF, (byte)(collidedRows + clippedRows));
     }
 
     // ---- FX30 : load hi-res font character ----------------------------------
 
-    public static void LoadHighResFontCharacter(Chip8Machine machine, int ins)
+    public static void LoadHighResFontCharacter(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var value = machine.ReadGeneralPurposeRegister(x);
-        machine.WriteIndexRegister((value & 0x0F) * Chip8Machine.HighRestFontCharWidth + Chip8Machine.HighResFontBaseAddress);
+        var value = cpu.ReadGeneralPurposeRegister(x);
+        cpu.WriteIndexRegister((value & 0x0F) * Chip8Machine.HighRestFontCharWidth + Chip8Machine.HighResFontBaseAddress);
     }
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------
 
-    public static void SaveFlags(Chip8Machine machine, int ins)
+    public static void SaveFlags(ICpu cpu, int ins)
     {
-        machine.SaveFlags(ExtractX(ins));
+        cpu.SaveFlags(ExtractX(ins));
     }
 
-    public static void LoadFlags(Chip8Machine machine, int ins)
+    public static void LoadFlags(ICpu cpu, int ins)
     {
-        machine.LoadFlags(ExtractX(ins));
+        cpu.LoadFlags(ExtractX(ins));
     }
 }

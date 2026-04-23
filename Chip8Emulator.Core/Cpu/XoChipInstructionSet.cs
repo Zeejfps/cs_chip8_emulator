@@ -8,49 +8,49 @@ internal static class XoChipInstructionSet
 {
     // ---- 00DN : scroll display up N rows ------------------------------------
 
-    public static void ScrollUp(Chip8Machine machine, int ins)
+    public static void ScrollUp(ICpu cpu, int ins)
     {
-        machine.ScrollDisplayUp(ins & 0x0F);
+        cpu.ScrollDisplayUp(ins & 0x0F);
     }
 
     // ---- F000 NNNN : long load I --------------------------------------------
 
-    public static void LongLoadIndexRegister(Chip8Machine machine, int ins)
+    public static void LongLoadIndexRegister(ICpu cpu, int ins)
     {
         // F000 NNNN matches only when X is 0; ignore F1nn–FFnn slotted here.
         if (ExtractX(ins) != 0) return;
-        var pc = machine.ReadProgramCounter();
-        var hi = machine.ReadMemory(pc);
-        var lo = machine.ReadMemory(pc + 1);
-        machine.WriteIndexRegister((hi << 8) | lo);
-        machine.AdvanceProgramCounter();
+        var pc = cpu.ReadProgramCounter();
+        var hi = cpu.ReadMemory(pc);
+        var lo = cpu.ReadMemory(pc + 1);
+        cpu.WriteIndexRegister((hi << 8) | lo);
+        cpu.AdvanceProgramCounter();
     }
 
     // ---- FN01 : select bitplane mask ----------------------------------------
 
-    public static void SelectPlane(Chip8Machine machine, int ins)
+    public static void SelectPlane(ICpu cpu, int ins)
     {
-        machine.SelectedPlanes = (byte)ExtractX(ins);
+        cpu.SelectedPlanes = (byte)ExtractX(ins);
     }
 
     // ---- F002 / FX3A : audio pattern buffer + pitch -------------------------
 
-    public static void LoadAudioPattern(Chip8Machine machine, int ins)
+    public static void LoadAudioPattern(ICpu cpu, int ins)
     {
         // F002 — only defined when X == 0; other slots (F102, F202, ...) are undefined.
         if (ExtractX(ins) != 0) return;
-        machine.LoadAudioPattern();
+        cpu.LoadAudioPattern();
     }
 
-    public static void SetPitch(Chip8Machine machine, int ins)
+    public static void SetPitch(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        machine.SetPitch(machine.ReadGeneralPurposeRegister(x));
+        cpu.SetPitch(cpu.ReadGeneralPurposeRegister(x));
     }
 
     // ---- 5XY2 / 5XY3 : store / load register range --------------------------
 
-    public static void StoreRegisterRange(Chip8Machine machine, int ins)  // 5XY2
+    public static void StoreRegisterRange(ICpu cpu, int ins)  // 5XY2
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -58,13 +58,13 @@ internal static class XoChipInstructionSet
         var count = Math.Abs(y - x) + 1;
         for (var k = 0; k < count; k++)
         {
-            machine.WriteMemory(
-                machine.ReadIndexRegisterWithOffset(k),
-                machine.ReadGeneralPurposeRegister(x + k * step));
+            cpu.WriteMemory(
+                cpu.ReadIndexRegisterWithOffset(k),
+                cpu.ReadGeneralPurposeRegister(x + k * step));
         }
     }
 
-    public static void LoadRegisterRange(Chip8Machine machine, int ins)  // 5XY3
+    public static void LoadRegisterRange(ICpu cpu, int ins)  // 5XY3
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -72,9 +72,9 @@ internal static class XoChipInstructionSet
         var count = Math.Abs(y - x) + 1;
         for (var k = 0; k < count; k++)
         {
-            var address = machine.ReadIndexRegisterWithOffset(k);
-            var value = machine.ReadMemory(address);
-            machine.WriteGeneralPurposeRegister(x + k * step, value);
+            var address = cpu.ReadIndexRegisterWithOffset(k);
+            var value = cpu.ReadMemory(address);
+            cpu.WriteGeneralPurposeRegister(x + k * step, value);
         }
     }
 }
