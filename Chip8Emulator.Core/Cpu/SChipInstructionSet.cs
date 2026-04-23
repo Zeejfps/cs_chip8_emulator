@@ -8,24 +8,24 @@ internal static class SChipInstructionSet
 {
     // ---- 00FF / 00FE : high-res mode toggle ---------------------------------
 
-    public static void ExecuteEnableHiresModeIns(Chip8Machine machine, int ins)
+    public static void EnableHiresMode(Chip8Machine machine, int ins)
     {
         machine.EnableHighResMode();
     }
 
-    public static void ExecuteDisableHiresModeIns(Chip8Machine machine, int ins)
+    public static void DisableHiresMode(Chip8Machine machine, int ins)
     {
         machine.DisableHighResMode();
     }
 
     // ---- 00FB / 00FC / 00CN : scroll ----------------------------------------
 
-    public static void ExecuteScrollRightIns(Chip8Machine machine, int ins)
+    public static void ScrollRight(Chip8Machine machine, int ins)
     {
         machine.ScrollDisplayRight(4);
     }
 
-    public static void ExecuteScrollLeftIns(Chip8Machine machine, int ins)
+    public static void ScrollLeft(Chip8Machine machine, int ins)
     {
         machine.ScrollDisplayLeft(4);
     }
@@ -39,7 +39,7 @@ internal static class SChipInstructionSet
 
     // Called from Chip8Cpu.ExeuteDrawToScreenIns when the display is in hi-res
     // mode and N == 0. Extended for XO-Chip bitplanes (mask param).
-    internal static void DrawHighResSprite(Chip8Machine machine, int x, int y, byte planeMask)
+    public static void DrawHighResSprite(Chip8Machine machine, int x, int y, byte planeMask)
     {
         // S-CHIP 1.1 DXY0 hi-res collision semantics (extended for XO-Chip bitplanes):
         // VF = number of sprite rows with at least one collision in any selected plane
@@ -109,7 +109,7 @@ internal static class SChipInstructionSet
 
     // ---- FX30 : load hi-res font character ----------------------------------
 
-    public static void ExecuteLoadHighResFontCharacter(Chip8Machine machine, int ins)
+    public static void LoadHighResFontCharacter(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var value = machine.ReadGeneralPurposeRegister(x);
@@ -118,12 +118,12 @@ internal static class SChipInstructionSet
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------
 
-    public static void ExecuteSaveFlagsIns(Chip8Machine machine, int ins)
+    public static void SaveFlags(Chip8Machine machine, int ins)
     {
         machine.SaveFlags(ExtractX(ins));
     }
 
-    public static void ExecuteLoadFlagsIns(Chip8Machine machine, int ins)
+    public static void LoadFlags(Chip8Machine machine, int ins)
     {
         machine.LoadFlags(ExtractX(ins));
     }
