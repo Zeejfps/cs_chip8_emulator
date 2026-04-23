@@ -1,4 +1,6 @@
-namespace Chip8Emulator.Core.Cpu;
+using Chip8Emulator.Core.Routines;
+
+namespace Chip8Emulator.Core;
 
 internal delegate void Routine(ICpu cpu, int ins);
 

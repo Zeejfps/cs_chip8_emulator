@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
+using Chip8Emulator.Core.Routines;
 
-namespace Chip8Emulator.Core.Cpu;
+namespace Chip8Emulator.Core;
 
 internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 {
@@ -169,7 +170,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public byte SelectedPlanes
     {
         get => _display.SelectedPlanes;
-        set => _display.SelectedPlanes = (byte)(value & Cpu.Display.AllPlanesMask);
+        set => _display.SelectedPlanes = (byte)(value & Core.Display.AllPlanesMask);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
