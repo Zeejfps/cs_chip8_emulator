@@ -43,7 +43,7 @@ runtime.setModuleImports('main.js', {
 
 const config = runtime.getConfig();
 const exports = await runtime.getAssemblyExports(config.mainAssemblyName);
-const api = exports.Interop as InteropExports;
+const api = exports.Chip8Emulator.Web.Interop as InteropExports;
 api.Init();
 
 if (boot) {
