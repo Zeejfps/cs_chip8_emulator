@@ -50,25 +50,25 @@ namespace Chip8Emulator.Web
         public static int GetProgramCounter() => _machine!.Debugger.ProgramCounter;
 
         [JSExport]
-        public static int GetMemoryByte(int address) => _machine!.Debugger.Memory[address];
+        public static int GetMemoryByte(int address) => _machine!.Memory.Read(address);
 
         [JSExport]
-        public static byte[] GetVRegisters() => _machine!.Debugger.Registers.ToArray();
+        public static byte[] GetVRegisters() => _machine!.Registers.AsReadOnlySpan().ToArray();
 
         [JSExport]
-        public static int GetIndexRegister() => _machine!.Debugger.IndexRegister;
+        public static int GetIndexRegister() => _machine!.Registers.ReadI();
 
         [JSExport]
-        public static int GetDelayTimer() => _machine!.Debugger.DelayTimer;
+        public static int GetDelayTimer() => _machine!.Registers.ReadDt();
 
         [JSExport]
-        public static int GetSoundTimer() => _machine!.Debugger.SoundTimer;
+        public static int GetSoundTimer() => _machine!.Registers.ReadSt();
 
         [JSExport]
-        public static int GetStackPointer() => _machine!.Debugger.StackPointer;
+        public static int GetStackPointer() => _machine!.Stack.StackPointer;
 
         [JSExport]
-        public static int[] GetStack() => _machine!.Debugger.Stack.ToArray();
+        public static int[] GetStack() => _machine!.Stack.AsReadOnlySpan().ToArray();
 
         [JSExport]
         public static string DisassembleInstruction(int ins) => Chip8Disassembler.Disassemble(ins);

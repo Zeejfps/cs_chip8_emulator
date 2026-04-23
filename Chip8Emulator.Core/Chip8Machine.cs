@@ -376,14 +376,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private sealed class Chip8MachineDebugger(Chip8Machine machine) : IMachineDebugger
     {
-        public ReadOnlySpan<byte> Memory => machine._memory.AsReadOnlySpan();
-        public ReadOnlySpan<byte> Registers => machine._registers.AsReadOnlySpan();
-        public ReadOnlySpan<int> Stack => machine._stack.AsReadOnlySpan();
         public int ProgramCounter => machine._programCounter;
-        public int IndexRegister => machine._registers.ReadI();
-        public int StackPointer => machine._stack.StackPointer;
-        public byte DelayTimer => machine._registers.ReadDt();
-        public byte SoundTimer => machine._registers.ReadSt();
         public bool IsWaitingForKey => machine._isWaitingForKey;
         public bool IsWaitingForVBlank => machine._waitForVBlank;
 

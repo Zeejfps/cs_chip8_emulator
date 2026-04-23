@@ -243,7 +243,7 @@ public class SuperChipTests
         emulator.TimerRoutines[0xF030 & 0x00FF](emulator, 0xF030);
 
         // High-res font base 0x0A0, each glyph is 10 bytes -> 0xA0 + 5*10 = 0xD2
-        Assert.Equal(0xA0 + 5 * 10, emulator.Debugger.IndexRegister);
+        Assert.Equal(0xA0 + 5 * 10, emulator.Registers.ReadI());
     }
 
     [Fact]
@@ -254,7 +254,7 @@ public class SuperChipTests
 
         emulator.TimerRoutines[0xF230 & 0x00FF](emulator, 0xF230);
 
-        Assert.Equal(0xA0, emulator.Debugger.IndexRegister);
+        Assert.Equal(0xA0, emulator.Registers.ReadI());
     }
 
     // ---- DXY0 : 16x16 high-res sprite drawing -------------------------------
@@ -391,7 +391,7 @@ public class SuperChipTests
 
         Chip8Routines.DrawToScreen(emulator, 0xD000);
 
-        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
@@ -409,7 +409,7 @@ public class SuperChipTests
         Chip8Routines.DrawToScreen(emulator, 0xD000);
 
         // All 16 rows of an all-on sprite collide on second draw.
-        Assert.Equal(16, emulator.Debugger.Registers[0xF]);
+        Assert.Equal(16, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
@@ -428,7 +428,7 @@ public class SuperChipTests
         Chip8Routines.DrawToScreen(emulator, 0xD010);
 
         // No on-screen collision (fresh display), but 8 rows clipped off the bottom.
-        Assert.Equal(8, emulator.Debugger.Registers[0xF]);
+        Assert.Equal(8, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
@@ -448,6 +448,6 @@ public class SuperChipTests
         Chip8Routines.DrawToScreen(emulator, 0xD010);
 
         // 8 rows collide on second draw + 8 rows clipped off the bottom.
-        Assert.Equal(16, emulator.Debugger.Registers[0xF]);
+        Assert.Equal(16, emulator.Registers.ReadV(0xF));
     }
 }

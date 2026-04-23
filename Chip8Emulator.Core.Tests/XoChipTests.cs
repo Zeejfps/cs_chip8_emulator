@@ -40,7 +40,7 @@ public class XoChipTests
         Chip8Routines.DrawToScreen(emulator, 0xD001);
 
         for (var x = 0; x < 8; x++) Assert.Equal(0, PixelAt(emulator, x, 0));
-        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
@@ -83,10 +83,10 @@ public class XoChipTests
         emulator.TimerRoutines[0xF301 & 0x00FF](emulator, 0xF301); // mask = 3
 
         Chip8Routines.DrawToScreen(emulator, 0xD001);
-        Assert.Equal(0, emulator.Debugger.Registers[0xF]);
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
 
         Chip8Routines.DrawToScreen(emulator, 0xD001);
-        Assert.Equal(1, emulator.Debugger.Registers[0xF]);
+        Assert.Equal(1, emulator.Registers.ReadV(0xF));
     }
 
     // ---- Clear / scroll respect plane mask ----------------------------------
@@ -209,10 +209,10 @@ public class XoChipTests
 
         emulator.TimerRoutines[0xF385 & 0x00FF](emulator, 0xF385); // FX85 with X=3 loads V0..V3
 
-        Assert.Equal(0x11, emulator.Debugger.Registers[0]);
-        Assert.Equal(0x22, emulator.Debugger.Registers[1]);
-        Assert.Equal(0x33, emulator.Debugger.Registers[2]);
-        Assert.Equal(0x44, emulator.Debugger.Registers[3]);
+        Assert.Equal(0x11, emulator.Registers.ReadV(0));
+        Assert.Equal(0x22, emulator.Registers.ReadV(1));
+        Assert.Equal(0x33, emulator.Registers.ReadV(2));
+        Assert.Equal(0x44, emulator.Registers.ReadV(3));
     }
 
     [Fact]
@@ -232,7 +232,7 @@ public class XoChipTests
 
         for (var i = 0; i < 16; i++)
         {
-            Assert.Equal((byte)(i * 17), restored.Debugger.Registers[i]);
+            Assert.Equal((byte)(i * 17), restored.Registers.ReadV(i));
         }
     }
 
@@ -248,7 +248,7 @@ public class XoChipTests
 
         emulator.TimerRoutines[0xF000 & 0x00FF](emulator, 0xF000);
 
-        Assert.Equal(0x1234, emulator.Debugger.IndexRegister);
+        Assert.Equal(0x1234, emulator.Registers.ReadI());
     }
 
     // ---- LoadProgram resets XO-Chip state -----------------------------------
