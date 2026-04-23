@@ -29,17 +29,17 @@ try
     var audio = new ConsoleBeepAudio();
 
     var clock = new StopwatchClock();
-    var pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
-    var emulatedDisplay = new EmulatedDisplay(size => pixelBuffer.AsMemory(0, size));
+    var pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
+    var emulatedDisplay = new Chip8Display(size => pixelBuffer.AsMemory(0, size));
     using var consoleDisplay = new AnsiConsoleDisplay(emulatedDisplay, pixelBuffer);
     var machine = Chip8.Builder()
         .WithDisplay(consoleDisplay)
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
-        .WithStack(new EmulatedStack(size => new int[size]))
-        .WithMemory(new EmulatedMemory(size => new byte[size]))
-        .WithRegisters(new EmulatedRegisters(size => new byte[size]))
+        .WithStack(new Chip8Stack(size => new int[size]))
+        .WithMemory(new Chip8Memory(size => new byte[size]))
+        .WithRegisters(new Chip8Registers(size => new byte[size]))
         .WithPersistentFlags(new FilePersistentFlags())
         .Build();
 

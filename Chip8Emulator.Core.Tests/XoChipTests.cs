@@ -7,24 +7,24 @@ public class XoChipTests
 {
     private const int LowResWidth = 64;
 
-    private readonly byte[] _pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
+    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
 
-    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) CreateEmulator(IPersistentFlags? flags = null)
+    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(IPersistentFlags? flags = null)
         => BuildMachine(new FakeAudio(), flags ?? new EmulatedPersistentFlags());
 
-    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) CreateEmulator(FakeAudio audio)
+    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(FakeAudio audio)
         => BuildMachine(audio, new EmulatedPersistentFlags());
 
-    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) BuildMachine(IAudio audio, IPersistentFlags flags)
+    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) BuildMachine(IAudio audio, IPersistentFlags flags)
     {
-        var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
-        var memory = new EmulatedMemory(size => new byte[size]);
+        var display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
+        var memory = new Chip8Memory(size => new byte[size]);
         var input = new FakeInput();
         var bus = new EmulatorBus();
-        var cpu = new EmulatedCpu(
+        var cpu = new Chip8Cpu(
             memory, display,
-            new EmulatedRegisters(size => new byte[size]),
-            new EmulatedStack(size => new int[size]),
+            new Chip8Registers(size => new byte[size]),
+            new Chip8Stack(size => new int[size]),
             flags,
             bus);
         var emulator = new Chip8Interpreter(new FakeClock(), display, memory, audio, input, bus, cpu);

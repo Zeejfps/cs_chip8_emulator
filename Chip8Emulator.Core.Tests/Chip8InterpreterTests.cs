@@ -5,24 +5,24 @@ namespace Chip8Emulator.Core.Tests;
 
 public class Chip8InterpreterTests
 {
-    private readonly byte[] _pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
+    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
 
-    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) CreateEmulator(out FakeAudio audio, out FakeClock clock, out FakeInput input)
+    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(out FakeAudio audio, out FakeClock clock, out FakeInput input)
     {
         audio = new FakeAudio();
         clock = new FakeClock();
         input = new FakeInput();
-        var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
-        var stack = new EmulatedStack(size => new int[size]);
-        var memory = new EmulatedMemory(size => new byte[size]);
-        var registers = new EmulatedRegisters(size => new byte[size]);
+        var display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
+        var stack = new Chip8Stack(size => new int[size]);
+        var memory = new Chip8Memory(size => new byte[size]);
+        var registers = new Chip8Registers(size => new byte[size]);
         var bus = new EmulatorBus();
-        var cpu = new EmulatedCpu(memory, display, registers, stack, new EmulatedPersistentFlags(), bus);
+        var cpu = new Chip8Cpu(memory, display, registers, stack, new EmulatedPersistentFlags(), bus);
         var emulator = new Chip8Interpreter(clock, display, memory, audio, input, bus, cpu);
         return (emulator, cpu);
     }
 
-    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) CreateEmulator() => CreateEmulator(out _, out _, out _);
+    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator() => CreateEmulator(out _, out _, out _);
 
     private static byte[] ReadMemorySlice(Chip8Interpreter emulator, int address, int length)
     {
@@ -31,8 +31,8 @@ public class Chip8InterpreterTests
             result[i] = emulator.Memory.Read(address + i);
         return result;
     }
-    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out input);
-    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) CreateEmulator(out FakeClock clock, out FakeInput input) => CreateEmulator(out _, out clock, out input);
+    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out input);
+    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(out FakeClock clock, out FakeInput input) => CreateEmulator(out _, out clock, out input);
 
     [Fact]
     public void InitialState_IsZeroed()

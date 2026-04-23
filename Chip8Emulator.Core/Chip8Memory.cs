@@ -1,10 +1,10 @@
 namespace Chip8Emulator.Core;
 
-public sealed class EmulatedMemory : IMemory
+public sealed class Chip8Memory : IMemory
 {
     private readonly Memory<byte> _buffer;
 
-    public EmulatedMemory(Func<int, Memory<byte>> alloc)
+    public Chip8Memory(Func<int, Memory<byte>> alloc)
     {
         const int requiredSize = 4096;
         _buffer = alloc(requiredSize);

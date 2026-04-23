@@ -1,13 +1,13 @@
 namespace Chip8Emulator.Core;
 
-public sealed class EmulatedStack : IStack
+public sealed class Chip8Stack : IStack
 {
     public int StackPointer => _stackPointer;
 
     private readonly Memory<int> _buffer;
     private int _stackPointer = -1;
 
-    public EmulatedStack(Func<int, Memory<int>> alloc)
+    public Chip8Stack(Func<int, Memory<int>> alloc)
     {
         const int requiredSize = 16;
         _buffer = alloc(requiredSize);

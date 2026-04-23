@@ -17,7 +17,7 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private const string DisableAltScroll = "\x1b[?1007l";
     private const string RestoreAltScroll = "\x1b[?1007h";
 
-    private readonly EmulatedDisplay _display;
+    private readonly Chip8Display _display;
     private readonly byte[] _pixels;
     private readonly byte[] _previousPixels;
     private readonly StringBuilder _frame = new(8192);
@@ -28,7 +28,7 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private int _lastPixelHeight = -1;
     private readonly string? _savedSttyState;
 
-    public AnsiConsoleDisplay(EmulatedDisplay display, byte[] pixels)
+    public AnsiConsoleDisplay(Chip8Display display, byte[] pixels)
     {
         _display = display;
         _pixels = pixels;

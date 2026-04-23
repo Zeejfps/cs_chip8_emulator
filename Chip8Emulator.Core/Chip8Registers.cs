@@ -1,13 +1,13 @@
 namespace Chip8Emulator.Core;
 
-public sealed class EmulatedRegisters : IRegisters
+public sealed class Chip8Registers : IRegisters
 {
     private byte _delayTimer;
     private byte _soundTimer;
     private int _indexRegister;
     private readonly Memory<byte> _vRegisters;
 
-    public EmulatedRegisters(Func<int, Memory<byte>> alloc)
+    public Chip8Registers(Func<int, Memory<byte>> alloc)
     {
         const int requiredSize = 16;
         _vRegisters = alloc(requiredSize);
