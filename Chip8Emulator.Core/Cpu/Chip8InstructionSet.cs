@@ -11,26 +11,9 @@ internal static class Chip8InstructionSet
 {
     // ---- Sub-table dispatchers (CHIP-8 fan-outs) ----------------------------
 
-    public static void ZeroBase(ICpu cpu, int ins)
-    {
-        // 0NNN (SYS call) — ignore on modern interpreters.
-        if ((ins & 0xFF00) != 0x0000) return;
-        cpu.DispatchSystemInstruction(ins);
-    }
-
-    public static void ArithmeticOperation(ICpu cpu, int ins)
-    {
-        cpu.DispatchArithmeticInstruction(ins);
-    }
-
     public static void SkipNextInsIfKeyIsPressedOrReleased(ICpu cpu, int ins)
     {
         cpu.DispatchKeyCheckInstruction(ins);
-    }
-
-    public static void TimerInstructions(ICpu cpu, int ins)
-    {
-        cpu.DispatchTimerInstruction(ins);
     }
 
     public static void SkipNextInsIfRegisterValueEqualsRegisterValue(ICpu cpu, int ins)
@@ -100,7 +83,7 @@ internal static class Chip8InstructionSet
 
     // ---- 0x5XY0 : SE Vx, Vy (called from FiveOpTable slot 0) ----------------
 
-    public static void ExecuteSkipIfVxEqualsVy(ICpu cpu, int ins)
+    public static void SkipIfVxEqualsVy(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -393,7 +376,7 @@ internal static class Chip8InstructionSet
 
     // ---- 0xEX* keyboard skips -----------------------------------------------
 
-    public static void ExecuteSkipNextInsIfKeyIsPressed(ICpu cpu, int ins)
+    public static void SkipNextInsIfKeyIsPressed(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var key = cpu.ReadGeneralPurposeRegister(x);
@@ -403,7 +386,7 @@ internal static class Chip8InstructionSet
         }
     }
 
-    public static void ExecuteSkipNextInsIfKeyIsReleased(ICpu cpu, int ins)
+    public static void SkipNextInsIfKeyIsReleased(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var key = cpu.ReadGeneralPurposeRegister(x);
@@ -415,31 +398,31 @@ internal static class Chip8InstructionSet
 
     // ---- 0xFX** timer / system ops ------------------------------------------
 
-    public static void ExecuteReadDelayTimer(ICpu cpu, int ins)
+    public static void ReadDelayTimer(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         cpu.WriteGeneralPurposeRegister(x, cpu.ReadDelayTimer());
     }
 
-    public static void ExecuteWaitForKeyPress(ICpu cpu, int ins)
+    public static void WaitForKeyPressAndRelease(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         cpu.BeginWaitForKey(x);
     }
 
-    public static void ExecuteSetDelayTimer(ICpu cpu, int ins)
+    public static void SetDelayTimer(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         cpu.WriteDelayTimer(cpu.ReadGeneralPurposeRegister(x));
     }
 
-    public static void ExecuteSetSoundTimer(ICpu cpu, int ins)
+    public static void SetSoundTimer(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         cpu.WriteSoundTimer(cpu.ReadGeneralPurposeRegister(x));
     }
 
-    public static void ExecuteAddVxToI(ICpu cpu, int ins)
+    public static void AddVxToI(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var i = cpu.ReadIndexRegister();
@@ -447,14 +430,14 @@ internal static class Chip8InstructionSet
         cpu.WriteIndexRegister(i + vx);
     }
 
-    public static void ExecuteLoadLowResFontCharacter(ICpu cpu, int ins)
+    public static void LoadLowResFontCharacter(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var value = cpu.ReadGeneralPurposeRegister(x);
         cpu.WriteIndexRegister((value & 0x0F) * Chip8Machine.LowRestFontCharWidth + Chip8Machine.LowResFontBaseAddress);
     }
 
-    public static void ExecuteStoreBcdInMemory(ICpu cpu, int ins)
+    public static void StoreBcdInMemory(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var bcd = cpu.ReadGeneralPurposeRegister(x);
@@ -466,7 +449,7 @@ internal static class Chip8InstructionSet
     // FX55/FX65 : store/load V0..Vx. Quirk-sensitive (inc I or keep I).
     // Thin dispatchers (still used by tests). Production dispatch picks a variant at flag-set time.
 
-    public static void ExecuteLoadRegisters(ICpu cpu, int ins)
+    public static void LoadRegisters(ICpu cpu, int ins)
     {
         if (cpu.LoadStoreIncrementsI) ExecuteLoadRegistersIncIIns(cpu, ins);
         else ExecuteLoadRegistersKeepIIns(cpu, ins);
@@ -491,7 +474,7 @@ internal static class Chip8InstructionSet
         cpu.WriteIndexRegister(cpu.ReadIndexRegister() + x + 1);
     }
 
-    public static void ExecuteStoreRegisters(ICpu cpu, int ins)
+    public static void StoreRegisters(ICpu cpu, int ins)
     {
         if (cpu.LoadStoreIncrementsI) ExecuteStoreRegistersIncIIns(cpu, ins);
         else ExecuteStoreRegistersKeepIIns(cpu, ins);

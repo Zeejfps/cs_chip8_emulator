@@ -31,7 +31,7 @@ public class SuperChipTests
     {
         var emulator = CreateEmulator();
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         Assert.Equal(HighResWidth, emulator.Display.Width);
         Assert.Equal(HighResHeight, emulator.Display.Height);
@@ -41,9 +41,9 @@ public class SuperChipTests
     public void DisableHighResModeIns_SetsDisplayTo64x32()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FE);
+        emulator.DispatchSystemInstruction(0x00FE);
 
         Assert.Equal(LowResWidth, emulator.Display.Width);
         Assert.Equal(LowResHeight, emulator.Display.Height);
@@ -59,7 +59,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001); // row 8 lit pixels at y=0
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00C3); // scroll down 3
+        emulator.DispatchSystemInstruction(0x00C3); // scroll down 3
 
         for (var x = 0; x < 8; x++)
         {
@@ -79,7 +79,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00C2);
+        emulator.DispatchSystemInstruction(0x00C2);
 
         for (var x = 0; x < 8; x++)
         {
@@ -96,7 +96,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00C0);
+        emulator.DispatchSystemInstruction(0x00C0);
 
         for (var x = 0; x < 8; x++)
             Assert.Equal(1, PixelAt(emulator, x, 0));
@@ -114,7 +114,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6105); // V1 = 5 -> draw at y=5
         Chip8InstructionSet.DrawToScreen(emulator, 0xD011);
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00D3); // scroll up 3
+        emulator.DispatchSystemInstruction(0x00D3); // scroll up 3
 
         for (var x = 0; x < 8; x++)
         {
@@ -136,7 +136,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x611F); // V1 = 31 -> bottom row of 64x32
         Chip8InstructionSet.DrawToScreen(emulator, 0xD011);
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00D2); // scroll up 2
+        emulator.DispatchSystemInstruction(0x00D2); // scroll up 2
 
         for (var x = 0; x < LowResWidth; x++)
         {
@@ -153,7 +153,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001); // row of 8 lit at y=0
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00D0);
+        emulator.DispatchSystemInstruction(0x00D0);
 
         for (var x = 0; x < 8; x++)
             Assert.Equal(1, PixelAt(emulator, x, 0));
@@ -169,7 +169,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001); // x=0..7 lit at y=0
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FB);
+        emulator.DispatchSystemInstruction(0x00FB);
 
         for (var x = 0; x < 4; x++)
             Assert.Equal(0, PixelAt(emulator, x, 0));
@@ -188,7 +188,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6100); // V1 = 0
         Chip8InstructionSet.DrawToScreen(emulator, 0xD011);
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FB);
+        emulator.DispatchSystemInstruction(0x00FB);
 
         // Four rightmost sprite pixels fall off; remaining four are at x=60..63
         Assert.Equal(4, CountLitPixels(emulator));
@@ -208,7 +208,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6100); // V1 = 0
         Chip8InstructionSet.DrawToScreen(emulator, 0xD011); // x=8..15 lit at y=0
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FC);
+        emulator.DispatchSystemInstruction(0x00FC);
 
         for (var x = 4; x < 12; x++)
             Assert.Equal(1, PixelAt(emulator, x, 0));
@@ -225,7 +225,7 @@ public class SuperChipTests
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001); // x=0..7 at y=0
 
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FC);
+        emulator.DispatchSystemInstruction(0x00FC);
 
         Assert.Equal(4, CountLitPixels(emulator));
         for (var x = 0; x < 4; x++)
@@ -240,7 +240,7 @@ public class SuperChipTests
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6005); // V0 = 5
 
-        Chip8InstructionSet.TimerInstructions(emulator, 0xF030);
+        emulator.DispatchTimerInstruction( 0xF030);
 
         // High-res font base 0x0A0, each glyph is 10 bytes -> 0xA0 + 5*10 = 0xD2
         Assert.Equal(0xA0 + 5 * 10, emulator.Debugger.IndexRegister);
@@ -252,7 +252,7 @@ public class SuperChipTests
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6200); // V2 = 0
 
-        Chip8InstructionSet.TimerInstructions(emulator, 0xF230);
+        emulator.DispatchTimerInstruction( 0xF230);
 
         Assert.Equal(0xA0, emulator.Debugger.IndexRegister);
     }
@@ -263,7 +263,7 @@ public class SuperChipTests
     public void DxY0_DrawsSixteenBySixteenSprite()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF); // enable high-res
+        emulator.DispatchSystemInstruction(0x00FF); // enable high-res
 
         var sprite = new byte[32];
         for (var i = 0; i < 32; i++) sprite[i] = 0xFF; // all bits set
@@ -282,7 +282,7 @@ public class SuperChipTests
     public void DxY0_EachRowUsesTwoBytes()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         // Row 0: 0x8000 (bit 15 set) — leftmost pixel only.
         // Row 1: 0x0001 (bit 0 set) — rightmost pixel only.
@@ -307,7 +307,7 @@ public class SuperChipTests
     public void DxY0_ExtractsAllBitsLeftToRight()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         // Single row: 0xA55A = 1010 0101 0101 1010
         var sprite = new byte[32];
@@ -326,7 +326,7 @@ public class SuperChipTests
     public void DxY0_DrawsAtVxVyCoordinates()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         var sprite = new byte[32];
         sprite[0] = 0x80; sprite[1] = 0x00;
@@ -345,7 +345,7 @@ public class SuperChipTests
     public void DxY0_ClipsAtBottomEdge()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         var sprite = new byte[32];
         for (var i = 0; i < 32; i++) sprite[i] = 0xFF;
@@ -363,7 +363,7 @@ public class SuperChipTests
     public void DxY0_ClipsAtRightEdge()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         var sprite = new byte[32];
         for (var i = 0; i < 32; i++) sprite[i] = 0xFF;
@@ -381,7 +381,7 @@ public class SuperChipTests
     public void DxY0_NoCollisionClearsVf()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6F01); // dirty VF
 
         var sprite = new byte[32];
@@ -398,7 +398,7 @@ public class SuperChipTests
     public void DxY0_VfIsNumberOfCollidingRows()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         var sprite = new byte[32];
         for (var i = 0; i < 32; i++) sprite[i] = 0xFF;
@@ -416,7 +416,7 @@ public class SuperChipTests
     public void DxY0_VfCountsBottomClippedRows()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         var sprite = new byte[32];
         for (var i = 0; i < 32; i++) sprite[i] = 0xFF;
@@ -435,7 +435,7 @@ public class SuperChipTests
     public void DxY0_VfIsCollidingRowsPlusClippedRows()
     {
         var emulator = CreateEmulator();
-        Chip8InstructionSet.ZeroBase(emulator, 0x00FF);
+        emulator.DispatchSystemInstruction(0x00FF);
 
         var sprite = new byte[32];
         for (var i = 0; i < 32; i++) sprite[i] = 0xFF;

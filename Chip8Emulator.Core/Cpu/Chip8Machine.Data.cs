@@ -52,7 +52,7 @@ internal sealed partial class Chip8Machine
     private InstructionHandler[] BuildRootOpcodeTable()
     {
         var table = new InstructionHandler[16];
-        table[0x0] = Chip8InstructionSet.ZeroBase;
+        table[0x0] = static (cpu, ins) => { if ((ins & 0xFF00) == 0x0000) cpu.DispatchSystemInstruction(ins); };
         table[0x1] = Chip8InstructionSet.JumpToAddress;
         table[0x2] = Chip8InstructionSet.CallSubroutine;
         table[0x3] = Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsValue;
@@ -60,14 +60,14 @@ internal sealed partial class Chip8Machine
         table[0x5] = Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsRegisterValue;
         table[0x6] = Chip8InstructionSet.SetRegisterValue;
         table[0x7] = Chip8InstructionSet.AddValueToRegister;
-        table[0x8] = Chip8InstructionSet.ArithmeticOperation;
+        table[0x8] = static (cpu, ins) => cpu.DispatchArithmeticInstruction(ins);
         table[0x9] = Chip8InstructionSet.SkipNextInsIfRegisterValueNotEqualsRegisterValue;
         table[0xA] = Chip8InstructionSet.SetIndexRegisterIns;
         table[0xB] = Chip8InstructionSet.JumpWithOffsetIns;
         table[0xC] = Chip8InstructionSet.GenerateRandomNum;
         table[0xD] = Chip8InstructionSet.DrawToScreen;
         table[0xE] = Chip8InstructionSet.SkipNextInsIfKeyIsPressedOrReleased;
-        table[0xF] = Chip8InstructionSet.TimerInstructions;
+        table[0xF] = static (cpu, ins) => cpu.DispatchTimerInstruction(ins);
         return table;
     }
 
@@ -101,18 +101,18 @@ internal sealed partial class Chip8Machine
         table[0x01] = XoChipInstructionSet.SelectPlane;
         // F002 — XO-CHIP copy 16 bytes at [I] into audio pattern buffer.
         table[0x02] = XoChipInstructionSet.LoadAudioPattern;
-        table[0x07] = Chip8InstructionSet.ExecuteReadDelayTimer;
-        table[0x0A] = Chip8InstructionSet.ExecuteWaitForKeyPress;
-        table[0x15] = Chip8InstructionSet.ExecuteSetDelayTimer;
-        table[0x18] = Chip8InstructionSet.ExecuteSetSoundTimer;
-        table[0x1E] = Chip8InstructionSet.ExecuteAddVxToI;
-        table[0x29] = Chip8InstructionSet.ExecuteLoadLowResFontCharacter;
+        table[0x07] = Chip8InstructionSet.ReadDelayTimer;
+        table[0x0A] = Chip8InstructionSet.WaitForKeyPressAndRelease;
+        table[0x15] = Chip8InstructionSet.SetDelayTimer;
+        table[0x18] = Chip8InstructionSet.SetSoundTimer;
+        table[0x1E] = Chip8InstructionSet.AddVxToI;
+        table[0x29] = Chip8InstructionSet.LoadLowResFontCharacter;
         table[0x30] = SChipInstructionSet.LoadHighResFontCharacter;
-        table[0x33] = Chip8InstructionSet.ExecuteStoreBcdInMemory;
+        table[0x33] = Chip8InstructionSet.StoreBcdInMemory;
         // FX3A — XO-CHIP set audio playback pitch from Vx.
         table[0x3A] = XoChipInstructionSet.SetPitch;
-        table[0x55] = Chip8InstructionSet.ExecuteStoreRegisters;
-        table[0x65] = Chip8InstructionSet.ExecuteLoadRegisters;
+        table[0x55] = Chip8InstructionSet.StoreRegisters;
+        table[0x65] = Chip8InstructionSet.LoadRegisters;
         // FX75 / FX85 — SCHIP save/load V0..Vx to persistent user flags.
         table[0x75] = SChipInstructionSet.SaveFlags;
         table[0x85] = SChipInstructionSet.LoadFlags;
@@ -123,8 +123,8 @@ internal sealed partial class Chip8Machine
     {
         var table = new InstructionHandler[256];
         Array.Fill(table, NoOp);
-        table[0x9E] = Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsPressed;
-        table[0xA1] = Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsReleased;
+        table[0x9E] = Chip8InstructionSet.SkipNextInsIfKeyIsPressed;
+        table[0xA1] = Chip8InstructionSet.SkipNextInsIfKeyIsReleased;
         return table;
     }
 
@@ -132,7 +132,7 @@ internal sealed partial class Chip8Machine
     {
         var table = new InstructionHandler[16];
         Array.Fill(table, NoOp);
-        table[0] = Chip8InstructionSet.ExecuteSkipIfVxEqualsVy;
+        table[0] = Chip8InstructionSet.SkipIfVxEqualsVy;
         table[2] = XoChipInstructionSet.StoreRegisterRange;
         table[3] = XoChipInstructionSet.LoadRegisterRange;
         return table;
