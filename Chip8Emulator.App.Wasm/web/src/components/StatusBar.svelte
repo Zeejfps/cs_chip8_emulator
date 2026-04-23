@@ -1,6 +1,4 @@
 <script lang="ts">
-  declare const __APP_VERSION__: string;
-
   import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
   import { PRESET_LABELS } from '$lib/quirks.js';
