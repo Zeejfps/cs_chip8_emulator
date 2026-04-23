@@ -78,7 +78,7 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
         var persistentFlags = _persistentFlags ?? new EmulatedPersistentFlags();
 
         var bus = new EmulatorBus();
-        var cpu = new EmulatedCpu(memory, display, registers, stack, persistentFlags, bus);
+        var cpu = new Chip8Cpu(memory, display, registers, stack, persistentFlags, bus);
         return new Chip8Interpreter(clock, display, memory, audio, input, bus, cpu);
     }
 }

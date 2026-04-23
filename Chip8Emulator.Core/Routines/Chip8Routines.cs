@@ -11,12 +11,12 @@ internal static class Chip8Routines
 {
     // ---- 0x0*** system ops --------------------------------------------------
 
-    public static void ClearDisplay(EmulatedCpu cpu, int ins)
+    public static void ClearDisplay(Chip8Cpu cpu, int ins)
     {
         cpu.Display.Clear();
     }
 
-    public static void ReturnFromSubroutine(EmulatedCpu cpu, int ins)
+    public static void ReturnFromSubroutine(Chip8Cpu cpu, int ins)
     {
         var address = cpu.Stack.Pop();
         cpu.WriteProgramCounter(address);
@@ -24,13 +24,13 @@ internal static class Chip8Routines
 
     // ---- 0x1NNN / 0x2NNN : jump / call --------------------------------------
 
-    public static void JumpToAddress(EmulatedCpu cpu, int ins)
+    public static void JumpToAddress(Chip8Cpu cpu, int ins)
     {
         var address = ExtractNnn(ins);
         cpu.WriteProgramCounter(address);
     }
 
-    public static void CallSubroutine(EmulatedCpu cpu, int ins)
+    public static void CallSubroutine(Chip8Cpu cpu, int ins)
     {
         var address = ExtractNnn(ins);
         cpu.Stack.Push(cpu.ReadProgramCounter());
@@ -39,7 +39,7 @@ internal static class Chip8Routines
 
     // ---- 0x3XNN / 0x4XNN / 0x9XY0 : conditional skips ------------------------
 
-    public static void SkipNextInsIfRegisterValueEqualsValue(EmulatedCpu cpu, int ins)
+    public static void SkipNextInsIfRegisterValueEqualsValue(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -49,7 +49,7 @@ internal static class Chip8Routines
         }
     }
 
-    public static void SkipNextInsIfRegisterValueNotEqualsValue(EmulatedCpu cpu, int ins)
+    public static void SkipNextInsIfRegisterValueNotEqualsValue(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -59,7 +59,7 @@ internal static class Chip8Routines
         }
     }
 
-    public static void SkipNextInsIfRegisterValueNotEqualsRegisterValue(EmulatedCpu cpu, int ins)
+    public static void SkipNextInsIfRegisterValueNotEqualsRegisterValue(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -71,7 +71,7 @@ internal static class Chip8Routines
 
     // ---- 0x5XY0 : SE Vx, Vy (called from FiveOpTable slot 0) ----------------
 
-    public static void SkipIfVxEqualsVy(EmulatedCpu cpu, int ins)
+    public static void SkipIfVxEqualsVy(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -83,14 +83,14 @@ internal static class Chip8Routines
 
     // ---- 0x6XNN / 0x7XNN ----------------------------------------------------
 
-    public static void SetRegisterValue(EmulatedCpu cpu, int ins)
+    public static void SetRegisterValue(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
         cpu.Registers.WriteV(x, nn);
     }
 
-    public static void AddValueToRegister(EmulatedCpu cpu, int ins)
+    public static void AddValueToRegister(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -99,7 +99,7 @@ internal static class Chip8Routines
 
     // ---- 0x8XY* arithmetic/logic --------------------------------------------
 
-    public static void SetRegisterValueFromRegister(EmulatedCpu cpu, int ins)
+    public static void SetRegisterValueFromRegister(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -107,20 +107,20 @@ internal static class Chip8Routines
     }
 
     // Thin dispatcher (still used by tests).
-    public static void BitwiseOrOnRegisters(EmulatedCpu cpu, int ins)
+    public static void BitwiseOrOnRegisters(Chip8Cpu cpu, int ins)
     {
         if (cpu.LogicResetsVf) ExecuteBitwiseOrResetVfIns(cpu, ins);
         else ExecuteBitwiseOrPreserveVfIns(cpu, ins);
     }
 
-    public static void ExecuteBitwiseOrPreserveVfIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteBitwiseOrPreserveVfIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) | cpu.Registers.ReadV(y)));
     }
 
-    public static void ExecuteBitwiseOrResetVfIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteBitwiseOrResetVfIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -129,20 +129,20 @@ internal static class Chip8Routines
     }
 
     // Thin dispatcher (still used by tests).
-    public static void BitwiseAndOnRegisters(EmulatedCpu cpu, int ins)
+    public static void BitwiseAndOnRegisters(Chip8Cpu cpu, int ins)
     {
         if (cpu.LogicResetsVf) ExecuteBitwiseAndResetVfIns(cpu, ins);
         else ExecuteBitwiseAndPreserveVfIns(cpu, ins);
     }
 
-    public static void ExecuteBitwiseAndPreserveVfIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteBitwiseAndPreserveVfIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) & cpu.Registers.ReadV(y)));
     }
 
-    public static void ExecuteBitwiseAndResetVfIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteBitwiseAndResetVfIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -151,20 +151,20 @@ internal static class Chip8Routines
     }
 
     // Thin dispatcher (still used by tests).
-    public static void XorRegisterValueFromRegister(EmulatedCpu cpu, int ins)
+    public static void XorRegisterValueFromRegister(Chip8Cpu cpu, int ins)
     {
         if (cpu.LogicResetsVf) ExecuteXorResetVfIns(cpu, ins);
         else ExecuteXorPreserveVfIns(cpu, ins);
     }
 
-    public static void ExecuteXorPreserveVfIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteXorPreserveVfIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) ^ cpu.Registers.ReadV(y)));
     }
 
-    public static void ExecuteXorResetVfIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteXorResetVfIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -172,7 +172,7 @@ internal static class Chip8Routines
         cpu.Registers.WriteV(0xF, 0);
     }
 
-    public static void AddValueToRegisterWithCarry(EmulatedCpu cpu, int ins)
+    public static void AddValueToRegisterWithCarry(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -184,7 +184,7 @@ internal static class Chip8Routines
         if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
-    public static void VxSubVy(EmulatedCpu cpu, int ins)
+    public static void VxSubVy(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -197,7 +197,7 @@ internal static class Chip8Routines
         if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
-    public static void VySubVx(EmulatedCpu cpu, int ins)
+    public static void VySubVx(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -211,7 +211,7 @@ internal static class Chip8Routines
         if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
-    public static void ShiftRight(EmulatedCpu cpu, int ins)
+    public static void ShiftRight(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var value = cpu.Registers.ReadV(x);
@@ -229,7 +229,7 @@ internal static class Chip8Routines
         if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
-    public static void ShiftLeft(EmulatedCpu cpu, int ins)
+    public static void ShiftLeft(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var value = cpu.Registers.ReadV(x);
@@ -249,33 +249,33 @@ internal static class Chip8Routines
 
     // ---- 0xANNN / 0xBNNN / 0xCXNN ------------------------------------------
 
-    public static void SetIndexRegisterIns(EmulatedCpu cpu, int ins)
+    public static void SetIndexRegisterIns(Chip8Cpu cpu, int ins)
     {
         var nnn = ExtractNnn(ins);
         cpu.Registers.WriteI(nnn);
     }
 
     // Thin dispatcher (still used by tests).
-    public static void JumpWithOffsetIns(EmulatedCpu cpu, int ins)
+    public static void JumpWithOffsetIns(Chip8Cpu cpu, int ins)
     {
         if (cpu.JumpUsesVx) ExecuteJumpWithVxOffsetIns(cpu, ins);
         else ExecuteJumpWithV0OffsetIns(cpu, ins);
     }
 
-    public static void ExecuteJumpWithV0OffsetIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteJumpWithV0OffsetIns(Chip8Cpu cpu, int ins)
     {
         var address = ExtractNnn(ins);
         cpu.WriteProgramCounter(address + cpu.Registers.ReadV(0));
     }
 
-    public static void ExecuteJumpWithVxOffsetIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteJumpWithVxOffsetIns(Chip8Cpu cpu, int ins)
     {
         var address = ExtractNnn(ins);
         var x = ExtractX(ins);
         cpu.WriteProgramCounter(address + cpu.Registers.ReadV(x));
     }
 
-    public static void GenerateRandomNum(EmulatedCpu cpu, int ins)
+    public static void GenerateRandomNum(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -285,13 +285,13 @@ internal static class Chip8Routines
 
     // ---- 0xDXYN draw --------------------------------------------------------
 
-    public static void DrawToScreen(EmulatedCpu cpu, int ins)
+    public static void DrawToScreen(Chip8Cpu cpu, int ins)
     {
         var display = cpu.Display;
         var x = cpu.Registers.ReadV(ExtractX(ins)) % display.Width;
         var y = cpu.Registers.ReadV(ExtractY(ins)) % display.Height;
         var n = ExtractN(ins);
-        var planeMask = (byte)(display.SelectedPlanes & EmulatedDisplay.AllPlanesMask);
+        var planeMask = (byte)(display.SelectedPlanes & Chip8Display.AllPlanesMask);
 
         if (planeMask == 0)
         {
@@ -318,7 +318,7 @@ internal static class Chip8Routines
         }
     }
 
-    internal static void DrawLowResSprite(EmulatedCpu cpu, int sx, int sy, int height, byte planeMask)
+    internal static void DrawLowResSprite(Chip8Cpu cpu, int sx, int sy, int height, byte planeMask)
     {
         var display = cpu.Display;
         display.WritePixels(displayPixels =>
@@ -366,14 +366,14 @@ internal static class Chip8Routines
 
     // ---- 0xEX* keyboard skips -----------------------------------------------
 
-    public static void SkipNextInsIfKeyIsPressed(EmulatedCpu cpu, int ins)
+    public static void SkipNextInsIfKeyIsPressed(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var key = cpu.Registers.ReadV(x);
         cpu.Bus.Publish(new KeyIsPressedSkipEvent(key));
     }
 
-    public static void SkipNextInsIfKeyIsReleased(EmulatedCpu cpu, int ins)
+    public static void SkipNextInsIfKeyIsReleased(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var key = cpu.Registers.ReadV(x);
@@ -382,31 +382,31 @@ internal static class Chip8Routines
 
     // ---- 0xFX** timer / system ops ------------------------------------------
 
-    public static void ReadDelayTimer(EmulatedCpu cpu, int ins)
+    public static void ReadDelayTimer(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         cpu.Registers.WriteV(x, cpu.Registers.ReadDt());
     }
 
-    public static void WaitForKeyPressAndRelease(EmulatedCpu cpu, int ins)
+    public static void WaitForKeyPressAndRelease(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         cpu.Bus.Publish(new BeginWaitForKeyEvent(x));
     }
 
-    public static void SetDelayTimer(EmulatedCpu cpu, int ins)
+    public static void SetDelayTimer(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         cpu.Registers.WriteDt(cpu.Registers.ReadV(x));
     }
 
-    public static void SetSoundTimer(EmulatedCpu cpu, int ins)
+    public static void SetSoundTimer(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         cpu.Registers.WriteSt(cpu.Registers.ReadV(x));
     }
 
-    public static void AddVxToI(EmulatedCpu cpu, int ins)
+    public static void AddVxToI(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var i = cpu.Registers.ReadI();
@@ -414,14 +414,14 @@ internal static class Chip8Routines
         cpu.Registers.WriteI(i + vx);
     }
 
-    public static void LoadLowResFontCharacter(EmulatedCpu cpu, int ins)
+    public static void LoadLowResFontCharacter(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var value = cpu.Registers.ReadV(x);
         cpu.Registers.WriteI((value & 0x0F) * Chip8Interpreter.LowRestFontCharWidth + Chip8Interpreter.LowResFontBaseAddress);
     }
 
-    public static void StoreBcdInMemory(EmulatedCpu cpu, int ins)
+    public static void StoreBcdInMemory(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var bcd = cpu.Registers.ReadV(x);
@@ -433,13 +433,13 @@ internal static class Chip8Routines
     // FX55/FX65 : store/load V0..Vx. Quirk-sensitive (inc I or keep I).
     // Thin dispatchers (still used by tests). Production dispatch picks a variant at flag-set time.
 
-    public static void LoadRegisters(EmulatedCpu cpu, int ins)
+    public static void LoadRegisters(Chip8Cpu cpu, int ins)
     {
         if (cpu.LoadStoreIncrementsI) ExecuteLoadRegistersIncIIns(cpu, ins);
         else ExecuteLoadRegistersKeepIIns(cpu, ins);
     }
 
-    public static void ExecuteLoadRegistersKeepIIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteLoadRegistersKeepIIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
@@ -448,7 +448,7 @@ internal static class Chip8Routines
         }
     }
 
-    public static void ExecuteLoadRegistersIncIIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteLoadRegistersIncIIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
@@ -458,13 +458,13 @@ internal static class Chip8Routines
         cpu.Registers.WriteI(cpu.Registers.ReadI() + x + 1);
     }
 
-    public static void StoreRegisters(EmulatedCpu cpu, int ins)
+    public static void StoreRegisters(Chip8Cpu cpu, int ins)
     {
         if (cpu.LoadStoreIncrementsI) ExecuteStoreRegistersIncIIns(cpu, ins);
         else ExecuteStoreRegistersKeepIIns(cpu, ins);
     }
 
-    public static void ExecuteStoreRegistersKeepIIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteStoreRegistersKeepIIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
@@ -473,7 +473,7 @@ internal static class Chip8Routines
         }
     }
 
-    public static void ExecuteStoreRegistersIncIIns(EmulatedCpu cpu, int ins)
+    public static void ExecuteStoreRegistersIncIIns(Chip8Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)

@@ -3,9 +3,9 @@ using Chip8Emulator.Core.Routines;
 
 namespace Chip8Emulator.Core;
 
-internal delegate void Routine(EmulatedCpu cpu, int ins);
+internal delegate void Routine(Chip8Cpu cpu, int ins);
 
-public sealed class EmulatedCpu : ICpu
+public sealed class Chip8Cpu : ICpu
 {
     private const int InstructionSizeInBytes = 2;
 
@@ -22,7 +22,7 @@ public sealed class EmulatedCpu : ICpu
     internal readonly Routine[] FiveOpRoutines;
     internal readonly Routine[] ArithmeticRoutines;
 
-    public EmulatedCpu(
+    public Chip8Cpu(
         IMemory memory,
         IDisplay display,
         IRegisters registers,
@@ -156,7 +156,7 @@ public sealed class EmulatedCpu : ICpu
             : Chip8Routines.ExecuteXorPreserveVfIns;
     }
 
-    private static void NoOp(EmulatedCpu cpu, int ins) { }
+    private static void NoOp(Chip8Cpu cpu, int ins) { }
 
     private Routine[] LoadMainRoutines()
     {

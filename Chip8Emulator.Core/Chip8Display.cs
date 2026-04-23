@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class EmulatedDisplay : IDisplay
+public sealed class Chip8Display : IDisplay
 {
     public const int HighRestWidth = 128;
     public const int HighRestHeight = 64;
@@ -20,7 +20,7 @@ public sealed class EmulatedDisplay : IDisplay
     
     private readonly Memory<byte> _pixels;
     
-    public EmulatedDisplay(Func<int, Memory<byte>> alloc)
+    public Chip8Display(Func<int, Memory<byte>> alloc)
     {
         Width = LowRestWidth;
         Height = LowRestHeight;
