@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Chip8Emulator.Core.Impl;
+namespace Chip8Emulator.Core.Cpu;
 
 internal sealed partial class Chip8Machine : IChip8Machine
 {
@@ -126,31 +126,31 @@ internal sealed partial class Chip8Machine : IChip8Machine
     private void ApplyJumpUsesVx()
     {
         RootOpcodeTable[0xB] = _jumpUsesVx
-            ? Chip8Cpu.ExecuteJumpWithVxOffsetIns
-            : Chip8Cpu.ExecuteJumpWithV0OffsetIns;
+            ? Chip8InstructionSet.ExecuteJumpWithVxOffsetIns
+            : Chip8InstructionSet.ExecuteJumpWithV0OffsetIns;
     }
 
     private void ApplyLoadStoreIncrementsI()
     {
         TimerTable[0x55] = _loadStoreIncrementsI
-            ? Chip8Cpu.ExecuteStoreRegistersIncIIns
-            : Chip8Cpu.ExecuteStoreRegistersKeepIIns;
+            ? Chip8InstructionSet.ExecuteStoreRegistersIncIIns
+            : Chip8InstructionSet.ExecuteStoreRegistersKeepIIns;
         TimerTable[0x65] = _loadStoreIncrementsI
-            ? Chip8Cpu.ExecuteLoadRegistersIncIIns
-            : Chip8Cpu.ExecuteLoadRegistersKeepIIns;
+            ? Chip8InstructionSet.ExecuteLoadRegistersIncIIns
+            : Chip8InstructionSet.ExecuteLoadRegistersKeepIIns;
     }
 
     private void ApplyLogicResetsVf()
     {
         ArithmeticTable[0x1] = _logicResetsVf
-            ? Chip8Cpu.ExecuteBitwiseOrResetVfIns
-            : Chip8Cpu.ExecuteBitwiseOrPreserveVfIns;
+            ? Chip8InstructionSet.ExecuteBitwiseOrResetVfIns
+            : Chip8InstructionSet.ExecuteBitwiseOrPreserveVfIns;
         ArithmeticTable[0x2] = _logicResetsVf
-            ? Chip8Cpu.ExecuteBitwiseAndResetVfIns
-            : Chip8Cpu.ExecuteBitwiseAndPreserveVfIns;
+            ? Chip8InstructionSet.ExecuteBitwiseAndResetVfIns
+            : Chip8InstructionSet.ExecuteBitwiseAndPreserveVfIns;
         ArithmeticTable[0x3] = _logicResetsVf
-            ? Chip8Cpu.ExecuteXorResetVfIns
-            : Chip8Cpu.ExecuteXorPreserveVfIns;
+            ? Chip8InstructionSet.ExecuteXorResetVfIns
+            : Chip8InstructionSet.ExecuteXorPreserveVfIns;
     }
 
     public IDisplay Display => _display;
@@ -167,7 +167,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
     public byte SelectedPlanes
     {
         get => _display.SelectedPlanes;
-        set => _display.SelectedPlanes = (byte)(value & Impl.Display.AllPlanesMask);
+        set => _display.SelectedPlanes = (byte)(value & Cpu.Display.AllPlanesMask);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

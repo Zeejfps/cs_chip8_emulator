@@ -1,10 +1,10 @@
 using static Chip8Emulator.Core.Chip8Disassembler;
 
-namespace Chip8Emulator.Core.Impl;
+namespace Chip8Emulator.Core.Cpu;
 
 // SUPER-CHIP 1.1 additions: hi-res mode, 4-pixel scrolls, scroll down N,
 // 16x16 sprite drawing (DXY0), 10-byte high-res font, persistent user flags.
-internal static class SChipCpu
+internal static class SChipInstructionSet
 {
     // ---- 00FF / 00FE : high-res mode toggle ---------------------------------
 
@@ -30,7 +30,7 @@ internal static class SChipCpu
         machine.ScrollDisplayLeft(4);
     }
 
-    public static void ExecuteScrollDownIns(Chip8Machine machine, int ins)
+    public static void ScrollDown(Chip8Machine machine, int ins)
     {
         machine.ScrollDisplayDown(ins & 0x0F);
     }

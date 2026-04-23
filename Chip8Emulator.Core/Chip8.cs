@@ -1,4 +1,4 @@
-﻿using Chip8Emulator.Core.Impl;
+﻿using Chip8Emulator.Core.Cpu;
 
 namespace Chip8Emulator.Core;
 

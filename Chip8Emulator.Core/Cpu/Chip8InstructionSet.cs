@@ -1,13 +1,13 @@
 using static Chip8Emulator.Core.Chip8Disassembler;
 
-namespace Chip8Emulator.Core.Impl;
+namespace Chip8Emulator.Core.Cpu;
 
 // Base CHIP-8 opcode handlers plus the quirk-variant handlers for the ambiguous
 // CHIP-8 instructions (OR/AND/XOR VF reset, SHR/SHL Vx-vs-Vy, BNNN jump, FX55/FX65
 // inc-I). The quirk variants live here because they are alternate interpretations
 // of CHIP-8 ops, not later-CPU additions; Chip8Machine.Apply* methods pick between
 // them at flag-set time.
-internal static class Chip8Cpu
+internal static class Chip8InstructionSet
 {
     // ---- Sub-table dispatchers (CHIP-8 fan-outs) ----------------------------
 
@@ -332,7 +332,7 @@ internal static class Chip8Cpu
         if (n == 0)
         {
             if (display.IsHighRes)
-                SChipCpu.DrawHighResSprite(machine, x, y, planeMask);
+                SChipInstructionSet.DrawHighResSprite(machine, x, y, planeMask);
             else
                 DrawLowResSprite(machine, x, y, 8, planeMask);
         }

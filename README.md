@@ -1,6 +1,6 @@
 # CHIP-8 Emulator
 
-![CHIP-8 Emulator](Chip8Emulator.App.Wasm/web/public/og-image.png)
+![CHIP-8 Emulator](Chip8Emulator.Web/web/public/og-image.png)
 
 A CHIP-8 emulator written in C# / .NET 10, with three front-ends sharing a common core.
 
@@ -8,40 +8,39 @@ Live demo: [chip8.builtbyzee.com](https://chip8.builtbyzee.com/)
 
 ## Projects
 
-- **`Chip8Emulator.Core`** — the interpreter (memory, registers, fetch/decode/execute, 60Hz timing).
+- **`Chip8Emulator.Core`** — the interpreter (memory, registers, fetch/decode/execute, 60Hz timing) plus a shared `StopwatchClock`.
 - **`Chip8Emulator.Core.Tests`** — xUnit tests for the core.
-- **`Chip8Emulator.App`** — shared host helpers (`StopwatchClock`).
-- **`Chip8Emulator.App.Cli`** — terminal front-end, renders to the console with ANSI half-block characters.
-- **`Chip8Emulator.App.Wasm`** — browser front-end, runs in WebAssembly and draws to a `<canvas>`.
-- **`Chip8Emulator.App.OpenGL`** — desktop front-end (WIP).
+- **`Chip8Emulator.Cli`** — terminal front-end, renders to the console with ANSI half-block characters.
+- **`Chip8Emulator.Web`** — browser front-end, runs in WebAssembly and draws to a `<canvas>` through a Svelte/Vite UI.
+- **`Chip8Emulator.Desktop`** — desktop front-end (WIP).
 
 ## Running
 
 ### CLI
 
 ```sh
-dotnet run --project Chip8Emulator.App.Cli -- path/to/rom.ch8
+dotnet run --project Chip8Emulator.Cli -- path/to/rom.ch8
 ```
 
-### Browser (WASM)
+### Browser (Web)
 
 Requires the `wasm-tools` workload:
 
 ```sh
 dotnet workload install wasm-tools
-dotnet run --project Chip8Emulator.App.Wasm
+dotnet run --project Chip8Emulator.Web
 ```
 
 Open the printed URL in a Chromium-based browser, then load a ROM.
 
 ## ROMs
 
-The WASM build bundles a curated set of ROMs in
-`Chip8Emulator.App.Wasm/web/public/roms/`. Most come from the CC0-licensed
+The Web build bundles a curated set of ROMs in
+`Chip8Emulator.Web/web/public/roms/`. Most come from the CC0-licensed
 [Chip8 Community Archive](https://github.com/JohnEarnest/chip8Archive); the
 two classics (Tetris by Fran Dachille, Space Invaders by David Winter) are
 freeware sourced via [kripod/chip8-roms](https://github.com/kripod/chip8-roms).
-See `Chip8Emulator.App.Wasm/web/public/roms/SOURCES.md` for per-ROM provenance.
+See `Chip8Emulator.Web/web/public/roms/SOURCES.md` for per-ROM provenance.
 
 For more ROMs to load via the upload button, the
 [kripod/chip8-roms](https://github.com/kripod/chip8-roms/tree/master)

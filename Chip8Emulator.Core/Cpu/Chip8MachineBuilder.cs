@@ -1,4 +1,4 @@
-namespace Chip8Emulator.Core.Impl;
+namespace Chip8Emulator.Core.Cpu;
 
 internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
 {
