@@ -25,7 +25,10 @@ public sealed class EmulatedDisplay : IDisplay
         Width = LowRestWidth;
         Height = LowRestHeight;
         //NOTE (Zee): Allocate enough space for the high resolution display.
-        _pixels = alloc(HighRestWidth * HighRestHeight);
+        const int requiredSize = HighRestWidth * HighRestHeight;
+        _pixels = alloc(requiredSize);
+        if (_pixels.Length < requiredSize)
+            throw new InvalidOperationException($"Allocator returned {_pixels.Length} bytes, expected at least {requiredSize}.");
     }
 
     public void WritePixels(Action<Span<byte>> writeAction)

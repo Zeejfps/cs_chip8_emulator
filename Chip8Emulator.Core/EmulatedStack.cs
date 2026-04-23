@@ -9,7 +9,10 @@ public sealed class EmulatedStack : IStack
 
     public EmulatedStack(Func<int, Memory<int>> alloc)
     {
-        _buffer = alloc(16);
+        const int requiredSize = 16;
+        _buffer = alloc(requiredSize);
+        if (_buffer.Length < requiredSize)
+            throw new InvalidOperationException($"Allocator returned {_buffer.Length} ints, expected at least {requiredSize}.");
     }
     
     public void Push(int value)

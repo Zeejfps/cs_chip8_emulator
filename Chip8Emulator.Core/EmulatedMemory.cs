@@ -6,7 +6,10 @@ public sealed class EmulatedMemory : IMemory
 
     public EmulatedMemory(Func<int, Memory<byte>> alloc)
     {
-        _buffer = alloc(4096);
+        const int requiredSize = 4096;
+        _buffer = alloc(requiredSize);
+        if (_buffer.Length < requiredSize)
+            throw new InvalidOperationException($"Allocator returned {_buffer.Length} bytes, expected at least {requiredSize}.");
     }
     
     public byte Read(int address)

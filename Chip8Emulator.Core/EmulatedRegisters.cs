@@ -9,7 +9,10 @@ public sealed class EmulatedRegisters : IRegisters
 
     public EmulatedRegisters(Func<int, Memory<byte>> alloc)
     {
-        _vRegisters = alloc(16);
+        const int requiredSize = 16;
+        _vRegisters = alloc(requiredSize);
+        if (_vRegisters.Length < requiredSize)
+            throw new InvalidOperationException($"Allocator returned {_vRegisters.Length} bytes, expected at least {requiredSize}.");
     }
     
     public byte ReadV(int register)
