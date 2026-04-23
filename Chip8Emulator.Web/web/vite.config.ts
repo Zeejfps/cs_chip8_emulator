@@ -53,7 +53,7 @@ function serveWasmAssets(): Plugin {
     configureServer(server) {
       if (!WASM_BIN_DIR) {
         server.config.logger.warn(
-          `[serve-wasm-assets] No wasm output directory found under ../bin/*/net*/wwwroot. Build the C# project first (dotnet build Chip8Emulator.App.Wasm.csproj -p:SKIP_FRONTEND_BUILD=true) or set WASM_OUTPUT_DIR.`,
+          `[serve-wasm-assets] No wasm output directory found under ../bin/*/net*/wwwroot. Build the C# project first (dotnet build Chip8Emulator.Web.csproj -p:SKIP_FRONTEND_BUILD=true) or set WASM_OUTPUT_DIR.`,
         );
       } else {
         server.config.logger.info(`[serve-wasm-assets] Serving wasm assets from ${WASM_BIN_DIR}`);
