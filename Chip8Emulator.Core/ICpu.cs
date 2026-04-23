@@ -23,6 +23,10 @@ public interface ICpu
     void AdvanceProgramCounter();
     void BeginWaitForKey(int registerIndex);
     void BeginWaitForVBlank();
+    void SaveFlags(int count);
+    void LoadFlags(int count);
+    
+    // IDisplay
     void ClearDisplay();
     void EnableHighResMode();
     void DisableHighResMode();
@@ -30,8 +34,8 @@ public interface ICpu
     void ScrollDisplayUp(int n);
     void ScrollDisplayLeft(int n);
     void ScrollDisplayRight(int n);
-    void SaveFlags(int count);
-    void LoadFlags(int count);
+    
+    // IAudio
     void LoadAudioPattern();
     void SetPitch(byte pitch);
 }
