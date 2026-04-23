@@ -393,7 +393,7 @@ internal static class Chip8InstructionSet
 
     // ---- 0xEX* keyboard skips -----------------------------------------------
 
-    public static void ExecuteSkipNextInsIfKeyIsPressed(Chip8Machine machine, int ins)
+    public static void SkipNextInsIfKeyIsPressed(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var key = machine.ReadGeneralPurposeRegister(x);
@@ -403,7 +403,7 @@ internal static class Chip8InstructionSet
         }
     }
 
-    public static void ExecuteSkipNextInsIfKeyIsReleased(Chip8Machine machine, int ins)
+    public static void SkipNextInsIfKeyIsReleased(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var key = machine.ReadGeneralPurposeRegister(x);
@@ -415,31 +415,31 @@ internal static class Chip8InstructionSet
 
     // ---- 0xFX** timer / system ops ------------------------------------------
 
-    public static void ExecuteReadDelayTimer(Chip8Machine machine, int ins)
+    public static void ReadDelayTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         machine.WriteGeneralPurposeRegister(x, machine.ReadDelayTimer());
     }
 
-    public static void ExecuteWaitForKeyPress(Chip8Machine machine, int ins)
+    public static void WaitForKeyPress(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         machine.BeginWaitForKey(x);
     }
 
-    public static void ExecuteSetDelayTimer(Chip8Machine machine, int ins)
+    public static void SetDelayTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         machine.WriteDelayTimer(machine.ReadGeneralPurposeRegister(x));
     }
 
-    public static void ExecuteSetSoundTimer(Chip8Machine machine, int ins)
+    public static void SetSoundTimer(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         machine.WriteSoundTimer(machine.ReadGeneralPurposeRegister(x));
     }
 
-    public static void ExecuteAddVxToI(Chip8Machine machine, int ins)
+    public static void AddVxToI(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var i = machine.ReadIndexRegister();
@@ -447,14 +447,14 @@ internal static class Chip8InstructionSet
         machine.WriteIndexRegister(i + vx);
     }
 
-    public static void ExecuteLoadLowResFontCharacter(Chip8Machine machine, int ins)
+    public static void LoadLowResFontCharacter(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var value = machine.ReadGeneralPurposeRegister(x);
         machine.WriteIndexRegister((value & 0x0F) * Chip8Machine.LowRestFontCharWidth + Chip8Machine.LowResFontBaseAddress);
     }
 
-    public static void ExecuteStoreBcdInMemory(Chip8Machine machine, int ins)
+    public static void StoreBcdInMemory(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var bcd = machine.ReadGeneralPurposeRegister(x);
