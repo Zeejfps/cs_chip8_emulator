@@ -5,7 +5,7 @@ namespace Chip8Emulator.Core;
 
 internal delegate void Routine(EmulatedCpu cpu, int ins);
 
-internal sealed class EmulatedCpu : ICpu
+public sealed class EmulatedCpu : ICpu
 {
     private const int InstructionSizeInBytes = 2;
 

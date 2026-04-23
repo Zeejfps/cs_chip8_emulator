@@ -16,6 +16,8 @@ namespace Chip8Emulator.Web
         private static byte[]? _memoryBuffer;
         private static byte[]? _vRegistersBuffer;
         private static byte[]? _pixelBuffer;
+        private static IMemory? _memory;
+        private static IDisplay? _display;
 
         [JSExport]
         public static void Init()
@@ -27,16 +29,16 @@ namespace Chip8Emulator.Web
             _vRegistersBuffer = new byte[16];
             _pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
             var stack = new EmulatedStack(size => _stackBuffer.AsMemory(0, size));
-            var memory = new EmulatedMemory(size => _memoryBuffer.AsMemory(0, size));
+            _memory = new EmulatedMemory(size => _memoryBuffer.AsMemory(0, size));
             var registers = new EmulatedRegisters(size => _vRegistersBuffer.AsMemory(0, size));
-            var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
+            _display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
             _machine = Chip8.Builder()
-                .WithDisplay(display)
+                .WithDisplay(_display)
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
                 .WithStack(stack)
-                .WithMemory(memory)
+                .WithMemory(_memory)
                 .WithRegisters(registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
@@ -65,7 +67,7 @@ namespace Chip8Emulator.Web
         public static int GetProgramCounter() => _machine!.Cpu.ReadProgramCounter();
 
         [JSExport]
-        public static int GetMemoryByte(int address) => _machine!.Memory.Read(address);
+        public static int GetMemoryByte(int address) => _memory!.Read(address);
 
         [JSExport]
         public static byte[] GetVRegisters() => _vRegistersBuffer!;
@@ -95,10 +97,10 @@ namespace Chip8Emulator.Web
         public static int GetPixelDataLength() => _pixelBuffer!.Length;
 
         [JSExport]
-        public static int GetWidth() => _machine!.Display.Width;
+        public static int GetWidth() => _display!.Width;
 
         [JSExport]
-        public static int GetHeight() => _machine!.Display.Height;
+        public static int GetHeight() => _display!.Height;
 
         [JSExport]
         public static void SetKey(int key, bool pressed) => _input!.SetKey((byte)key, pressed);

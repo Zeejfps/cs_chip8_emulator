@@ -1,14 +1,14 @@
 namespace Chip8Emulator.Core;
 
-public interface IChip8MachineBuilder
+public interface IChip8InterpreterBuilder
 {
-    IChip8MachineBuilder WithInput(IInput input);
-    IChip8MachineBuilder WithAudio(IAudio audio);
-    IChip8MachineBuilder WithClock(IClock clock);
-    IChip8MachineBuilder WithDisplay(IDisplay display);
-    IChip8MachineBuilder WithStack(IStack stack);
-    IChip8MachineBuilder WithMemory(IMemory memory);
-    IChip8MachineBuilder WithRegisters(IRegisters registers);
-    IChip8MachineBuilder WithPersistentFlags(IPersistentFlags flags);
+    IChip8InterpreterBuilder WithInput(IInput input);
+    IChip8InterpreterBuilder WithAudio(IAudio audio);
+    IChip8InterpreterBuilder WithClock(IClock clock);
+    IChip8InterpreterBuilder WithDisplay(IDisplay display);
+    IChip8InterpreterBuilder WithStack(IStack stack);
+    IChip8InterpreterBuilder WithMemory(IMemory memory);
+    IChip8InterpreterBuilder WithRegisters(IRegisters registers);
+    IChip8InterpreterBuilder WithPersistentFlags(IPersistentFlags flags);
     IChip8Interpreter Build();
 }
