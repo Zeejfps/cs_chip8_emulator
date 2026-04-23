@@ -12,11 +12,20 @@ public class Chip8MachineTests
         clock = new FakeClock();
         input = new FakeInput();
         var stack = new EmulatedStack(size => new int[size]);
+        var memory = new EmulatedMemory(size => new byte[size]);
         var registers = new EmulatedRegisters(size => new byte[size]);
-        return new Chip8Machine(renderer, audio, clock, input, stack, registers, new EmulatedPersistentFlags());
+        return new Chip8Machine(renderer, audio, clock, input, stack, memory, registers, new EmulatedPersistentFlags());
     }
 
     private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _, out _);
+
+    private static byte[] ReadMemorySlice(Chip8Machine emulator, int address, int length)
+    {
+        var result = new byte[length];
+        for (var i = 0; i < length; i++)
+            result[i] = emulator.Memory.Read(address + i);
+        return result;
+    }
     private static Chip8Machine CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out _, out input);
     private static Chip8Machine CreateEmulator(out FakeClock clock, out FakeInput input) => CreateEmulator(out _, out _, out clock, out input);
 
@@ -29,7 +38,6 @@ public class Chip8MachineTests
         Assert.Equal(0, emulator.Registers.ReadI());
         Assert.Equal(0, emulator.Registers.ReadDt());
         Assert.Equal(0, emulator.Registers.ReadSt());
-        Assert.Equal(64 * 1024, emulator.Memory.AsReadOnlySpan().Length);
     }
 
     [Fact]
@@ -48,7 +56,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        for (var i = 0; i < emulator.Memory.AsReadOnlySpan().Length; i++)
+        for (var i = 0; i < 4096; i++)
         {
             if (i >= 0x050 && i < 0x050 + 80) continue;   // low-res font (16 glyphs * 5 bytes)
             if (i >= 0x0A0 && i < 0x0A0 + 100) continue;  // high-res font (10 glyphs * 10 bytes)
@@ -61,8 +69,8 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        var zeroSprite = emulator.Memory.AsReadOnlySpan().Slice(0x050, 5);
-        Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, zeroSprite.ToArray());
+        var zeroSprite = ReadMemorySlice(emulator, 0x050, 5);
+        Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, zeroSprite);
     }
 
     [Theory]
@@ -713,8 +721,8 @@ public class Chip8MachineTests
 
         Chip8Routines.LoadLowResFontCharacter(emulator, 0xF129);
 
-        var sprite = emulator.Memory.AsReadOnlySpan().Slice(emulator.Registers.ReadI(), 5);
-        Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, sprite.ToArray());
+        var sprite = ReadMemorySlice(emulator, emulator.Registers.ReadI(), 5);
+        Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, sprite);
     }
 
     [Fact]

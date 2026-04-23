@@ -38,8 +38,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private bool _loadStoreIncrementsI;
     private bool _logicResetsVf;
 
-    public Routine[] TimerRoutines { get; }
-
+    internal readonly Routine[] TimerRoutines;
     internal readonly Routine[] MainRoutines;
     internal readonly Routine[] SystemRoutines;
     internal readonly Routine[] KeyCheckRoutines;
@@ -52,6 +51,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         IClock clock, 
         IInput input, 
         IStack stack, 
+        IMemory memory,
         IRegisters registers, 
         IPersistentFlags persistentFlags)
     {
@@ -60,14 +60,14 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _clock = clock;
         _input = input;
         _stack = stack;
+        _memory = memory;
         _registers = registers;
+        
         _persistentFlags = persistentFlags;
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
-        _memory = new EmulatedMemory();
-        _memory.Write(LowResFontBaseAddress, LowResFont);
-        _memory.Write(HighResFontBaseAddress, HighResFont);
+        
         Debugger = new Chip8MachineDebugger(this);
 
         MainRoutines = LoadMainRoutines();

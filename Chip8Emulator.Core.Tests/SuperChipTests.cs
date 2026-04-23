@@ -13,6 +13,7 @@ public class SuperChipTests
     private static Chip8Machine CreateEmulator()
         => new(new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
             new EmulatedStack(size => new int[size]),
+            new EmulatedMemory(size => new byte[size]),
             new EmulatedRegisters(size => new byte[size]),
             new EmulatedPersistentFlags());
 

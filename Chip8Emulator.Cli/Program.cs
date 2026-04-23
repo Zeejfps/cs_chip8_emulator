@@ -36,6 +36,7 @@ try
         .WithClock(clock)
         .WithInput(input)
         .WithStack(new EmulatedStack(size => new int[size]))
+        .WithMemory(new EmulatedMemory(size => new byte[size]))
         .WithRegisters(new EmulatedRegisters(size => new byte[size]))
         .WithPersistentFlags(new FilePersistentFlags())
         .Build();

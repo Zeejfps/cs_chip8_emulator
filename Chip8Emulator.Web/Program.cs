@@ -13,6 +13,7 @@ namespace Chip8Emulator.Web
         private static StopwatchClock? _clock;
         private static MemoryHandle _pixelsHandle;
         private static int[]? _stackBuffer;
+        private static byte[]? _memoryBuffer;
         private static byte[]? _vRegistersBuffer;
 
         [JSExport]
@@ -21,8 +22,10 @@ namespace Chip8Emulator.Web
             _input = new BrowserInput();
             _clock = new StopwatchClock();
             _stackBuffer = new int[16];
+            _memoryBuffer = new byte[4096];
             _vRegistersBuffer = new byte[16];
             var stack = new EmulatedStack(size => _stackBuffer.AsMemory(0, size));
+            var memory = new EmulatedMemory(size => _memoryBuffer.AsMemory(0, size));
             var registers = new EmulatedRegisters(size => _vRegistersBuffer.AsMemory(0, size));
             _machine = Chip8.Builder()
                 .WithRenderer(new BrowserRenderer())
@@ -30,6 +33,7 @@ namespace Chip8Emulator.Web
                 .WithClock(_clock)
                 .WithInput(_input)
                 .WithStack(stack)
+                .WithMemory(memory)
                 .WithRegisters(registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
