@@ -12,6 +12,4 @@ public interface IRegisters
     void WriteSt(byte value);
     byte ReadSt();
     void Clear();
-    
-    ReadOnlySpan<byte> AsReadOnlySpan();
 }

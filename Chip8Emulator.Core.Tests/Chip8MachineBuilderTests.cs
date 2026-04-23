@@ -62,6 +62,7 @@ public class Chip8MachineBuilderTests
             .WithClock(new FakeClock())
             .WithInput(new FakeInput())
             .WithStack(new EmulatedStack(size => new int[size]))
+            .WithRegisters(new EmulatedRegisters(size => new byte[size]))
             .Build();
 
         Assert.NotNull(chip);

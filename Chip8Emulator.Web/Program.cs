@@ -13,6 +13,7 @@ namespace Chip8Emulator.Web
         private static StopwatchClock? _clock;
         private static MemoryHandle _pixelsHandle;
         private static int[]? _stackBuffer;
+        private static byte[]? _vRegistersBuffer;
 
         [JSExport]
         public static void Init()
@@ -20,13 +21,16 @@ namespace Chip8Emulator.Web
             _input = new BrowserInput();
             _clock = new StopwatchClock();
             _stackBuffer = new int[16];
+            _vRegistersBuffer = new byte[16];
             var stack = new EmulatedStack(size => _stackBuffer.AsMemory(0, size));
+            var registers = new EmulatedRegisters(size => _vRegistersBuffer.AsMemory(0, size));
             _machine = Chip8.Builder()
                 .WithRenderer(new BrowserRenderer())
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
                 .WithStack(stack)
+                .WithRegisters(registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
             _pixelsHandle = _machine.Display.Pixels.Pin();
@@ -57,7 +61,7 @@ namespace Chip8Emulator.Web
         public static int GetMemoryByte(int address) => _machine!.Memory.Read(address);
 
         [JSExport]
-        public static byte[] GetVRegisters() => _machine!.Registers.AsReadOnlySpan().ToArray();
+        public static byte[] GetVRegisters() => _vRegistersBuffer!;
 
         [JSExport]
         public static int GetIndexRegister() => _machine!.Registers.ReadI();

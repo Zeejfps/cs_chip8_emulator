@@ -12,7 +12,9 @@ public class SuperChipTests
 
     private static Chip8Machine CreateEmulator()
         => new(new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
-            new EmulatedStack(size => new int[size]), new EmulatedPersistentFlags());
+            new EmulatedStack(size => new int[size]),
+            new EmulatedRegisters(size => new byte[size]),
+            new EmulatedPersistentFlags());
 
     private static byte PixelAt(Chip8Machine emulator, int x, int y)
         => emulator.Display.Pixels.Span[y * emulator.Display.Width + x];

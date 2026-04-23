@@ -18,7 +18,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private readonly IPersistentFlags _persistentFlags;
     private readonly IMemory _memory;
     private readonly IStack _stack;
-    private readonly IRegisters _registers = new EmulatedRegisters();
+    private readonly IRegisters _registers;
     private readonly EmulatedDisplay _display = new();
     
     private readonly long _ticksPerFrame;
@@ -52,6 +52,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         IClock clock, 
         IInput input, 
         IStack stack, 
+        IRegisters registers, 
         IPersistentFlags persistentFlags)
     {
         _renderer = renderer;
@@ -59,6 +60,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _clock = clock;
         _input = input;
         _stack = stack;
+        _registers = registers;
         _persistentFlags = persistentFlags;
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
@@ -379,7 +381,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     {
         public int ProgramCounter => machine._programCounter;
         public bool IsWaitingForKey => machine._isWaitingForKey;
-        public bool IsWaitingForVBlank => machine._waitForVBlank;
 
         public void StepInstruction()
         {

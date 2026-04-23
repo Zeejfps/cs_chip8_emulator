@@ -12,7 +12,8 @@ public class Chip8MachineTests
         clock = new FakeClock();
         input = new FakeInput();
         var stack = new EmulatedStack(size => new int[size]);
-        return new Chip8Machine(renderer, audio, clock, input, stack, new EmulatedPersistentFlags());
+        var registers = new EmulatedRegisters(size => new byte[size]);
+        return new Chip8Machine(renderer, audio, clock, input, stack, registers, new EmulatedPersistentFlags());
     }
 
     private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _, out _);
