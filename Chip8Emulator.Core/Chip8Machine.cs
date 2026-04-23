@@ -89,6 +89,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public IMemory Memory => _memory;
     public IStack Stack => _stack;
     public IRegisters Registers => _registers;
+    public IDisplay Display => _display;
+    public IInput Input => _input;
     public IMachineDebugger Debugger { get; }
 
     public int InstructionsPerSecond
@@ -155,17 +157,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
             ? Chip8Routines.ExecuteXorResetVfIns
             : Chip8Routines.ExecuteXorPreserveVfIns;
     }
-
-    public IDisplay Display => _display;
-    public IInput Input => _input;
-
-    public void ScrollDisplayDown(int n) => _display.ScrollDown(n);
-    public void ScrollDisplayUp(int n) => _display.ScrollUp(n);
-    public void ScrollDisplayLeft(int n) => _display.ScrollLeft(n);
-    public void ScrollDisplayRight(int n) => _display.ScrollRight(n);
-    public void ClearDisplay() => _display.Clear();
-    public void EnableHighResMode() => _display.EnableHighResMode();
-    public void DisableHighResMode() => _display.DisableHighResMode();
 
     public byte SelectedPlanes
     {
