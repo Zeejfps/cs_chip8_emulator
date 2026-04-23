@@ -1,6 +1,6 @@
 using static Chip8Emulator.Core.Chip8Disassembler;
 
-namespace Chip8Emulator.Core.Cpu;
+namespace Chip8Emulator.Core.Routines;
 
 // XO-Chip additions: scroll up N, 16-bit I register (long load), bitplane
 // selection, audio pattern buffer + pitch, register range load/store.

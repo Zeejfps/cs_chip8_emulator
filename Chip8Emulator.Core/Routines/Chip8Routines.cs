@@ -7,7 +7,7 @@ namespace Chip8Emulator.Core.Cpu;
 // inc-I). The quirk variants live here because they are alternate interpretations
 // of CHIP-8 ops, not later-CPU additions; Chip8Machine.Apply* methods pick between
 // them at flag-set time.
-internal static class Chip8InstructionSet
+internal static class Chip8Routines
 {
     // ---- 0x0*** system ops --------------------------------------------------
 
@@ -99,7 +99,7 @@ internal static class Chip8InstructionSet
 
     // ---- 0x8XY* arithmetic/logic --------------------------------------------
 
-    public static void ExecuteSetRegisterValueFromRegisterIns(ICpu cpu, int ins)
+    public static void SetRegisterValueFromRegister(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -107,7 +107,7 @@ internal static class Chip8InstructionSet
     }
 
     // Thin dispatcher (still used by tests).
-    public static void ExecuteBitwiseOrOnRegistersIns(ICpu cpu, int ins)
+    public static void BitwiseOrOnRegisters(ICpu cpu, int ins)
     {
         if (cpu.LogicResetsVf) ExecuteBitwiseOrResetVfIns(cpu, ins);
         else ExecuteBitwiseOrPreserveVfIns(cpu, ins);
@@ -129,7 +129,7 @@ internal static class Chip8InstructionSet
     }
 
     // Thin dispatcher (still used by tests).
-    public static void ExecuteBitwiseAndOnRegistersIns(ICpu cpu, int ins)
+    public static void BitwiseAndOnRegisters(ICpu cpu, int ins)
     {
         if (cpu.LogicResetsVf) ExecuteBitwiseAndResetVfIns(cpu, ins);
         else ExecuteBitwiseAndPreserveVfIns(cpu, ins);
@@ -151,7 +151,7 @@ internal static class Chip8InstructionSet
     }
 
     // Thin dispatcher (still used by tests).
-    public static void ExecuteXorRegisterValueFromRegisterIns(ICpu cpu, int ins)
+    public static void XorRegisterValueFromRegister(ICpu cpu, int ins)
     {
         if (cpu.LogicResetsVf) ExecuteXorResetVfIns(cpu, ins);
         else ExecuteXorPreserveVfIns(cpu, ins);
@@ -172,7 +172,7 @@ internal static class Chip8InstructionSet
         cpu.Registers.WriteV(0xF, 0);
     }
 
-    public static void ExecuteAddValueToRegisterWithCarryIns(ICpu cpu, int ins)
+    public static void AddValueToRegisterWithCarry(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -184,7 +184,7 @@ internal static class Chip8InstructionSet
         if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
-    public static void ExecuteVxSubVyIns(ICpu cpu, int ins)
+    public static void VxSubVy(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -197,7 +197,7 @@ internal static class Chip8InstructionSet
         if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
-    public static void ExecuteVySubVxIns(ICpu cpu, int ins)
+    public static void VySubVx(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -211,7 +211,7 @@ internal static class Chip8InstructionSet
         if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
-    public static void ExecuteShiftRightIns(ICpu cpu, int ins)
+    public static void ShiftRight(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var value = cpu.Registers.ReadV(x);
@@ -229,7 +229,7 @@ internal static class Chip8InstructionSet
         if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
-    public static void ExecuteShiftLeftIns(ICpu cpu, int ins)
+    public static void ShiftLeft(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var value = cpu.Registers.ReadV(x);
@@ -303,7 +303,7 @@ internal static class Chip8InstructionSet
         if (n == 0)
         {
             if (display.IsHighRes)
-                SChipInstructionSet.DrawHighResSprite(cpu, x, y, planeMask);
+                SChipRoutines.DrawHighResSprite(cpu, x, y, planeMask);
             else
                 DrawLowResSprite(cpu, x, y, 8, planeMask);
         }

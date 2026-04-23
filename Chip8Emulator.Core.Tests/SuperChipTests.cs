@@ -1,4 +1,4 @@
-using Chip8Emulator.Core.Cpu;
+using Chip8Emulator.Core.Routines;
 using Chip8Emulator.Core.Tests.Fakes;
 
 namespace Chip8Emulator.Core.Tests;

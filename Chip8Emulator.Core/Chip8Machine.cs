@@ -128,31 +128,31 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private void ApplyJumpUsesVx()
     {
         MainRoutines[0xB] = _jumpUsesVx
-            ? Chip8InstructionSet.ExecuteJumpWithVxOffsetIns
-            : Chip8InstructionSet.ExecuteJumpWithV0OffsetIns;
+            ? Chip8Routines.ExecuteJumpWithVxOffsetIns
+            : Chip8Routines.ExecuteJumpWithV0OffsetIns;
     }
 
     private void ApplyLoadStoreIncrementsI()
     {
         TimerRoutines[0x55] = _loadStoreIncrementsI
-            ? Chip8InstructionSet.ExecuteStoreRegistersIncIIns
-            : Chip8InstructionSet.ExecuteStoreRegistersKeepIIns;
+            ? Chip8Routines.ExecuteStoreRegistersIncIIns
+            : Chip8Routines.ExecuteStoreRegistersKeepIIns;
         TimerRoutines[0x65] = _loadStoreIncrementsI
-            ? Chip8InstructionSet.ExecuteLoadRegistersIncIIns
-            : Chip8InstructionSet.ExecuteLoadRegistersKeepIIns;
+            ? Chip8Routines.ExecuteLoadRegistersIncIIns
+            : Chip8Routines.ExecuteLoadRegistersKeepIIns;
     }
 
     private void ApplyLogicResetsVf()
     {
         ArithmeticRoutines[0x1] = _logicResetsVf
-            ? Chip8InstructionSet.ExecuteBitwiseOrResetVfIns
-            : Chip8InstructionSet.ExecuteBitwiseOrPreserveVfIns;
+            ? Chip8Routines.ExecuteBitwiseOrResetVfIns
+            : Chip8Routines.ExecuteBitwiseOrPreserveVfIns;
         ArithmeticRoutines[0x2] = _logicResetsVf
-            ? Chip8InstructionSet.ExecuteBitwiseAndResetVfIns
-            : Chip8InstructionSet.ExecuteBitwiseAndPreserveVfIns;
+            ? Chip8Routines.ExecuteBitwiseAndResetVfIns
+            : Chip8Routines.ExecuteBitwiseAndPreserveVfIns;
         ArithmeticRoutines[0x3] = _logicResetsVf
-            ? Chip8InstructionSet.ExecuteXorResetVfIns
-            : Chip8InstructionSet.ExecuteXorPreserveVfIns;
+            ? Chip8Routines.ExecuteXorResetVfIns
+            : Chip8Routines.ExecuteXorPreserveVfIns;
     }
 
     public IDisplay Display => _display;

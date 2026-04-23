@@ -1,6 +1,4 @@
-﻿using Chip8Emulator.Core.Cpu;
-
-namespace Chip8Emulator.Core;
+﻿namespace Chip8Emulator.Core;
 
 public static class Chip8
 {

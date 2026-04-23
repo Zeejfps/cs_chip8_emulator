@@ -1,4 +1,4 @@
-namespace Chip8Emulator.Core.Cpu;
+namespace Chip8Emulator.Core;
 
 internal sealed class Display : IDisplay
 {
