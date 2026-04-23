@@ -59,7 +59,7 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
         return this;
     }
 
-    public IChip8Machine Build()
+    public IChip8Interpreter Build()
     {
         var audio = _audio ?? throw new InvalidOperationException(
             $"{nameof(WithAudio)} must be called before {nameof(Build)}.");
@@ -79,6 +79,6 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
 
         var bus = new EmulatorBus();
         var cpu = new EmulatedCpu(memory, display, registers, stack, persistentFlags, bus);
-        return new Chip8Machine(clock, display, memory, audio, input, bus, cpu);
+        return new Chip8Interpreter(clock, display, memory, audio, input, bus, cpu);
     }
 }

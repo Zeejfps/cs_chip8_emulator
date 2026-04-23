@@ -57,6 +57,6 @@ public class Chip8MachineBuilderTests
             .Build();
 
         Assert.NotNull(chip);
-        Assert.IsType<Chip8Machine>(chip);
+        Assert.IsType<Chip8Interpreter>(chip);
     }
 }

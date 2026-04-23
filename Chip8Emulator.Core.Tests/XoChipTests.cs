@@ -9,13 +9,13 @@ public class XoChipTests
 
     private readonly byte[] _pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
 
-    private (Chip8Machine Emulator, EmulatedCpu Cpu) CreateEmulator(IPersistentFlags? flags = null)
+    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) CreateEmulator(IPersistentFlags? flags = null)
         => BuildMachine(new FakeAudio(), flags ?? new EmulatedPersistentFlags());
 
-    private (Chip8Machine Emulator, EmulatedCpu Cpu) CreateEmulator(FakeAudio audio)
+    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) CreateEmulator(FakeAudio audio)
         => BuildMachine(audio, new EmulatedPersistentFlags());
 
-    private (Chip8Machine Emulator, EmulatedCpu Cpu) BuildMachine(IAudio audio, IPersistentFlags flags)
+    private (Chip8Interpreter Emulator, EmulatedCpu Cpu) BuildMachine(IAudio audio, IPersistentFlags flags)
     {
         var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
         var memory = new EmulatedMemory(size => new byte[size]);
@@ -27,11 +27,11 @@ public class XoChipTests
             new EmulatedStack(size => new int[size]),
             flags,
             bus);
-        var emulator = new Chip8Machine(new FakeClock(), display, memory, audio, input, bus, cpu);
+        var emulator = new Chip8Interpreter(new FakeClock(), display, memory, audio, input, bus, cpu);
         return (emulator, cpu);
     }
 
-    private byte PixelAt(Chip8Machine emulator, int x, int y)
+    private byte PixelAt(Chip8Interpreter emulator, int x, int y)
         => _pixelBuffer[y * emulator.Display.Width + x];
 
     // ---- FX01 : select bitplane mask ----------------------------------------

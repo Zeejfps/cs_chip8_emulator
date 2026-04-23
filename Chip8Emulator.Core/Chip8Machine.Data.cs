@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-internal sealed partial class Chip8Machine
+internal sealed partial class Chip8Interpreter
 {
     private static ReadOnlySpan<byte> LowResFont =>
     [

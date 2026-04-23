@@ -115,7 +115,7 @@ internal static class SChipRoutines
     {
         var x = ExtractX(ins);
         var value = cpu.Registers.ReadV(x);
-        cpu.Registers.WriteI((value & 0x0F) * Chip8Machine.HighRestFontCharWidth + Chip8Machine.HighResFontBaseAddress);
+        cpu.Registers.WriteI((value & 0x0F) * Chip8Interpreter.HighRestFontCharWidth + Chip8Interpreter.HighResFontBaseAddress);
     }
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------

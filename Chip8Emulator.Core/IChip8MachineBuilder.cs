@@ -10,5 +10,5 @@ public interface IChip8MachineBuilder
     IChip8MachineBuilder WithMemory(IMemory memory);
     IChip8MachineBuilder WithRegisters(IRegisters registers);
     IChip8MachineBuilder WithPersistentFlags(IPersistentFlags flags);
-    IChip8Machine Build();
+    IChip8Interpreter Build();
 }

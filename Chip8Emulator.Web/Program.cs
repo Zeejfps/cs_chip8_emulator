@@ -8,7 +8,7 @@ namespace Chip8Emulator.Web
 {
     public static partial class Interop
     {
-        private static IChip8Machine? _machine;
+        private static IChip8Interpreter? _machine;
         private static BrowserInput? _input;
         private static StopwatchClock? _clock;
         private static MemoryHandle _pixelsHandle;
