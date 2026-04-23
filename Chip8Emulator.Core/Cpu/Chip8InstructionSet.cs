@@ -47,7 +47,7 @@ internal static class Chip8InstructionSet
 
     public static void ReturnFromSubroutine(ICpu cpu, int ins)
     {
-        var address = cpu.PopStack();
+        var address = cpu.Stack.Pop();
         cpu.WriteProgramCounter(address);
     }
 
@@ -62,7 +62,7 @@ internal static class Chip8InstructionSet
     public static void CallSubroutine(ICpu cpu, int ins)
     {
         var address = ExtractNnn(ins);
-        cpu.PushStack(cpu.ReadProgramCounter());
+        cpu.Stack.Push(cpu.ReadProgramCounter());
         cpu.WriteProgramCounter(address);
     }
 

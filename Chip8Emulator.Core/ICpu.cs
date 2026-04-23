@@ -5,6 +5,8 @@ public interface ICpu
     IDisplay Display { get; }
     IInput Input { get; }
     IMemory Memory { get; }
+    IStack Stack { get; }
+    
     byte SelectedPlanes { get; set; }
     bool ShiftUsesVy { get; }
     bool SpritesWrap { get; }
@@ -25,8 +27,6 @@ public interface ICpu
     byte ReadDelayTimer();
     void WriteDelayTimer(byte value);
     void WriteSoundTimer(byte value);
-    void PushStack(int value);
-    int PopStack();
     void BeginWaitForKey(int registerIndex);
     void BeginWaitForVBlank();
     void ClearDisplay();

@@ -18,11 +18,9 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private readonly IInput _input;
     private readonly IPersistentFlags _persistentFlags;
     private readonly IMemory _memory;
+    private readonly IStack _stack;
     private readonly Display _display = new();
     private readonly byte[] _vRegisters = new byte[16];
-
-    private readonly int[] _stack = new int[16];
-    private int _stackPointer = -1;
 
     private readonly byte[] _audioPattern = new byte[AudioPatternSize];
     private byte _pitch = DefaultPitch;
@@ -69,6 +67,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
+        _stack = new Stack16();
         _memory = new Memory64K();
         _memory.Write(LowResFontBaseAddress, LowResFont);
         _memory.Write(HighResFontBaseAddress, HighResFont);
@@ -88,7 +87,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     }
 
     public IMemory Memory => _memory;
-    
+    public IStack Stack => _stack;
+
     public IMachineDebugger Debugger { get; }
 
     public int InstructionsPerSecond
@@ -292,25 +292,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         }
     }
 
-    public void PushStack(int value)
-    {
-        var nextStackPointer = _stackPointer + 1;
-        if (nextStackPointer >= _stack.Length)
-            throw new InvalidOperationException("Stack overflow");
-        _stackPointer = nextStackPointer;
-        _stack[_stackPointer] = value;
-    }
-
-    public int PopStack()
-    {
-        if (_stackPointer < 0)
-            throw new InvalidOperationException("Stack underflow");
-
-        var value = _stack[_stackPointer];
-        _stackPointer--;
-        return value;
-    }
-
     public void BeginWaitForKey(int registerIndex)
     {
         _isWaitingForKey = true;
@@ -393,8 +374,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private void ResetStack()
     {
-        Array.Clear(_stack);
-        _stackPointer = -1;
+       _stack.Clear();
     }
 
     private void ResetAudioPattern()
@@ -503,10 +483,10 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     {
         public ReadOnlySpan<byte> Memory => machine._memory.AsReadOnlySpan();
         public ReadOnlySpan<byte> Registers => machine._vRegisters;
-        public ReadOnlySpan<int> Stack => machine._stack;
+        public ReadOnlySpan<int> Stack => machine._stack.AsReadOnlySpan();
         public int ProgramCounter => machine._programCounter;
         public int IndexRegister => machine._indexRegister;
-        public int StackPointer => machine._stackPointer;
+        public int StackPointer => machine._stack.StackPointer;
         public byte DelayTimer => machine._delayTimer;
         public byte SoundTimer => machine._soundTimer;
         public bool IsWaitingForKey => machine._isWaitingForKey;
