@@ -2,7 +2,6 @@ namespace Chip8Emulator.Core;
 
 public interface ICpu
 {
-    int ProgramCounter { get; }
     IRegisters Registers { get; }
     IStack Stack { get; }
 
@@ -14,5 +13,10 @@ public interface ICpu
     bool DisplayWait { get; set; }
     bool VfResultWrittenLast { get; set; }
 
+    int ReadProgramCounter();
+    void WriteProgramCounter(int value);
+    void AdvanceProgramCounter();
+
     void FetchDecodeExecute();
+    void Reset();
 }

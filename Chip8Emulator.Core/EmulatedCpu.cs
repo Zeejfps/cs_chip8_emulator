@@ -55,7 +55,7 @@ internal sealed class EmulatedCpu : ICpu
     public IStack Stack { get; }
     public IBus Bus { get; }
 
-    public int ProgramCounter { get; private set; }
+    private int _programCounter;
     public bool ShiftUsesVy { get; set; }
     public bool SpritesWrap { get; set; }
     public bool DisplayWait { get; set; }
@@ -80,13 +80,13 @@ internal sealed class EmulatedCpu : ICpu
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public int ReadProgramCounter() => ProgramCounter;
+    public int ReadProgramCounter() => _programCounter;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void WriteProgramCounter(int value) => ProgramCounter = value;
+    public void WriteProgramCounter(int value) => _programCounter = value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void AdvanceProgramCounter() => ProgramCounter += InstructionSizeInBytes;
+    public void AdvanceProgramCounter() => _programCounter += InstructionSizeInBytes;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void FetchDecodeExecute()
@@ -101,16 +101,15 @@ internal sealed class EmulatedCpu : ICpu
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private int Fetch()
     {
-        var pc = ProgramCounter;
+        var pc = _programCounter;
         return Memory.Read(pc) << 8 | Memory.Read(pc + 1);
     }
 
-    public void Reset(int programCounter)
+    public void Reset()
     {
         Registers.Clear();
         Stack.Clear();
         Display.Reset();
-        ProgramCounter = programCounter;
     }
 
     public void SaveFlags(int count)

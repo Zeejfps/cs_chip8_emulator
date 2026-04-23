@@ -9,10 +9,8 @@ internal sealed partial class Chip8Machine : IChip8Machine
 
     public IDisplay Display { get; }
     public IMemory Memory { get; }
-    public EmulatedCpu Cpu { get; }
-
-    ICpu IChip8Machine.Cpu => Cpu;
-
+    public ICpu Cpu { get; }
+    
     public bool IsWaitingForKey => _isWaitingForKey;
 
     public int InstructionsPerSecond
@@ -44,7 +42,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
     private int _keyRegisterIndex;
     private bool _waitForVBlank;
 
-    public Chip8Machine(IClock clock, IDisplay display, IMemory memory, IAudio audio, IInput input, IBus bus, EmulatedCpu cpu)
+    public Chip8Machine(IClock clock, IDisplay display, IMemory memory, IAudio audio, IInput input, IBus bus, ICpu cpu)
     {
         _clock = clock;
         Display = display;
@@ -71,7 +69,8 @@ internal sealed partial class Chip8Machine : IChip8Machine
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         ResetMemory();
-        Cpu.Reset(programCounter: 0x200);
+        Cpu.Reset();
+        Cpu.WriteProgramCounter(0x200);
         _audio.Reset();
         _isWaitingForKey = false;
         _keyRegisterIndex = 0;
@@ -181,10 +180,9 @@ internal sealed partial class Chip8Machine : IChip8Machine
         _audio.WritePattern(span =>
         {
             var registers = Cpu.Registers;
-            var memory = Cpu.Memory;
             for (var i = 0; i < span.Length; i++)
             {
-                span[i] = memory.Read(registers.ReadIWithOffset(i));
+                span[i] = Memory.Read(registers.ReadIWithOffset(i));
             }
         });
     }

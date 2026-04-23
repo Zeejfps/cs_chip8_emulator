@@ -62,7 +62,7 @@ namespace Chip8Emulator.Web
         public static void Step() => _machine!.Cpu.FetchDecodeExecute();
 
         [JSExport]
-        public static int GetProgramCounter() => _machine!.Cpu.ProgramCounter;
+        public static int GetProgramCounter() => _machine!.Cpu.ReadProgramCounter();
 
         [JSExport]
         public static int GetMemoryByte(int address) => _machine!.Memory.Read(address);
