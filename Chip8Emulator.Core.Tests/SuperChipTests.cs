@@ -252,7 +252,7 @@ public class SuperChipTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6005); // V0 = 5
 
-        emulator.Cpu.TimerRoutines[0xF030 & 0x00FF](emulator.Cpu, 0xF030);
+        emulator.Cpu.UtilityRoutines[0xF030 & 0x00FF](emulator.Cpu, 0xF030);
 
         // High-res font base 0x0A0, each glyph is 10 bytes -> 0xA0 + 5*10 = 0xD2
         Assert.Equal(0xA0 + 5 * 10, emulator.Cpu.Registers.ReadI());
@@ -264,7 +264,7 @@ public class SuperChipTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6200); // V2 = 0
 
-        emulator.Cpu.TimerRoutines[0xF230 & 0x00FF](emulator.Cpu, 0xF230);
+        emulator.Cpu.UtilityRoutines[0xF230 & 0x00FF](emulator.Cpu, 0xF230);
 
         Assert.Equal(0xA0, emulator.Cpu.Registers.ReadI());
     }

@@ -565,7 +565,7 @@ public class Chip8MachineTests
         input.Press(0x7);
         var pcBefore = emulator.Cpu.ProgramCounter;
 
-        emulator.Cpu.KeyCheckRoutines[0xE19E & 0x00FF](emulator.Cpu, 0xE19E);
+        emulator.Cpu.InputRoutines[0xE19E & 0x00FF](emulator.Cpu, 0xE19E);
 
         Assert.Equal(pcBefore + 2, emulator.Cpu.ProgramCounter);
     }
@@ -577,7 +577,7 @@ public class Chip8MachineTests
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6107);
         var pcBefore = emulator.Cpu.ProgramCounter;
 
-        emulator.Cpu.KeyCheckRoutines[0xE1A1 & 0x00FF](emulator.Cpu, 0xE1A1);
+        emulator.Cpu.InputRoutines[0xE1A1 & 0x00FF](emulator.Cpu, 0xE1A1);
 
         Assert.Equal(pcBefore + 2, emulator.Cpu.ProgramCounter);
     }
@@ -590,7 +590,7 @@ public class Chip8MachineTests
         input.Press(0x7);
         var pcBefore = emulator.Cpu.ProgramCounter;
 
-        emulator.Cpu.KeyCheckRoutines[0xE100 & 0x00FF](emulator.Cpu, 0xE100);
+        emulator.Cpu.InputRoutines[0xE100 & 0x00FF](emulator.Cpu, 0xE100);
 
         Assert.Equal(pcBefore, emulator.Cpu.ProgramCounter);
     }
@@ -636,7 +636,7 @@ public class Chip8MachineTests
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6155);
         Chip8Routines.SetDelayTimer(emulator.Cpu, 0xF115);
 
-        emulator.Cpu.TimerRoutines[0xF207 & 0x00FF](emulator.Cpu, 0xF207);
+        emulator.Cpu.UtilityRoutines[0xF207 & 0x00FF](emulator.Cpu, 0xF207);
 
         Assert.Equal(0x55, emulator.Cpu.Registers.ReadV(2));
     }
@@ -647,7 +647,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6199);
 
-        emulator.Cpu.TimerRoutines[0xF115 & 0x00FF](emulator.Cpu, 0xF115);
+        emulator.Cpu.UtilityRoutines[0xF115 & 0x00FF](emulator.Cpu, 0xF115);
 
         Assert.Equal(0x99, emulator.Cpu.Registers.ReadDt());
     }
@@ -658,7 +658,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x617F);
 
-        emulator.Cpu.TimerRoutines[0xF118 & 0x00FF](emulator.Cpu, 0xF118);
+        emulator.Cpu.UtilityRoutines[0xF118 & 0x00FF](emulator.Cpu, 0xF118);
 
         Assert.Equal(0x7F, emulator.Cpu.Registers.ReadSt());
     }
@@ -670,7 +670,7 @@ public class Chip8MachineTests
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x61AA);
         var pcBefore = emulator.Cpu.ProgramCounter;
 
-        emulator.Cpu.TimerRoutines[0xF100 & 0x00FF](emulator.Cpu, 0xF100);
+        emulator.Cpu.UtilityRoutines[0xF100 & 0x00FF](emulator.Cpu, 0xF100);
 
         Assert.Equal(pcBefore, emulator.Cpu.ProgramCounter);
     }
@@ -814,7 +814,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        emulator.Cpu.TimerRoutines[0xF10A & 0x00FF](emulator.Cpu, 0xF10A);
+        emulator.Cpu.UtilityRoutines[0xF10A & 0x00FF](emulator.Cpu, 0xF10A);
 
         Assert.True(emulator.Cpu.IsWaitingForKey);
     }
@@ -826,7 +826,7 @@ public class Chip8MachineTests
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA020);
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6103);
 
-        emulator.Cpu.TimerRoutines[0xF11E & 0x00FF](emulator.Cpu, 0xF11E);
+        emulator.Cpu.UtilityRoutines[0xF11E & 0x00FF](emulator.Cpu, 0xF11E);
 
         Assert.Equal(0x023, emulator.Cpu.Registers.ReadI());
     }
@@ -837,7 +837,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6103);
 
-        emulator.Cpu.TimerRoutines[0xF129 & 0x00FF](emulator.Cpu, 0xF129);
+        emulator.Cpu.UtilityRoutines[0xF129 & 0x00FF](emulator.Cpu, 0xF129);
 
         Assert.Equal(0x050 + 5 * 3, emulator.Cpu.Registers.ReadI());
     }
@@ -931,7 +931,7 @@ public class Chip8MachineTests
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6099);
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA400);
 
-        emulator.Cpu.TimerRoutines[0xF055 & 0x00FF](emulator.Cpu, 0xF055);
+        emulator.Cpu.UtilityRoutines[0xF055 & 0x00FF](emulator.Cpu, 0xF055);
 
         Assert.Equal(0x99, emulator.Memory.Read(0x400));
     }
@@ -976,7 +976,7 @@ public class Chip8MachineTests
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x61C8);
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA400);
 
-        emulator.Cpu.TimerRoutines[0xF133 & 0x00FF](emulator.Cpu, 0xF133);
+        emulator.Cpu.UtilityRoutines[0xF133 & 0x00FF](emulator.Cpu, 0xF133);
 
         Assert.Equal(2, emulator.Memory.Read(0x400));
         Assert.Equal(0, emulator.Memory.Read(0x401));
@@ -990,7 +990,7 @@ public class Chip8MachineTests
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA400);
         emulator.Memory.Write(0x400, [0x77]);
 
-        emulator.Cpu.TimerRoutines[0xF065 & 0x00FF](emulator.Cpu, 0xF065);
+        emulator.Cpu.UtilityRoutines[0xF065 & 0x00FF](emulator.Cpu, 0xF065);
 
         Assert.Equal(0x77, emulator.Cpu.Registers.ReadV(0));
     }

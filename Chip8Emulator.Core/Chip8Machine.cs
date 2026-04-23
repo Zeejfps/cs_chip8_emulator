@@ -81,7 +81,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
         _lastTimestamp = _clock.Timestamp;
         _clock.Ticked += OnTicked;
         _running = true;
-        _cpu.OnStart();
+        if (_cpu.Registers.ReadSt() > 0) _cpu.Audio.PlaySound();
     }
 
     public void Stop()
@@ -89,7 +89,7 @@ internal sealed partial class Chip8Machine : IChip8Machine
         if (!_running) return;
         _clock.Ticked -= OnTicked;
         _running = false;
-        _cpu.OnStop();
+        if (_cpu.Registers.ReadSt() > 0) _cpu.Audio.StopSound();
     }
 
     private void OnTicked(object? sender, EventArgs e)
@@ -133,7 +133,19 @@ internal sealed partial class Chip8Machine : IChip8Machine
 
     private void StepFrame()
     {
-        _cpu.TickTimers();
+        var registers = _cpu.Registers;
+
+        var dt = registers.ReadDt();
+        if (dt > 0) registers.WriteDt((byte)(dt - 1));
+
+        var st = registers.ReadSt();
+        if (st > 0)
+        {
+            st--;
+            registers.WriteSt(st);
+            if (st == 0) _cpu.Audio.StopSound();
+        }
+
         _display.Render();
         _frameAcc -= _ticksPerFrame;
         _cpu.ClearVBlankWait();

@@ -38,7 +38,7 @@ public class XoChipTests
     {
         var emulator = CreateEmulator();
 
-        emulator.Cpu.TimerRoutines[0xF201 & 0x00FF](emulator.Cpu, 0xF201); // mask = 2 (plane 1 only)
+        emulator.Cpu.UtilityRoutines[0xF201 & 0x00FF](emulator.Cpu, 0xF201); // mask = 2 (plane 1 only)
 
         Assert.Equal(2, emulator.Display.SelectedPlanes);
     }
@@ -50,7 +50,7 @@ public class XoChipTests
         emulator.Memory.Write(0x300, [0xFF]);
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA300);
 
-        emulator.Cpu.TimerRoutines[0xF001 & 0x00FF](emulator.Cpu, 0xF001); // mask = 0
+        emulator.Cpu.UtilityRoutines[0xF001 & 0x00FF](emulator.Cpu, 0xF001); // mask = 0
         Chip8Routines.DrawToScreen(emulator.Cpu, 0xD001);
 
         for (var x = 0; x < 8; x++) Assert.Equal(0, PixelAt(emulator, x, 0));
@@ -64,7 +64,7 @@ public class XoChipTests
         emulator.Memory.Write(0x300, [0xFF]);
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA300);
 
-        emulator.Cpu.TimerRoutines[0xF201 & 0x00FF](emulator.Cpu, 0xF201); // mask = 2
+        emulator.Cpu.UtilityRoutines[0xF201 & 0x00FF](emulator.Cpu, 0xF201); // mask = 2
         Chip8Routines.DrawToScreen(emulator.Cpu, 0xD001);
 
         for (var x = 0; x < 8; x++) Assert.Equal(0x02, PixelAt(emulator, x, 0));
@@ -78,7 +78,7 @@ public class XoChipTests
         // plane 1 sprite: 1 byte = 0x0F (low nibble on)
         emulator.Memory.Write(0x300, [0xFF, 0x0F]);
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA300);
-        emulator.Cpu.TimerRoutines[0xF301 & 0x00FF](emulator.Cpu, 0xF301); // mask = 3 (both planes)
+        emulator.Cpu.UtilityRoutines[0xF301 & 0x00FF](emulator.Cpu, 0xF301); // mask = 3 (both planes)
 
         Chip8Routines.DrawToScreen(emulator.Cpu, 0xD001);
 
@@ -94,7 +94,7 @@ public class XoChipTests
         var emulator = CreateEmulator();
         emulator.Memory.Write(0x300, [0xFF, 0xFF]);
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA300);
-        emulator.Cpu.TimerRoutines[0xF301 & 0x00FF](emulator.Cpu, 0xF301); // mask = 3
+        emulator.Cpu.UtilityRoutines[0xF301 & 0x00FF](emulator.Cpu, 0xF301); // mask = 3
 
         Chip8Routines.DrawToScreen(emulator.Cpu, 0xD001);
         Assert.Equal(0, emulator.Cpu.Registers.ReadV(0xF));
@@ -114,11 +114,11 @@ public class XoChipTests
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA300);
         Chip8Routines.DrawToScreen(emulator.Cpu, 0xD001);
         // Set plane 1 pixels on the same row
-        emulator.Cpu.TimerRoutines[0xF201 & 0x00FF](emulator.Cpu, 0xF201); // mask = 2
+        emulator.Cpu.UtilityRoutines[0xF201 & 0x00FF](emulator.Cpu, 0xF201); // mask = 2
         Chip8Routines.DrawToScreen(emulator.Cpu, 0xD001);
 
         // Now clear only plane 0
-        emulator.Cpu.TimerRoutines[0xF101 & 0x00FF](emulator.Cpu, 0xF101); // mask = 1
+        emulator.Cpu.UtilityRoutines[0xF101 & 0x00FF](emulator.Cpu, 0xF101); // mask = 1
         emulator.Cpu.SystemRoutines[0x00E0 & 0x00FF](emulator.Cpu, 0x00E0);
 
         // Plane 0 bits gone, plane 1 bits remain
@@ -135,7 +135,7 @@ public class XoChipTests
         // Draw into plane 0
         Chip8Routines.DrawToScreen(emulator.Cpu, 0xD001);
         // Draw the same shape into plane 1
-        emulator.Cpu.TimerRoutines[0xF201 & 0x00FF](emulator.Cpu, 0xF201);
+        emulator.Cpu.UtilityRoutines[0xF201 & 0x00FF](emulator.Cpu, 0xF201);
         Chip8Routines.DrawToScreen(emulator.Cpu, 0xD001);
 
         // Scroll right by 4 but only plane 1
@@ -161,7 +161,7 @@ public class XoChipTests
         emulator.Memory.Write(0x400, pattern);
         Chip8Routines.SetIndexRegisterIns(emulator.Cpu, 0xA400);
 
-        emulator.Cpu.TimerRoutines[0xF002 & 0x00FF](emulator.Cpu, 0xF002);
+        emulator.Cpu.UtilityRoutines[0xF002 & 0x00FF](emulator.Cpu, 0xF002);
 
         Assert.Equal(1, audio.WritePatternCount);
         Assert.Equal(pattern, audio.LastPattern);
@@ -173,7 +173,7 @@ public class XoChipTests
         var audio = new FakeAudio();
         var emulator = CreateEmulator(audio);
 
-        emulator.Cpu.TimerRoutines[0xF102 & 0x00FF](emulator.Cpu, 0xF102); // F102 is not F002
+        emulator.Cpu.UtilityRoutines[0xF102 & 0x00FF](emulator.Cpu, 0xF102); // F102 is not F002
 
         Assert.Equal(0, audio.WritePatternCount);
     }
@@ -187,7 +187,7 @@ public class XoChipTests
         var emulator = CreateEmulator(audio);
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6070); // V0 = 112
 
-        emulator.Cpu.TimerRoutines[0xF03A & 0x00FF](emulator.Cpu, 0xF03A);
+        emulator.Cpu.UtilityRoutines[0xF03A & 0x00FF](emulator.Cpu, 0xF03A);
 
         Assert.Equal(112, audio.Pitch);
     }
@@ -203,7 +203,7 @@ public class XoChipTests
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x61BB); // V1 = 0xBB
         Chip8Routines.SetRegisterValue(emulator.Cpu, 0x62CC); // V2 = 0xCC
 
-        emulator.Cpu.TimerRoutines[0xF275 & 0x00FF](emulator.Cpu, 0xF275); // FX75 with X=2 saves V0..V2
+        emulator.Cpu.UtilityRoutines[0xF275 & 0x00FF](emulator.Cpu, 0xF275); // FX75 with X=2 saves V0..V2
 
         Span<byte> readBack = stackalloc byte[16];
         flags.Read(readBack);
@@ -221,7 +221,7 @@ public class XoChipTests
         flags.Write(seed);
         var emulator = CreateEmulator(flags);
 
-        emulator.Cpu.TimerRoutines[0xF385 & 0x00FF](emulator.Cpu, 0xF385); // FX85 with X=3 loads V0..V3
+        emulator.Cpu.UtilityRoutines[0xF385 & 0x00FF](emulator.Cpu, 0xF385); // FX85 with X=3 loads V0..V3
 
         Assert.Equal(0x11, emulator.Cpu.Registers.ReadV(0));
         Assert.Equal(0x22, emulator.Cpu.Registers.ReadV(1));
@@ -239,10 +239,10 @@ public class XoChipTests
             Chip8Routines.SetRegisterValue(emulator.Cpu, 0x6000 | (i << 8) | (i * 17));
         }
 
-        emulator.Cpu.TimerRoutines[0xFF75 & 0x00FF](emulator.Cpu, 0xFF75); // save V0..VF
+        emulator.Cpu.UtilityRoutines[0xFF75 & 0x00FF](emulator.Cpu, 0xFF75); // save V0..VF
 
         var restored = CreateEmulator(flags);
-        restored.Cpu.TimerRoutines[0xFF85 & 0x00FF](restored.Cpu, 0xFF85); // load V0..VF
+        restored.Cpu.UtilityRoutines[0xFF85 & 0x00FF](restored.Cpu, 0xFF85); // load V0..VF
 
         for (var i = 0; i < 16; i++)
         {
@@ -260,7 +260,7 @@ public class XoChipTests
         // Simulate the fetch/decode phase: PC points at the NNNN word after the F000 opcode.
         emulator.Cpu.WriteProgramCounter(0x400);
 
-        emulator.Cpu.TimerRoutines[0xF000 & 0x00FF](emulator.Cpu, 0xF000);
+        emulator.Cpu.UtilityRoutines[0xF000 & 0x00FF](emulator.Cpu, 0xF000);
 
         Assert.Equal(0x1234, emulator.Cpu.Registers.ReadI());
     }
@@ -271,7 +271,7 @@ public class XoChipTests
     public void LoadProgram_ResetsSelectedPlanesToPlaneZero()
     {
         var emulator = CreateEmulator();
-        emulator.Cpu.TimerRoutines[0xF301 & 0x00FF](emulator.Cpu, 0xF301); // mask = 3
+        emulator.Cpu.UtilityRoutines[0xF301 & 0x00FF](emulator.Cpu, 0xF301); // mask = 3
 
         emulator.LoadProgram([0x00, 0xE0]);
 
