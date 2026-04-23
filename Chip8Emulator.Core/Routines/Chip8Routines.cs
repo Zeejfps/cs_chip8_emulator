@@ -291,7 +291,7 @@ internal static class Chip8Routines
         var x = cpu.Registers.ReadV(ExtractX(ins)) % display.Width;
         var y = cpu.Registers.ReadV(ExtractY(ins)) % display.Height;
         var n = ExtractN(ins);
-        var planeMask = (byte)(cpu.SelectedPlanes & Display.AllPlanesMask);
+        var planeMask = (byte)(cpu.SelectedPlanes & EmulatedDisplay.AllPlanesMask);
 
         if (planeMask == 0)
         {

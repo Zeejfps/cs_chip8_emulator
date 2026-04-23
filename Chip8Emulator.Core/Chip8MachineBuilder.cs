@@ -48,7 +48,7 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
             $"{nameof(WithClock)} must be called before {nameof(Build)}.");
         var input = _input ?? throw new InvalidOperationException(
             $"{nameof(WithInput)} must be called before {nameof(Build)}.");
-        var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();
+        var persistentFlags = _persistentFlags ?? new EmulatedPersistentFlags();
         return new Chip8Machine(renderer, audio, clock, input, persistentFlags);
     }
 }

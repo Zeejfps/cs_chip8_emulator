@@ -9,10 +9,10 @@ public class XoChipTests
 
     private static Chip8Machine CreateEmulator(IPersistentFlags? flags = null)
         => new(new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
-            flags ?? new InMemoryPersistentFlags());
+            flags ?? new EmulatedPersistentFlags());
 
     private static Chip8Machine CreateEmulator(FakeAudio audio)
-        => new(new FakeRenderer(), audio, new FakeClock(), new FakeInput(), new InMemoryPersistentFlags());
+        => new(new FakeRenderer(), audio, new FakeClock(), new FakeInput(), new EmulatedPersistentFlags());
 
     private static byte PixelAt(Chip8Machine emulator, int x, int y)
         => emulator.Display.Pixels.Span[y * emulator.Display.Width + x];
@@ -183,7 +183,7 @@ public class XoChipTests
     [Fact]
     public void SaveFlags_WritesV0ThroughVxToPersistentStorage()
     {
-        var flags = new InMemoryPersistentFlags();
+        var flags = new EmulatedPersistentFlags();
         var emulator = CreateEmulator(flags);
         Chip8Routines.SetRegisterValue(emulator, 0x60AA); // V0 = 0xAA
         Chip8Routines.SetRegisterValue(emulator, 0x61BB); // V1 = 0xBB
@@ -201,7 +201,7 @@ public class XoChipTests
     [Fact]
     public void LoadFlags_RestoresV0ThroughVxFromPersistentStorage()
     {
-        var flags = new InMemoryPersistentFlags();
+        var flags = new EmulatedPersistentFlags();
         Span<byte> seed = stackalloc byte[16];
         seed[0] = 0x11; seed[1] = 0x22; seed[2] = 0x33; seed[3] = 0x44;
         flags.Write(seed);
@@ -218,7 +218,7 @@ public class XoChipTests
     [Fact]
     public void SaveLoadFlags_RoundTripPreservesValues()
     {
-        var flags = new InMemoryPersistentFlags();
+        var flags = new EmulatedPersistentFlags();
         var emulator = CreateEmulator(flags);
         for (var i = 0; i < 16; i++)
         {

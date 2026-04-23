@@ -18,8 +18,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private readonly IPersistentFlags _persistentFlags;
     private readonly IMemory _memory;
     private readonly IStack _stack;
-    private readonly IRegisters _registers = new Registers();
-    private readonly Display _display = new();
+    private readonly IRegisters _registers = new EmulatedRegisters();
+    private readonly EmulatedDisplay _display = new();
     
     private readonly long _ticksPerFrame;
     
@@ -47,7 +47,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     internal readonly Routine[] ArithmeticRoutines;
 
     public Chip8Machine(IRenderer renderer, IAudio audio, IClock clock, IInput input)
-        : this(renderer, audio, clock, input, new InMemoryPersistentFlags())
+        : this(renderer, audio, clock, input, new EmulatedPersistentFlags())
     {
     }
 
@@ -61,8 +61,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
-        _stack = new Stack16();
-        _memory = new Memory64K();
+        _stack = new EmulatedStack();
+        _memory = new EmulatedMemory();
         _memory.Write(LowResFontBaseAddress, LowResFont);
         _memory.Write(HighResFontBaseAddress, HighResFont);
         Debugger = new Chip8MachineDebugger(this);
@@ -156,7 +156,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public byte SelectedPlanes
     {
         get => _display.SelectedPlanes;
-        set => _display.SelectedPlanes = (byte)(value & Core.Display.AllPlanesMask);
+        set => _display.SelectedPlanes = (byte)(value & Core.EmulatedDisplay.AllPlanesMask);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class Memory64K : IMemory
+public sealed class EmulatedMemory : IMemory
 {
     private readonly byte[] _buffer = new byte[64 * 1024];
     

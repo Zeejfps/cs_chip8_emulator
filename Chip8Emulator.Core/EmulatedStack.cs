@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class Stack16 : IStack
+public sealed class EmulatedStack : IStack
 {
     public int StackPointer => _stackPointer;
     

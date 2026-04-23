@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class Registers : IRegisters
+public sealed class EmulatedRegisters : IRegisters
 {
     private byte _delayTimer;
     private byte _soundTimer;
