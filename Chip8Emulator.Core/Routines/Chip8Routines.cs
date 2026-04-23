@@ -13,7 +13,7 @@ internal static class Chip8Routines
 
     public static void ClearDisplay(ICpu cpu, int ins)
     {
-        cpu.ClearDisplay();
+        cpu.Display.Clear();
     }
 
     public static void ReturnFromSubroutine(ICpu cpu, int ins)

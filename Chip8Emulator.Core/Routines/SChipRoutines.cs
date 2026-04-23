@@ -10,29 +10,29 @@ internal static class SChipRoutines
 
     public static void EnableHiresMode(ICpu cpu, int ins)
     {
-        cpu.EnableHighResMode();
+        cpu.Display.EnableHighResMode();
     }
 
     public static void DisableHiresMode(ICpu cpu, int ins)
     {
-        cpu.DisableHighResMode();
+        cpu.Display.DisableHighResMode();
     }
 
     // ---- 00FB / 00FC / 00CN : scroll ----------------------------------------
 
     public static void ScrollRight(ICpu cpu, int ins)
     {
-        cpu.ScrollDisplayRight(4);
+        cpu.Display.ScrollRight(4);
     }
 
     public static void ScrollLeft(ICpu cpu, int ins)
     {
-        cpu.ScrollDisplayLeft(4);
+        cpu.Display.ScrollLeft(4);
     }
 
     public static void ScrollDown(ICpu cpu, int ins)
     {
-        cpu.ScrollDisplayDown(ins & 0x0F);
+        cpu.Display.ScrollDown(ins & 0x0F);
     }
 
     // ---- DXY0 : 16x16 hi-res sprite -----------------------------------------

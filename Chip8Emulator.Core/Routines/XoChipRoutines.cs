@@ -10,7 +10,7 @@ internal static class XoChipRoutines
 
     public static void ScrollUp(ICpu cpu, int ins)
     {
-        cpu.ScrollDisplayUp(ins & 0x0F);
+        cpu.Display.ScrollUp(ins & 0x0F);
     }
 
     // ---- F000 NNNN : long load I --------------------------------------------

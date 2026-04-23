@@ -26,15 +26,6 @@ public interface ICpu
     void SaveFlags(int count);
     void LoadFlags(int count);
     
-    // IDisplay
-    void ClearDisplay();
-    void EnableHighResMode();
-    void DisableHighResMode();
-    void ScrollDisplayDown(int n);
-    void ScrollDisplayUp(int n);
-    void ScrollDisplayLeft(int n);
-    void ScrollDisplayRight(int n);
-    
     // IAudio
     void LoadAudioPattern();
     void SetPitch(byte pitch);
