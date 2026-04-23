@@ -1,4 +1,6 @@
 <script lang="ts">
+  declare const __APP_VERSION__: string;
+
   import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
   import { PRESET_LABELS } from '$lib/quirks.js';
@@ -15,5 +17,6 @@
   <span class="flex items-center gap-3">
     <span>{presetLabel}</span>
     <span>{settings.ips} IPS</span>
+    <span>{__APP_VERSION__}</span>
   </span>
 </div>

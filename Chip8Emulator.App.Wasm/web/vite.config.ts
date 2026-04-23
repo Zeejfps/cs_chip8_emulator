@@ -90,6 +90,7 @@ export default defineConfig({
   base: './',
   define: {
     __BUILD_ID__: JSON.stringify(Date.now().toString(36)),
+    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || 'dev'),
   },
   plugins: [tailwindcss(), svelte(), serveWasmAssets()],
   resolve: {

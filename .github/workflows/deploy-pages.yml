@@ -2,7 +2,6 @@ name: Deploy WASM to GitHub Pages
 run-name: Deploying to Web (${{ github.ref_type == 'tag' && github.ref_name || github.sha }})
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - 'v*'
@@ -40,6 +39,8 @@ jobs:
         run: npm ci
 
       - name: Publish
+        env:
+          APP_VERSION: ${{ github.ref_name }}
         run: dotnet publish Chip8Emulator.App.Wasm/Chip8Emulator.App.Wasm.csproj -c Release -o publish
 
       - name: Disable Jekyll
