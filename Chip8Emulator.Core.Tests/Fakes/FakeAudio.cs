@@ -4,10 +4,11 @@ internal sealed class FakeAudio : IAudio
 {
     public int PlayCount { get; private set; }
     public int StopCount { get; private set; }
+    public int ResetCount { get; private set; }
+    public int WritePatternCount { get; private set; }
     public bool IsPlaying { get; private set; }
+    public byte Pitch { get; set; }
     public byte[] LastPattern { get; private set; } = [];
-    public double LastFrequencyHz { get; private set; }
-    public int SetPatternCount { get; private set; }
 
     public void PlaySound()
     {
@@ -21,10 +22,16 @@ internal sealed class FakeAudio : IAudio
         IsPlaying = false;
     }
 
-    public void SetPattern(ReadOnlySpan<byte> pattern, double frequencyHz)
+    public void Reset()
     {
-        LastPattern = pattern.ToArray();
-        LastFrequencyHz = frequencyHz;
-        SetPatternCount++;
+        ResetCount++;
+    }
+
+    public void WritePattern(Action<Span<byte>> writeAction)
+    {
+        var buffer = new byte[16];
+        writeAction(buffer.AsSpan());
+        LastPattern = buffer;
+        WritePatternCount++;
     }
 }

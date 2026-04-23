@@ -10,8 +10,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public const int LowRestFontCharWidth = 5;
     public const int HighRestFontCharWidth = 10;
     public const int InstructionSizeInBytes = 2;
-    private const int AudioPatternSize = 16;
-    private const byte DefaultPitch = 64;
 
     private readonly IRenderer _renderer;
     private readonly IAudio _audio;
@@ -22,10 +20,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private readonly IStack _stack;
     private readonly IRegisters _registers = new Registers();
     private readonly Display _display = new();
-
-    private readonly byte[] _audioPattern = new byte[AudioPatternSize];
-    private byte _pitch = DefaultPitch;
-
+    
     private readonly long _ticksPerFrame;
     
     private int _instructionsPerSecond = 1000;
@@ -182,34 +177,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         return ins;
     }
     
-    public void LoadAudioPattern()
-    {
-        for (var i = 0; i < AudioPatternSize; i++)
-        {
-            var iRegister = _registers.ReadIWithOffset(i);
-            var value = _memory.Read(iRegister);
-            _audioPattern[i] = value;
-        }
-        PushPatternToAudio();
-    }
-
-    public void SetPitch(byte pitch)
-    {
-        _pitch = pitch;
-        PushPatternToAudio();
-    }
-
-    public byte Pitch => _pitch;
-
-    public ReadOnlySpan<byte> AudioPattern => _audioPattern;
-
-    public double AudioFrequencyHz => 4000.0 * Math.Pow(2.0, (_pitch - 64) / 48.0);
-
-    private void PushPatternToAudio()
-    {
-        _audio.SetPattern(_audioPattern, AudioFrequencyHz);
-    }
-
     public void SaveFlags(int count)
     {
         Span<byte> buffer = stackalloc byte[IPersistentFlags.Capacity];
@@ -230,7 +197,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
             _registers.WriteV(i, buffer[i]);
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public int ReadProgramCounter() => _programCounter;
 
@@ -254,12 +221,11 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         ResetMemory();
-        ResetClock();
+        ResetAccumulators();
         ResetDisplay();
         ResetRegisters();
         ResetStack();
-        ResetAudioPattern();
-        _audio.StopSound();
+        ResetAudio();
         _isWaitingForKey = false;
         _waitForVBlank = false;
         _keyRegisterIndex = 0;
@@ -274,7 +240,12 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         }
     }
 
-    private void ResetClock()
+    private void ResetAudio()
+    {
+        _audio.Reset();
+    }
+
+    private void ResetAccumulators()
     {
         _instructionAcc = 0;
         _frameAcc = 0;
@@ -301,12 +272,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private void ResetStack()
     {
        _stack.Clear();
-    }
-
-    private void ResetAudioPattern()
-    {
-        Array.Clear(_audioPattern);
-        _pitch = DefaultPitch;
     }
 
     public void Start()

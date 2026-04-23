@@ -25,8 +25,4 @@ public interface ICpu
     void BeginWaitForVBlank();
     void SaveFlags(int count);
     void LoadFlags(int count);
-    
-    // IAudio
-    void LoadAudioPattern();
-    void SetPitch(byte pitch);
 }

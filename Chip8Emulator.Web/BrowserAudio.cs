@@ -5,14 +5,51 @@ namespace Chip8Emulator.Web;
 
 internal sealed partial class BrowserAudio : IAudio
 {
+    private const byte DefaultPitch = 64;
+
+    private byte _pitch;
+    public byte Pitch
+    {
+        get => _pitch;
+        set
+        {
+            if (_pitch == value)
+                return;
+
+            _pitch = value;
+            _audioFrequencyHz = CalculateAudioFrequency(_pitch);
+            SetPatternJs(_patternBuffer, _audioFrequencyHz);
+        }
+    }
+
+    private readonly byte[] _patternBuffer = new byte[16];
+    private double _audioFrequencyHz;
+
+    public BrowserAudio()
+    {
+        _pitch = DefaultPitch;
+        _audioFrequencyHz = CalculateAudioFrequency(_pitch);
+    }
+    
+    public void WritePattern(Action<Span<byte>> writeAction)
+    {
+        writeAction(_patternBuffer.AsSpan());
+        SetPatternJs(_patternBuffer, _audioFrequencyHz);
+    }
+
     public void PlaySound() => PlaySoundJs();
     public void StopSound() => StopSoundJs();
-
-    public void SetPattern(ReadOnlySpan<byte> pattern, double frequencyHz)
+    public void Reset()
     {
-        Span<byte> buffer = stackalloc byte[16];
-        pattern[..Math.Min(pattern.Length, buffer.Length)].CopyTo(buffer);
-        SetPatternJs(buffer.ToArray(), frequencyHz);
+        _pitch = DefaultPitch;
+        _audioFrequencyHz = CalculateAudioFrequency(_pitch);
+        Array.Clear(_patternBuffer);
+        SetPatternJs(_patternBuffer, _audioFrequencyHz);
+    }
+
+    private static double CalculateAudioFrequency(byte pitch)
+    {
+        return 4000.0 * Math.Pow(2.0, (pitch - 64) / 48.0);
     }
 
     [JSImport("audio.playSound", "main.js")]

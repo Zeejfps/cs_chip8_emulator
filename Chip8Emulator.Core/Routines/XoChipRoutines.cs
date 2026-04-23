@@ -39,13 +39,26 @@ internal static class XoChipRoutines
     {
         // F002 — only defined when X == 0; other slots (F102, F202, ...) are undefined.
         if (ExtractX(ins) != 0) return;
-        cpu.LoadAudioPattern();
+        
+        var audio = cpu.Audio;
+        audio.WritePattern(patterBuffer =>
+        {
+            var registers = cpu.Registers;
+            var memory = cpu.Memory;
+            for (var i = 0; i < patterBuffer.Length; i++)
+            {
+                var iRegister = registers.ReadIWithOffset(i);
+                var value = memory.Read(iRegister);
+                patterBuffer[i] = value;
+            }
+        });
     }
 
     public static void SetPitch(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        cpu.SetPitch(cpu.Registers.ReadV(x));
+        var pitch = cpu.Registers.ReadV(x);
+        cpu.Audio.Pitch = pitch;
     }
 
     // ---- 5XY2 / 5XY3 : store / load register range --------------------------

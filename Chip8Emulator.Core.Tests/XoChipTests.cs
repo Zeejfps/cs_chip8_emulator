@@ -149,20 +149,8 @@ public class XoChipTests
 
         emulator.TimerRoutines[0xF002 & 0x00FF](emulator, 0xF002);
 
-        Assert.Equal(1, audio.SetPatternCount);
+        Assert.Equal(1, audio.WritePatternCount);
         Assert.Equal(pattern, audio.LastPattern);
-    }
-
-    [Fact]
-    public void LoadAudioPattern_DefaultPitchIs4000Hz()
-    {
-        var audio = new FakeAudio();
-        var emulator = CreateEmulator(audio);
-        Chip8Routines.SetIndexRegisterIns(emulator, 0xA400);
-
-        emulator.TimerRoutines[0xF002 & 0x00FF](emulator, 0xF002);
-
-        Assert.Equal(4000.0, audio.LastFrequencyHz, precision: 3);
     }
 
     [Fact]
@@ -173,13 +161,13 @@ public class XoChipTests
 
         emulator.TimerRoutines[0xF102 & 0x00FF](emulator, 0xF102); // F102 is not F002
 
-        Assert.Equal(0, audio.SetPatternCount);
+        Assert.Equal(0, audio.WritePatternCount);
     }
 
     // ---- FX3A : set audio pitch ---------------------------------------------
 
     [Fact]
-    public void SetPitch_UpdatesFrequencyPerOctoSpec()
+    public void SetPitch_WritesPitchRegisterToAudio()
     {
         var audio = new FakeAudio();
         var emulator = CreateEmulator(audio);
@@ -187,20 +175,7 @@ public class XoChipTests
 
         emulator.TimerRoutines[0xF03A & 0x00FF](emulator, 0xF03A);
 
-        // 4000 * 2^((112 - 64) / 48) = 4000 * 2 = 8000
-        Assert.Equal(8000.0, audio.LastFrequencyHz, precision: 3);
-    }
-
-    [Fact]
-    public void SetPitch_DefaultPitch64Produces4000Hz()
-    {
-        var audio = new FakeAudio();
-        var emulator = CreateEmulator(audio);
-        Chip8Routines.SetRegisterValue(emulator, 0x6040); // V0 = 64
-
-        emulator.TimerRoutines[0xF03A & 0x00FF](emulator, 0xF03A);
-
-        Assert.Equal(4000.0, audio.LastFrequencyHz, precision: 3);
+        Assert.Equal(112, audio.Pitch);
     }
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------
