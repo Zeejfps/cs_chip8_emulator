@@ -11,41 +11,41 @@ internal static class Chip8InstructionSet
 {
     // ---- Sub-table dispatchers (CHIP-8 fan-outs) ----------------------------
 
-    public static void ExecuteZeroBaseIns(Chip8Machine machine, int ins)
+    public static void ZeroBase(Chip8Machine machine, int ins)
     {
         // 0NNN (SYS call) — ignore on modern interpreters.
         if ((ins & 0xFF00) != 0x0000) return;
         machine.SystemInsTable[ins & 0x00FF](machine, ins);
     }
 
-    public static void ExecuteArithmeticOperationIns(Chip8Machine machine, int ins)
+    public static void ArithmeticOperation(Chip8Machine machine, int ins)
     {
         machine.ArithmeticTable[ins & 0x000F](machine, ins);
     }
 
-    public static void ExecuteSkipNextInsIfKeyIsPressedOrReleased(Chip8Machine machine, int ins)
+    public static void SkipNextInsIfKeyIsPressedOrReleased(Chip8Machine machine, int ins)
     {
         machine.KeyCheckTable[ins & 0x00FF](machine, ins);
     }
 
-    public static void ExecuteTimerIns(Chip8Machine machine, int ins)
+    public static void TimerInstructions(Chip8Machine machine, int ins)
     {
         machine.TimerTable[ins & 0x00FF](machine, ins);
     }
 
-    public static void ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue(Chip8Machine machine, int ins)
+    public static void SkipNextInsIfRegisterValueEqualsRegisterValue(Chip8Machine machine, int ins)
     {
         machine.FiveOpTable[ExtractN(ins)](machine, ins);
     }
 
     // ---- 0x0*** system ops --------------------------------------------------
 
-    public static void ExecuteClearDisplayIns(Chip8Machine machine, int ins)
+    public static void ClearDisplay(Chip8Machine machine, int ins)
     {
         machine.ClearDisplay();
     }
 
-    public static void ExecuteReturnFromSubroutineIns(Chip8Machine machine, int ins)
+    public static void ReturnFromSubroutine(Chip8Machine machine, int ins)
     {
         var address = machine.PopStack();
         machine.WriteProgramCounter(address);
@@ -53,13 +53,13 @@ internal static class Chip8InstructionSet
 
     // ---- 0x1NNN / 0x2NNN : jump / call --------------------------------------
 
-    public static void ExecuteJumpToAddressIns(Chip8Machine machine, int ins)
+    public static void JumpToAddress(Chip8Machine machine, int ins)
     {
         var address = ExtractNnn(ins);
         machine.WriteProgramCounter(address);
     }
 
-    public static void ExecuteCallSubroutineIns(Chip8Machine machine, int ins)
+    public static void CallSubroutine(Chip8Machine machine, int ins)
     {
         var address = ExtractNnn(ins);
         machine.PushStack(machine.ReadProgramCounter());
@@ -68,7 +68,7 @@ internal static class Chip8InstructionSet
 
     // ---- 0x3XNN / 0x4XNN / 0x9XY0 : conditional skips ------------------------
 
-    public static void ExecuteSkipNextInsIfRegisterValueEqualsValueIns(Chip8Machine machine, int ins)
+    public static void SkipNextInsIfRegisterValueEqualsValue(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -78,7 +78,7 @@ internal static class Chip8InstructionSet
         }
     }
 
-    public static void ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns(Chip8Machine machine, int ins)
+    public static void SkipNextInsIfRegisterValueNotEqualsValue(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -88,7 +88,7 @@ internal static class Chip8InstructionSet
         }
     }
 
-    public static void ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue(Chip8Machine machine, int ins)
+    public static void SkipNextInsIfRegisterValueNotEqualsRegisterValue(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -112,14 +112,14 @@ internal static class Chip8InstructionSet
 
     // ---- 0x6XNN / 0x7XNN ----------------------------------------------------
 
-    public static void ExecuteSetRegisterValueIns(Chip8Machine machine, int ins)
+    public static void SetRegisterValue(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
         machine.WriteGeneralPurposeRegister(x, nn);
     }
 
-    public static void ExecuteAddValueToRegisterIns(Chip8Machine machine, int ins)
+    public static void AddValueToRegister(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -278,14 +278,14 @@ internal static class Chip8InstructionSet
 
     // ---- 0xANNN / 0xBNNN / 0xCXNN ------------------------------------------
 
-    public static void ExecuteSetIndexRegisterIns(Chip8Machine machine, int ins)
+    public static void SetIndexRegisterIns(Chip8Machine machine, int ins)
     {
         var nnn = ExtractNnn(ins);
         machine.WriteIndexRegister(nnn);
     }
 
     // Thin dispatcher (still used by tests).
-    public static void ExecuteJumpWithOffsetIns(Chip8Machine machine, int ins)
+    public static void JumpWithOffsetIns(Chip8Machine machine, int ins)
     {
         if (machine.JumpUsesVx) ExecuteJumpWithVxOffsetIns(machine, ins);
         else ExecuteJumpWithV0OffsetIns(machine, ins);
@@ -304,7 +304,7 @@ internal static class Chip8InstructionSet
         machine.WriteProgramCounter(address + machine.ReadGeneralPurposeRegister(x));
     }
 
-    public static void ExecuteGenerateRandomNumIns(Chip8Machine machine, int ins)
+    public static void GenerateRandomNum(Chip8Machine machine, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
@@ -314,7 +314,7 @@ internal static class Chip8InstructionSet
 
     // ---- 0xDXYN draw --------------------------------------------------------
 
-    public static void ExeuteDrawToScreenIns(Chip8Machine machine, int ins)
+    public static void DrawToScreen(Chip8Machine machine, int ins)
     {
         var display = machine.Display;
         var x = machine.ReadGeneralPurposeRegister(ExtractX(ins)) % display.Width;

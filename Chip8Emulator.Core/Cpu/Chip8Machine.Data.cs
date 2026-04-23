@@ -52,22 +52,22 @@ internal sealed partial class Chip8Machine
     private InstructionHandler[] BuildRootOpcodeTable()
     {
         var table = new InstructionHandler[16];
-        table[0x0] = Chip8InstructionSet.ExecuteZeroBaseIns;
-        table[0x1] = Chip8InstructionSet.ExecuteJumpToAddressIns;
-        table[0x2] = Chip8InstructionSet.ExecuteCallSubroutineIns;
-        table[0x3] = Chip8InstructionSet.ExecuteSkipNextInsIfRegisterValueEqualsValueIns;
-        table[0x4] = Chip8InstructionSet.ExecuteSkipNextInsIfRegisterValueNotEqualsValueIns;
-        table[0x5] = Chip8InstructionSet.ExecuteSkipNextInsIfRegisterValueEqualsRegisterValue;
-        table[0x6] = Chip8InstructionSet.ExecuteSetRegisterValueIns;
-        table[0x7] = Chip8InstructionSet.ExecuteAddValueToRegisterIns;
-        table[0x8] = Chip8InstructionSet.ExecuteArithmeticOperationIns;
-        table[0x9] = Chip8InstructionSet.ExecuteSkipNextInsIfRegisterValueNotEqualsRegisterValue;
-        table[0xA] = Chip8InstructionSet.ExecuteSetIndexRegisterIns;
-        table[0xB] = Chip8InstructionSet.ExecuteJumpWithOffsetIns;
-        table[0xC] = Chip8InstructionSet.ExecuteGenerateRandomNumIns;
-        table[0xD] = Chip8InstructionSet.ExeuteDrawToScreenIns;
-        table[0xE] = Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsPressedOrReleased;
-        table[0xF] = Chip8InstructionSet.ExecuteTimerIns;
+        table[0x0] = Chip8InstructionSet.ZeroBase;
+        table[0x1] = Chip8InstructionSet.JumpToAddress;
+        table[0x2] = Chip8InstructionSet.CallSubroutine;
+        table[0x3] = Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsValue;
+        table[0x4] = Chip8InstructionSet.SkipNextInsIfRegisterValueNotEqualsValue;
+        table[0x5] = Chip8InstructionSet.SkipNextInsIfRegisterValueEqualsRegisterValue;
+        table[0x6] = Chip8InstructionSet.SetRegisterValue;
+        table[0x7] = Chip8InstructionSet.AddValueToRegister;
+        table[0x8] = Chip8InstructionSet.ArithmeticOperation;
+        table[0x9] = Chip8InstructionSet.SkipNextInsIfRegisterValueNotEqualsRegisterValue;
+        table[0xA] = Chip8InstructionSet.SetIndexRegisterIns;
+        table[0xB] = Chip8InstructionSet.JumpWithOffsetIns;
+        table[0xC] = Chip8InstructionSet.GenerateRandomNum;
+        table[0xD] = Chip8InstructionSet.DrawToScreen;
+        table[0xE] = Chip8InstructionSet.SkipNextInsIfKeyIsPressedOrReleased;
+        table[0xF] = Chip8InstructionSet.TimerInstructions;
         return table;
     }
 
@@ -75,12 +75,12 @@ internal sealed partial class Chip8Machine
     {
         var table = new InstructionHandler[256];
         Array.Fill(table, NoOp);
-        table[0xE0] = Chip8InstructionSet.ExecuteClearDisplayIns;
-        table[0xEE] = Chip8InstructionSet.ExecuteReturnFromSubroutineIns;
-        table[0xFF] = SChipInstructionSet.ExecuteEnableHiresModeIns;
-        table[0xFE] = SChipInstructionSet.ExecuteDisableHiresModeIns;
-        table[0xFB] = SChipInstructionSet.ExecuteScrollRightIns;
-        table[0xFC] = SChipInstructionSet.ExecuteScrollLeftIns;
+        table[0xE0] = Chip8InstructionSet.ClearDisplay;
+        table[0xEE] = Chip8InstructionSet.ReturnFromSubroutine;
+        table[0xFF] = SChipInstructionSet.EnableHiresMode;
+        table[0xFE] = SChipInstructionSet.DisableHiresMode;
+        table[0xFB] = SChipInstructionSet.ScrollRight;
+        table[0xFC] = SChipInstructionSet.ScrollLeft;
         for (var n = 0; n < 16; n++)
         {
             // 00CN — S-CHIP: scroll display down N rows.
@@ -107,15 +107,15 @@ internal sealed partial class Chip8Machine
         table[0x18] = Chip8InstructionSet.ExecuteSetSoundTimer;
         table[0x1E] = Chip8InstructionSet.ExecuteAddVxToI;
         table[0x29] = Chip8InstructionSet.ExecuteLoadLowResFontCharacter;
-        table[0x30] = SChipInstructionSet.ExecuteLoadHighResFontCharacter;
+        table[0x30] = SChipInstructionSet.LoadHighResFontCharacter;
         table[0x33] = Chip8InstructionSet.ExecuteStoreBcdInMemory;
         // FX3A — XO-CHIP set audio playback pitch from Vx.
         table[0x3A] = XoChipInstructionSet.SetPitch;
         table[0x55] = Chip8InstructionSet.ExecuteStoreRegisters;
         table[0x65] = Chip8InstructionSet.ExecuteLoadRegisters;
         // FX75 / FX85 — SCHIP save/load V0..Vx to persistent user flags.
-        table[0x75] = SChipInstructionSet.ExecuteSaveFlagsIns;
-        table[0x85] = SChipInstructionSet.ExecuteLoadFlagsIns;
+        table[0x75] = SChipInstructionSet.SaveFlags;
+        table[0x85] = SChipInstructionSet.LoadFlags;
         return table;
     }
 
