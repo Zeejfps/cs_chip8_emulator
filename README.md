@@ -6,6 +6,12 @@ A CHIP-8 emulator written in C# / .NET 10, with three front-ends sharing a commo
 
 Live demo: [chip8.builtbyzee.com](https://chip8.builtbyzee.com/)
 
+## About this project
+
+This repo is a **playground**. I'm using CHIP-8, the simplest practical ISA I know, as a low-stakes sandbox to experiment with different ways of structuring an emulator: splitting CPU from machine, dependency wiring, mediator patterns, a pub/sub bus between components, the tradeoffs between staying close to how real hardware worked and using modern software-design conventions. Expect the architecture to keep shifting as I try ideas and revert the ones that don't pay off. The goal is to build up intuition here before tackling more complex systems (NES, Game Boy, etc.) where the same design choices carry much more weight.
+
+If you're reading the code hoping for a textbook "correct" layout, this isn't it. If you're curious about the tradeoffs involved in designing an emulator's internal seams, you're in the right place.
+
 ## Projects
 
 - **`Chip8Emulator.Core`** — the interpreter (memory, registers, fetch/decode/execute, 60Hz timing) plus a shared `StopwatchClock`.
