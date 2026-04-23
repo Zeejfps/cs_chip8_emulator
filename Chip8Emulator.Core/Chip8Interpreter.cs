@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-internal sealed partial class Chip8Machine : IChip8Interpreter
+internal sealed partial class Chip8Interpreter : IChip8Interpreter
 {
     public const int LowResFontBaseAddress = 0x050;
     public const int HighResFontBaseAddress = 0x0A0;
@@ -42,7 +42,7 @@ internal sealed partial class Chip8Machine : IChip8Interpreter
     private int _keyRegisterIndex;
     private bool _waitForVBlank;
 
-    public Chip8Machine(IClock clock, IDisplay display, IMemory memory, IAudio audio, IInput input, IBus bus, ICpu cpu)
+    public Chip8Interpreter(IClock clock, IDisplay display, IMemory memory, IAudio audio, IInput input, IBus bus, ICpu cpu)
     {
         _clock = clock;
         Display = display;

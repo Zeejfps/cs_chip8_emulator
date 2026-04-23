@@ -2,7 +2,7 @@ using Chip8Emulator.Core.Tests.Fakes;
 
 namespace Chip8Emulator.Core.Tests;
 
-public class Chip8MachineBuilderTests
+public class Chip8InterpreterBuilderTests
 {
     [Fact]
     public void Builder_ReturnsNewBuilderInstance()
@@ -10,7 +10,7 @@ public class Chip8MachineBuilderTests
         var builder = Chip8.Builder();
 
         Assert.NotNull(builder);
-        Assert.IsType<Chip8MachineBuilder>(builder);
+        Assert.IsType<Chip8InterpreterBuilder>(builder);
     }
 
     [Fact]

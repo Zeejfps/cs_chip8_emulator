@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
+internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
 {
     private IDisplay? _display;
     private IAudio? _audio;
@@ -11,49 +11,49 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
     private IRegisters? _registers;
     private IPersistentFlags? _persistentFlags;
 
-    public IChip8MachineBuilder WithInput(IInput input)
+    public IChip8InterpreterBuilder WithInput(IInput input)
     {
         _input = input;
         return this;
     }
 
-    public IChip8MachineBuilder WithAudio(IAudio audio)
+    public IChip8InterpreterBuilder WithAudio(IAudio audio)
     {
         _audio = audio;
         return this;
     }
 
-    public IChip8MachineBuilder WithClock(IClock clock)
+    public IChip8InterpreterBuilder WithClock(IClock clock)
     {
         _clock = clock;
         return this;
     }
 
-    public IChip8MachineBuilder WithStack(IStack stack)
+    public IChip8InterpreterBuilder WithStack(IStack stack)
     {
         _stack = stack;
         return this;
     }
 
-    public IChip8MachineBuilder WithRegisters(IRegisters registers)
+    public IChip8InterpreterBuilder WithRegisters(IRegisters registers)
     {
         _registers = registers;
         return this;
     }
 
-    public IChip8MachineBuilder WithPersistentFlags(IPersistentFlags flags)
+    public IChip8InterpreterBuilder WithPersistentFlags(IPersistentFlags flags)
     {
         _persistentFlags = flags;
         return this;
     }
 
-    public IChip8MachineBuilder WithMemory(IMemory memory)
+    public IChip8InterpreterBuilder WithMemory(IMemory memory)
     {
         _memory = memory;
         return this;
     }
 
-    public IChip8MachineBuilder WithDisplay(IDisplay display)
+    public IChip8InterpreterBuilder WithDisplay(IDisplay display)
     {
         _display = display;
         return this;

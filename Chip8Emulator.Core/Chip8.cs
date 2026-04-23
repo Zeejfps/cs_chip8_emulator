@@ -2,8 +2,8 @@
 
 public static class Chip8
 {
-    public static IChip8MachineBuilder Builder()
+    public static IChip8InterpreterBuilder Builder()
     {
-        return new Chip8MachineBuilder();
+        return new Chip8InterpreterBuilder();
     }
 }
