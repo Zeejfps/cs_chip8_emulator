@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-internal sealed class EmulatedDisplay : IDisplay
+public sealed class EmulatedDisplay : IDisplay
 {
     public const int HighRestWidth = 128;
     public const int HighRestHeight = 64;
@@ -14,43 +14,39 @@ internal sealed class EmulatedDisplay : IDisplay
     public const byte Plane1Mask = 0x02;
     public const byte AllPlanesMask = 0x03;
 
-    public Memory<byte> Pixels => _pixels;
     public int Width { get; private set; }
     public int Height { get; private set; }
     public bool IsHighRes { get; private set; }
-
-    // XO-Chip FX01 plane mask; defaults to plane 0 so legacy (CHIP-8/SCHIP) drawing works.
-    public byte SelectedPlanes { get; set; } = Plane0Mask;
-
-    private readonly byte[] _pixels;
-
-    public EmulatedDisplay()
+    
+    private readonly Memory<byte> _pixels;
+    
+    public EmulatedDisplay(Func<int, Memory<byte>> alloc)
     {
         Width = LowRestWidth;
         Height = LowRestHeight;
         //NOTE (Zee): Allocate enough space for the high resolution display.
-        _pixels = new byte[HighRestWidth * HighRestHeight];
+        _pixels = alloc(HighRestWidth * HighRestHeight);
     }
 
+    public void WritePixels(Action<Span<byte>> writeAction)
+    {
+        writeAction(_pixels.Span);
+    }
+
+    // XO-Chip FX01 plane mask; defaults to plane 0 so legacy (CHIP-8/SCHIP) drawing works.
+    public byte SelectedPlanes
+    {
+        get;
+        set => field = (byte)(value & AllPlanesMask);
+    } = Plane0Mask;
+    
     public void Reset()
     {
         IsHighRes = false;
         Width = LowRestWidth;
         Height = LowRestHeight;
         SelectedPlanes = Plane0Mask;
-        Array.Clear(_pixels);
-    }
-
-    public void ToggleHighRest()
-    {
-        if (IsHighRes)
-        {
-            DisableHighResMode();
-        }
-        else
-        {
-            EnableHighResMode();
-        }
+        _pixels.Span.Clear();
     }
 
     public void Clear()
@@ -59,13 +55,13 @@ internal sealed class EmulatedDisplay : IDisplay
         if (mask == 0) return;
         if (mask == AllPlanesMask)
         {
-            Array.Clear(_pixels);
+            _pixels.Span.Clear();
             return;
         }
         var keep = (byte)(~mask & AllPlanesMask);
         for (var i = 0; i < _pixels.Length; i++)
         {
-            _pixels[i] = (byte)(_pixels[i] & keep);
+            _pixels.Span[i] = (byte)(_pixels.Span[i] & keep);
         }
     }
 
@@ -103,18 +99,19 @@ internal sealed class EmulatedDisplay : IDisplay
             return;
         }
 
+        var pixels = _pixels.Span;
         for (var y = 0; y < Height; y++)
         {
             var row = y * Width;
             for (var x = 0; x < Width - n; x++)
             {
-                var src = _pixels[row + x + n];
-                var dst = _pixels[row + x];
-                _pixels[row + x] = (byte)((src & mask) | (dst & keep));
+                var src = pixels[row + x + n];
+                var dst = pixels[row + x];
+                pixels[row + x] = (byte)((src & mask) | (dst & keep));
             }
             for (var x = Width - n; x < Width; x++)
             {
-                _pixels[row + x] = (byte)(_pixels[row + x] & keep);
+                pixels[row + x] = (byte)(pixels[row + x] & keep);
             }
         }
     }
@@ -132,18 +129,19 @@ internal sealed class EmulatedDisplay : IDisplay
             return;
         }
 
+        var pixels = _pixels.Span;
         for (var y = 0; y < Height; y++)
         {
             var row = y * Width;
             for (var x = Width - 1; x >= n; x--)
             {
-                var src = _pixels[row + x - n];
-                var dst = _pixels[row + x];
-                _pixels[row + x] = (byte)((src & mask) | (dst & keep));
+                var src = pixels[row + x - n];
+                var dst = pixels[row + x];
+                pixels[row + x] = (byte)((src & mask) | (dst & keep));
             }
             for (var x = 0; x < n; x++)
             {
-                _pixels[row + x] = (byte)(_pixels[row + x] & keep);
+                pixels[row + x] = (byte)(pixels[row + x] & keep);
             }
         }
     }
@@ -161,15 +159,16 @@ internal sealed class EmulatedDisplay : IDisplay
             return;
         }
 
+        var pixels = _pixels.Span;
         for (var y = Height - 1; y >= n; y--)
         {
             var srcRow = (y - n) * Width;
             var dstRow = y * Width;
             for (var x = 0; x < Width; x++)
             {
-                var src = _pixels[srcRow + x];
-                var dst = _pixels[dstRow + x];
-                _pixels[dstRow + x] = (byte)((src & mask) | (dst & keep));
+                var src = pixels[srcRow + x];
+                var dst = pixels[dstRow + x];
+                pixels[dstRow + x] = (byte)((src & mask) | (dst & keep));
             }
         }
 
@@ -178,7 +177,7 @@ internal sealed class EmulatedDisplay : IDisplay
             var row = y * Width;
             for (var x = 0; x < Width; x++)
             {
-                _pixels[row + x] = (byte)(_pixels[row + x] & keep);
+                pixels[row + x] = (byte)(pixels[row + x] & keep);
             }
         }
     }
@@ -196,15 +195,16 @@ internal sealed class EmulatedDisplay : IDisplay
             return;
         }
 
+        var pixels = _pixels.Span;
         for (var y = 0; y < Height - n; y++)
         {
             var srcRow = (y + n) * Width;
             var dstRow = y * Width;
             for (var x = 0; x < Width; x++)
             {
-                var src = _pixels[srcRow + x];
-                var dst = _pixels[dstRow + x];
-                _pixels[dstRow + x] = (byte)((src & mask) | (dst & keep));
+                var src = pixels[srcRow + x];
+                var dst = pixels[dstRow + x];
+                pixels[dstRow + x] = (byte)((src & mask) | (dst & keep));
             }
         }
 
@@ -213,22 +213,23 @@ internal sealed class EmulatedDisplay : IDisplay
             var row = y * Width;
             for (var x = 0; x < Width; x++)
             {
-                _pixels[row + x] = (byte)(_pixels[row + x] & keep);
+                pixels[row + x] = (byte)(pixels[row + x] & keep);
             }
         }
     }
 
     private void ClearSelectedPlanes(byte mask)
     {
+        var pixels = _pixels.Span;
         if (mask == AllPlanesMask)
         {
-            Array.Clear(_pixels);
+            pixels.Clear();
             return;
         }
         var keep = (byte)(~mask & AllPlanesMask);
         for (var i = 0; i < _pixels.Length; i++)
         {
-            _pixels[i] = (byte)(_pixels[i] & keep);
+            pixels[i] = (byte)(pixels[i] & keep);
         }
     }
 }

@@ -9,7 +9,6 @@ public interface ICpu
     IStack Stack { get; }
     IRegisters Registers { get; }
     
-    byte SelectedPlanes { get; set; }
     bool ShiftUsesVy { get; }
     bool SpritesWrap { get; }
     bool DisplayWait { get; }

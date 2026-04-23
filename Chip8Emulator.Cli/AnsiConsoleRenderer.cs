@@ -18,7 +18,8 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
     private const string RestoreAltScroll = "\x1b[?1007h";
 
     private IChip8Machine? _machine;
-    private byte[] _previousPixels;
+    private byte[] _pixels = [];
+    private byte[] _previousPixels = [];
     private readonly StringBuilder _frame = new(8192);
     private bool _hasRendered;
     private int _lastWindowWidth = -1;
@@ -40,16 +41,17 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
         Console.Out.Flush();
     }
 
-    public void Attach(IChip8Machine machine)
+    public void Attach(IChip8Machine machine, byte[] pixels)
     {
         _machine = machine;
-        _previousPixels = new byte[machine.Display.Pixels.Length];
+        _pixels = pixels;
+        _previousPixels = new byte[pixels.Length];
     }
 
     public void Render()
     {
         var display = _machine!.Display;
-        var pixels = display.Pixels.Span;
+        var pixels = _pixels.AsSpan();
         var pixelWidth = display.Width;
         var pixelHeight = display.Height;
         var cellHeight = (pixelHeight + 1) / 2;

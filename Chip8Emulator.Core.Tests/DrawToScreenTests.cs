@@ -8,20 +8,23 @@ public class DrawToScreenTests
     private const int ScreenWidth = 64;
     private const int ScreenHeight = 32;
 
-    private static Chip8Machine CreateEmulator()
-        => new(new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
+    private readonly byte[] _pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
+
+    private Chip8Machine CreateEmulator()
+        => new(new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size)),
+            new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
             new EmulatedStack(size => new int[size]),
             new EmulatedMemory(size => new byte[size]),
             new EmulatedRegisters(size => new byte[size]),
             new EmulatedPersistentFlags());
 
-    private static byte PixelAt(Chip8Machine emulator, int x, int y)
-        => emulator.Display.Pixels.Span[y * ScreenWidth + x];
+    private byte PixelAt(Chip8Machine emulator, int x, int y)
+        => _pixelBuffer[y * ScreenWidth + x];
 
-    private static int CountLitPixels(Chip8Machine emulator)
+    private int CountLitPixels(Chip8Machine emulator)
     {
         var count = 0;
-        foreach (var p in emulator.Display.Pixels.Span)
+        foreach (var p in _pixelBuffer)
             if (p == 1) count++;
         return count;
     }

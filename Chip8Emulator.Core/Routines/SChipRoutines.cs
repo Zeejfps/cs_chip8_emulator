@@ -45,66 +45,68 @@ internal static class SChipRoutines
         // VF = number of sprite rows with at least one collision in any selected plane
         //    + number of sprite rows clipped off the bottom edge (when not wrapping).
         var display = cpu.Display;
-        var displayPixels = display.Pixels.Span;
-        var width = display.Width;
-        var height = display.Height;
-        var wrap = cpu.SpritesWrap;
-        var collidedRows = 0;
-        var clippedRows = 0;
-
-        // Rows-per-plane: 16 for a single plane, 32 total when both planes selected
-        // (first 32 bytes = plane 0, next 32 = plane 1).
-        var planeStride = 32;
-        var spriteBase = 0;
-
-        Span<bool> rowCollisions = stackalloc bool[16];
-        var anyClipped = 0;
-
-        for (var planeBit = 0; planeBit < 2; planeBit++)
+        display.WritePixels(displayPixels =>
         {
-            var planeBitMask = (byte)(1 << planeBit);
-            if ((planeMask & planeBitMask) == 0) continue;
+            var width = display.Width;
+            var height = display.Height;
+            var wrap = cpu.SpritesWrap;
+            var collidedRows = 0;
+            var clippedRows = 0;
 
-            for (var i = 0; i < 16; i++)
+            // Rows-per-plane: 16 for a single plane, 32 total when both planes selected
+            // (first 32 bytes = plane 0, next 32 = plane 1).
+            var planeStride = 32;
+            var spriteBase = 0;
+
+            Span<bool> rowCollisions = stackalloc bool[16];
+            var anyClipped = 0;
+
+            for (var planeBit = 0; planeBit < 2; planeBit++)
             {
-                var dstY = y + i;
-                if (wrap)
+                var planeBitMask = (byte)(1 << planeBit);
+                if ((planeMask & planeBitMask) == 0) continue;
+
+                for (var i = 0; i < 16; i++)
                 {
-                    dstY %= height;
-                }
-                else if (dstY >= height)
-                {
-                    anyClipped = Math.Max(anyClipped, 16 - i);
-                    break;
+                    var dstY = y + i;
+                    if (wrap)
+                    {
+                        dstY %= height;
+                    }
+                    else if (dstY >= height)
+                    {
+                        anyClipped = Math.Max(anyClipped, 16 - i);
+                        break;
+                    }
+
+                    var offset = spriteBase + i * 2;
+                    var spritePixelsRow = (ushort)(cpu.Memory.Read(cpu.Registers.ReadIWithOffset(offset)) << 8 |
+                                                   cpu.Memory.Read(cpu.Registers.ReadIWithOffset(offset + 1)));
+                    for (var bit = 0; bit < 16; bit++)
+                    {
+                        var dstX = x + bit;
+                        if (wrap) dstX %= width;
+                        else if (dstX >= width) break;
+
+                        var spriteBitOn = ((spritePixelsRow >> (15 - bit)) & 1) != 0;
+                        if (!spriteBitOn) continue;
+
+                        var dstIndex = dstY * width + dstX;
+                        var before = displayPixels[dstIndex];
+                        if ((before & planeBitMask) != 0) rowCollisions[i] = true;
+                        displayPixels[dstIndex] = (byte)(before ^ planeBitMask);
+                    }
                 }
 
-                var offset = spriteBase + i * 2;
-                var spritePixelsRow = (ushort)(cpu.Memory.Read(cpu.Registers.ReadIWithOffset(offset)) << 8 |
-                                               cpu.Memory.Read(cpu.Registers.ReadIWithOffset(offset + 1)));
-                for (var bit = 0; bit < 16; bit++)
-                {
-                    var dstX = x + bit;
-                    if (wrap) dstX %= width;
-                    else if (dstX >= width) break;
-
-                    var spriteBitOn = ((spritePixelsRow >> (15 - bit)) & 1) != 0;
-                    if (!spriteBitOn) continue;
-
-                    var dstIndex = dstY * width + dstX;
-                    var before = displayPixels[dstIndex];
-                    if ((before & planeBitMask) != 0) rowCollisions[i] = true;
-                    displayPixels[dstIndex] = (byte)(before ^ planeBitMask);
-                }
+                spriteBase += planeStride;
             }
 
-            spriteBase += planeStride;
-        }
-
-        for (var i = 0; i < 16; i++)
-            if (rowCollisions[i]) collidedRows++;
-        clippedRows = anyClipped;
-
-        cpu.Registers.WriteV(0xF, (byte)(collidedRows + clippedRows));
+            for (var i = 0; i < 16; i++)
+                if (rowCollisions[i]) collidedRows++;
+            
+            clippedRows = anyClipped;
+            cpu.Registers.WriteV(0xF, (byte)(collidedRows + clippedRows));
+        });
     }
 
     // ---- FX30 : load hi-res font character ----------------------------------

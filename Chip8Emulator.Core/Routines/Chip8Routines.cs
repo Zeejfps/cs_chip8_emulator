@@ -291,7 +291,7 @@ internal static class Chip8Routines
         var x = cpu.Registers.ReadV(ExtractX(ins)) % display.Width;
         var y = cpu.Registers.ReadV(ExtractY(ins)) % display.Height;
         var n = ExtractN(ins);
-        var planeMask = (byte)(cpu.SelectedPlanes & EmulatedDisplay.AllPlanesMask);
+        var planeMask = (byte)(display.SelectedPlanes & EmulatedDisplay.AllPlanesMask);
 
         if (planeMask == 0)
         {
@@ -321,45 +321,47 @@ internal static class Chip8Routines
     internal static void DrawLowResSprite(ICpu cpu, int sx, int sy, int height, byte planeMask)
     {
         var display = cpu.Display;
-        var displayPixels = display.Pixels.Span;
-        var width = display.Width;
-        var displayHeight = display.Height;
-        var wrap = cpu.SpritesWrap;
-        byte collision = 0;
-
-        var spriteBase = 0;
-        for (var planeBit = 0; planeBit < 2; planeBit++)
+        display.WritePixels(displayPixels =>
         {
-            var planeBitMask = (byte)(1 << planeBit);
-            if ((planeMask & planeBitMask) == 0) continue;
+            var width = display.Width;
+            var displayHeight = display.Height;
+            var wrap = cpu.SpritesWrap;
+            byte collision = 0;
 
-            for (var y = 0; y < height; y++)
+            var spriteBase = 0;
+            for (var planeBit = 0; planeBit < 2; planeBit++)
             {
-                var dstY = sy + y;
-                if (wrap) dstY %= displayHeight;
-                else if (dstY >= displayHeight) break;
+                var planeBitMask = (byte)(1 << planeBit);
+                if ((planeMask & planeBitMask) == 0) continue;
 
-                var row = cpu.Memory.Read(cpu.Registers.ReadIWithOffset(spriteBase + y));
-                for (var bit = 0; bit < 8; bit++)
+                for (var y = 0; y < height; y++)
                 {
-                    var dstX = sx + bit;
-                    if (wrap) dstX %= width;
-                    else if (dstX >= width) break;
+                    var dstY = sy + y;
+                    if (wrap) dstY %= displayHeight;
+                    else if (dstY >= displayHeight) break;
 
-                    var spriteBitOn = ((row >> (7 - bit)) & 1) != 0;
-                    if (!spriteBitOn) continue;
+                    var row = cpu.Memory.Read(cpu.Registers.ReadIWithOffset(spriteBase + y));
+                    for (var bit = 0; bit < 8; bit++)
+                    {
+                        var dstX = sx + bit;
+                        if (wrap) dstX %= width;
+                        else if (dstX >= width) break;
 
-                    var dstIndex = dstY * width + dstX;
-                    var before = displayPixels[dstIndex];
-                    if ((before & planeBitMask) != 0) collision = 1;
-                    displayPixels[dstIndex] = (byte)(before ^ planeBitMask);
+                        var spriteBitOn = ((row >> (7 - bit)) & 1) != 0;
+                        if (!spriteBitOn) continue;
+
+                        var dstIndex = dstY * width + dstX;
+                        var before = displayPixels[dstIndex];
+                        if ((before & planeBitMask) != 0) collision = 1;
+                        displayPixels[dstIndex] = (byte)(before ^ planeBitMask);
+                    }
                 }
+
+                spriteBase += height;
             }
 
-            spriteBase += height;
-        }
-
-        cpu.Registers.WriteV(0xF, collision);
+            cpu.Registers.WriteV(0xF, collision);
+        });
     }
 
     // ---- 0xEX* keyboard skips -----------------------------------------------

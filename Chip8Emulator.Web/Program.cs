@@ -15,6 +15,7 @@ namespace Chip8Emulator.Web
         private static int[]? _stackBuffer;
         private static byte[]? _memoryBuffer;
         private static byte[]? _vRegistersBuffer;
+        private static byte[]? _pixelBuffer;
 
         [JSExport]
         public static void Init()
@@ -24,11 +25,14 @@ namespace Chip8Emulator.Web
             _stackBuffer = new int[16];
             _memoryBuffer = new byte[4096];
             _vRegistersBuffer = new byte[16];
+            _pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
             var stack = new EmulatedStack(size => _stackBuffer.AsMemory(0, size));
             var memory = new EmulatedMemory(size => _memoryBuffer.AsMemory(0, size));
             var registers = new EmulatedRegisters(size => _vRegistersBuffer.AsMemory(0, size));
+            var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
             _machine = Chip8.Builder()
                 .WithRenderer(new BrowserRenderer())
+                .WithDisplay(display)
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
@@ -37,7 +41,7 @@ namespace Chip8Emulator.Web
                 .WithRegisters(registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
-            _pixelsHandle = _machine.Display.Pixels.Pin();
+            _pixelsHandle = _pixelBuffer.AsMemory().Pin();
         }
 
         [JSExport]
@@ -89,7 +93,7 @@ namespace Chip8Emulator.Web
         public static unsafe int GetPixelDataPtr() => (int)_pixelsHandle.Pointer;
 
         [JSExport]
-        public static int GetPixelDataLength() => _machine!.Display.Pixels.Length;
+        public static int GetPixelDataLength() => _pixelBuffer!.Length;
 
         [JSExport]
         public static int GetWidth() => _machine!.Display.Width;

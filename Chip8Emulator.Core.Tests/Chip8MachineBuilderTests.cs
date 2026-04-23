@@ -58,6 +58,7 @@ public class Chip8MachineBuilderTests
     {
         var chip = Chip8.Builder()
             .WithRenderer(new FakeRenderer())
+            .WithDisplay(new EmulatedDisplay(size => new byte[size]))
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())
             .WithInput(new FakeInput())

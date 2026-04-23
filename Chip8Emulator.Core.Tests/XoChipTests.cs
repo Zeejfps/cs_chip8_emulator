@@ -7,22 +7,26 @@ public class XoChipTests
 {
     private const int LowResWidth = 64;
 
-    private static Chip8Machine CreateEmulator(IPersistentFlags? flags = null)
-        => new(new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
+    private readonly byte[] _pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
+
+    private Chip8Machine CreateEmulator(IPersistentFlags? flags = null)
+        => new(new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size)),
+            new FakeRenderer(), new FakeAudio(), new FakeClock(), new FakeInput(),
             new EmulatedStack(size => new int[size]),
             new EmulatedMemory(size => new byte[size]),
             new EmulatedRegisters(size => new byte[size]),
             flags ?? new EmulatedPersistentFlags());
 
-    private static Chip8Machine CreateEmulator(FakeAudio audio)
-        => new(new FakeRenderer(), audio, new FakeClock(), new FakeInput(),
+    private Chip8Machine CreateEmulator(FakeAudio audio)
+        => new(new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size)),
+            new FakeRenderer(), audio, new FakeClock(), new FakeInput(),
             new EmulatedStack(size => new int[size]),
             new EmulatedMemory(size => new byte[size]),
             new EmulatedRegisters(size => new byte[size]),
             new EmulatedPersistentFlags());
 
-    private static byte PixelAt(Chip8Machine emulator, int x, int y)
-        => emulator.Display.Pixels.Span[y * emulator.Display.Width + x];
+    private byte PixelAt(Chip8Machine emulator, int x, int y)
+        => _pixelBuffer[y * emulator.Display.Width + x];
 
     // ---- FX01 : select bitplane mask ----------------------------------------
 

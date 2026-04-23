@@ -19,7 +19,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private readonly IMemory _memory;
     private readonly IStack _stack;
     private readonly IRegisters _registers;
-    private readonly EmulatedDisplay _display = new();
+    private readonly IDisplay _display;
     
     private readonly long _ticksPerFrame;
     
@@ -46,6 +46,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     internal readonly Routine[] ArithmeticRoutines;
 
     public Chip8Machine(
+        IDisplay display,
         IRenderer renderer, 
         IAudio audio,
         IClock clock, 
@@ -55,6 +56,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         IRegisters registers, 
         IPersistentFlags persistentFlags)
     {
+        _display = display;
         _renderer = renderer;
         _audio = audio;
         _clock = clock;
@@ -67,7 +69,9 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
-        
+
+        ResetMemory();
+
         Debugger = new Chip8MachineDebugger(this);
 
         MainRoutines = LoadMainRoutines();

@@ -30,7 +30,7 @@ internal static class XoChipRoutines
 
     public static void SelectPlane(ICpu cpu, int ins)
     {
-        cpu.SelectedPlanes = (byte)ExtractX(ins);
+        cpu.Display.SelectedPlanes = (byte)ExtractX(ins);
     }
 
     // ---- F002 / FX3A : audio pattern buffer + pitch -------------------------

@@ -25,13 +25,15 @@ try
         cancelled = true;
     };
 
-    using var display = new AnsiConsoleRenderer();
+    using var renderer = new AnsiConsoleRenderer();
     using var input = new ConsoleInput();
     var audio = new ConsoleBeepAudio();
 
     var clock = new StopwatchClock();
+    var pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
     var machine = Chip8.Builder()
-        .WithRenderer(display)
+        .WithRenderer(renderer)
+        .WithDisplay(new EmulatedDisplay(size => pixelBuffer.AsMemory(0, size)))
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
@@ -41,7 +43,7 @@ try
         .WithPersistentFlags(new FilePersistentFlags())
         .Build();
 
-    display.Attach(machine);
+    renderer.Attach(machine, pixelBuffer);
 
     Console.WriteLine($"Loading ROM: {romPath}");
     var romData = File.ReadAllBytes(romPath);

@@ -5,19 +5,22 @@ namespace Chip8Emulator.Core.Tests;
 
 public class Chip8MachineTests
 {
-    private static Chip8Machine CreateEmulator(out FakeRenderer renderer, out FakeAudio audio, out FakeClock clock, out FakeInput input)
+    private readonly byte[] _pixelBuffer = new byte[EmulatedDisplay.HighRestWidth * EmulatedDisplay.HighRestHeight];
+
+    private Chip8Machine CreateEmulator(out FakeRenderer renderer, out FakeAudio audio, out FakeClock clock, out FakeInput input)
     {
         renderer = new FakeRenderer();
         audio = new FakeAudio();
         clock = new FakeClock();
         input = new FakeInput();
+        var display = new EmulatedDisplay(size => _pixelBuffer.AsMemory(0, size));
         var stack = new EmulatedStack(size => new int[size]);
         var memory = new EmulatedMemory(size => new byte[size]);
         var registers = new EmulatedRegisters(size => new byte[size]);
-        return new Chip8Machine(renderer, audio, clock, input, stack, memory, registers, new EmulatedPersistentFlags());
+        return new Chip8Machine(display, renderer, audio, clock, input, stack, memory, registers, new EmulatedPersistentFlags());
     }
 
-    private static Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _, out _);
+    private Chip8Machine CreateEmulator() => CreateEmulator(out _, out _, out _, out _);
 
     private static byte[] ReadMemorySlice(Chip8Machine emulator, int address, int length)
     {
@@ -26,8 +29,8 @@ public class Chip8MachineTests
             result[i] = emulator.Memory.Read(address + i);
         return result;
     }
-    private static Chip8Machine CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out _, out input);
-    private static Chip8Machine CreateEmulator(out FakeClock clock, out FakeInput input) => CreateEmulator(out _, out _, out clock, out input);
+    private Chip8Machine CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out _, out input);
+    private Chip8Machine CreateEmulator(out FakeClock clock, out FakeInput input) => CreateEmulator(out _, out _, out clock, out input);
 
     [Fact]
     public void InitialState_IsZeroed()
@@ -999,11 +1002,11 @@ public class Chip8MachineTests
         Chip8Routines.SetIndexRegisterIns(emulator, 0xA000);
         emulator.Memory.Write(0, [0xFF]);
         Chip8Routines.DrawToScreen(emulator, 0xD001);
-        Assert.Contains(emulator.Display.Pixels.ToArray(), p => p == 1);
+        Assert.Contains(_pixelBuffer, p => p == 1);
 
         Chip8Routines.ClearDisplay(emulator, 0x00E0);
 
-        foreach (var p in emulator.Display.Pixels.Span)
+        foreach (var p in _pixelBuffer)
             Assert.Equal(0, p);
     }
 
