@@ -500,7 +500,7 @@ public class Chip8MachineTests
         input.Press(0x5);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsPressed(emulator, 0xE19E);
+        Chip8InstructionSet.SkipNextInsIfKeyIsPressed(emulator, 0xE19E);
 
         Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
@@ -513,7 +513,7 @@ public class Chip8MachineTests
         input.Press(0x3);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsPressed(emulator, 0xE19E);
+        Chip8InstructionSet.SkipNextInsIfKeyIsPressed(emulator, 0xE19E);
 
         Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
@@ -526,7 +526,7 @@ public class Chip8MachineTests
         input.Press(0x3);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsReleased(emulator, 0xE1A1);
+        Chip8InstructionSet.SkipNextInsIfKeyIsReleased(emulator, 0xE1A1);
 
         Assert.Equal(pcBefore + 2, emulator.Debugger.ProgramCounter);
     }
@@ -539,7 +539,7 @@ public class Chip8MachineTests
         input.Press(0x5);
         var pcBefore = emulator.Debugger.ProgramCounter;
 
-        Chip8InstructionSet.ExecuteSkipNextInsIfKeyIsReleased(emulator, 0xE1A1);
+        Chip8InstructionSet.SkipNextInsIfKeyIsReleased(emulator, 0xE1A1);
 
         Assert.Equal(pcBefore, emulator.Debugger.ProgramCounter);
     }
@@ -588,7 +588,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x613C);
 
-        Chip8InstructionSet.ExecuteSetDelayTimer(emulator, 0xF115);
+        Chip8InstructionSet.SetDelayTimer(emulator, 0xF115);
 
         Assert.Equal(0x3C, emulator.Debugger.DelayTimer);
     }
@@ -599,7 +599,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6120);
 
-        Chip8InstructionSet.ExecuteSetSoundTimer(emulator, 0xF118);
+        Chip8InstructionSet.SetSoundTimer(emulator, 0xF118);
 
         Assert.Equal(0x20, emulator.Debugger.SoundTimer);
     }
@@ -609,9 +609,9 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x612A);
-        Chip8InstructionSet.ExecuteSetDelayTimer(emulator, 0xF115);
+        Chip8InstructionSet.SetDelayTimer(emulator, 0xF115);
 
-        Chip8InstructionSet.ExecuteReadDelayTimer(emulator, 0xF207);
+        Chip8InstructionSet.ReadDelayTimer(emulator, 0xF207);
 
         Assert.Equal(0x2A, emulator.Debugger.Registers[2]);
     }
@@ -621,7 +621,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6155);
-        Chip8InstructionSet.ExecuteSetDelayTimer(emulator, 0xF115);
+        Chip8InstructionSet.SetDelayTimer(emulator, 0xF115);
 
         Chip8InstructionSet.TimerInstructions(emulator, 0xF207);
 
@@ -669,7 +669,7 @@ public class Chip8MachineTests
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA100);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6125);
 
-        Chip8InstructionSet.ExecuteAddVxToI(emulator, 0xF11E);
+        Chip8InstructionSet.AddVxToI(emulator, 0xF11E);
 
         Assert.Equal(0x125, emulator.Debugger.IndexRegister);
     }
@@ -681,8 +681,8 @@ public class Chip8MachineTests
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA010);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6105);
 
-        Chip8InstructionSet.ExecuteAddVxToI(emulator, 0xF11E);
-        Chip8InstructionSet.ExecuteAddVxToI(emulator, 0xF11E);
+        Chip8InstructionSet.AddVxToI(emulator, 0xF11E);
+        Chip8InstructionSet.AddVxToI(emulator, 0xF11E);
 
         Assert.Equal(0x01A, emulator.Debugger.IndexRegister);
     }
@@ -698,7 +698,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6100 | vx);
 
-        Chip8InstructionSet.ExecuteLoadLowResFontCharacter(emulator, 0xF129);
+        Chip8InstructionSet.LoadLowResFontCharacter(emulator, 0xF129);
 
         Assert.Equal(expectedIndex, emulator.Debugger.IndexRegister);
     }
@@ -709,7 +709,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6100);
 
-        Chip8InstructionSet.ExecuteLoadLowResFontCharacter(emulator, 0xF129);
+        Chip8InstructionSet.LoadLowResFontCharacter(emulator, 0xF129);
 
         var sprite = emulator.Debugger.Memory.Slice(emulator.Debugger.IndexRegister, 5);
         Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, sprite.ToArray());
@@ -720,7 +720,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        Chip8InstructionSet.ExecuteWaitForKeyPress(emulator, 0xF20A);
+        Chip8InstructionSet.WaitForKeyPress(emulator, 0xF20A);
 
         Assert.True(emulator.Debugger.IsWaitingForKey);
     }
@@ -730,7 +730,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator();
 
-        Chip8InstructionSet.ExecuteWaitForKeyPress(emulator, 0xF20A);
+        Chip8InstructionSet.WaitForKeyPress(emulator, 0xF20A);
 
         Assert.Equal(0, emulator.Debugger.Registers[2]);
     }
@@ -740,7 +740,7 @@ public class Chip8MachineTests
     {
         var emulator = CreateEmulator(out var clock, out _);
         emulator.Start();
-        Chip8InstructionSet.ExecuteWaitForKeyPress(emulator, 0xF20A);
+        Chip8InstructionSet.WaitForKeyPress(emulator, 0xF20A);
         clock.Timestamp = clock.Frequency / 60;
 
         clock.Tick();
@@ -755,7 +755,7 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var clock, out var input);
         emulator.Start();
         emulator.WriteMemory(0, [0x10, 0x00]);
-        Chip8InstructionSet.ExecuteWaitForKeyPress(emulator, 0xF20A);
+        Chip8InstructionSet.WaitForKeyPress(emulator, 0xF20A);
         input.QueueKeyPressAndReleaseEvent(0xA);
         clock.Timestamp = clock.Frequency / 60;
 
@@ -771,8 +771,8 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var clock, out _);
         emulator.Start();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x600A);
-        Chip8InstructionSet.ExecuteSetDelayTimer(emulator, 0xF015);
-        Chip8InstructionSet.ExecuteWaitForKeyPress(emulator, 0xF10A);
+        Chip8InstructionSet.SetDelayTimer(emulator, 0xF015);
+        Chip8InstructionSet.WaitForKeyPress(emulator, 0xF10A);
         clock.Timestamp = clock.Frequency / 60;
 
         clock.Tick();
@@ -787,8 +787,8 @@ public class Chip8MachineTests
         var emulator = CreateEmulator(out var clock, out _);
         emulator.Start();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6005);
-        Chip8InstructionSet.ExecuteSetSoundTimer(emulator, 0xF018);
-        Chip8InstructionSet.ExecuteWaitForKeyPress(emulator, 0xF10A);
+        Chip8InstructionSet.SetSoundTimer(emulator, 0xF018);
+        Chip8InstructionSet.WaitForKeyPress(emulator, 0xF10A);
         clock.Timestamp = clock.Frequency / 60;
 
         clock.Tick();
@@ -936,7 +936,7 @@ public class Chip8MachineTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6100 | vx);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
-        Chip8InstructionSet.ExecuteStoreBcdInMemory(emulator, 0xF133);
+        Chip8InstructionSet.StoreBcdInMemory(emulator, 0xF133);
 
         Assert.Equal(hundreds, emulator.Debugger.Memory[0x300]);
         Assert.Equal(tens, emulator.Debugger.Memory[0x301]);
@@ -950,7 +950,7 @@ public class Chip8MachineTests
         Chip8InstructionSet.SetRegisterValue(emulator, 0x617B);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
-        Chip8InstructionSet.ExecuteStoreBcdInMemory(emulator, 0xF133);
+        Chip8InstructionSet.StoreBcdInMemory(emulator, 0xF133);
 
         Assert.Equal(0x7B, emulator.Debugger.Registers[1]);
         Assert.Equal(0x300, emulator.Debugger.IndexRegister);
