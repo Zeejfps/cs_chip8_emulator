@@ -67,7 +67,7 @@ internal sealed partial class Chip8Machine
         table[0xC] = Chip8InstructionSet.GenerateRandomNum;
         table[0xD] = Chip8InstructionSet.DrawToScreen;
         table[0xE] = Chip8InstructionSet.SkipNextInsIfKeyIsPressedOrReleased;
-        table[0xF] = static (cpu, ins) => cpu.DispatchTimerInstruction(ins);
+        table[0xF] = (cpu, ins) => TimerRoutines[ins & 0x00FF].Invoke(cpu, ins);
         return table;
     }
 

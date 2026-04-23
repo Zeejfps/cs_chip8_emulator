@@ -1,3 +1,5 @@
+using Chip8Emulator.Core.Cpu;
+
 namespace Chip8Emulator.Core;
 
 public interface ICpu
@@ -43,6 +45,5 @@ public interface ICpu
     void DispatchSystemInstruction(int ins);
     void DispatchArithmeticInstruction(int ins);
     void DispatchKeyCheckInstruction(int ins);
-    void DispatchTimerInstruction(int ins);
     void DispatchFiveOpInstruction(int ins);
 }

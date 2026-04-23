@@ -45,9 +45,10 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private bool _loadStoreIncrementsI;
     private bool _logicResetsVf;
 
+    public InstructionHandler[] TimerRoutines { get; }
+
     internal readonly InstructionHandler[] RootOpcodeTable;
     internal readonly InstructionHandler[] SystemInsTable;
-    internal readonly InstructionHandler[] TimerTable;
     internal readonly InstructionHandler[] KeyCheckTable;
     internal readonly InstructionHandler[] FiveOpTable;
     internal readonly InstructionHandler[] ArithmeticTable;
@@ -75,7 +76,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
         RootOpcodeTable = BuildRootOpcodeTable();
         SystemInsTable = BuildSystemInsTable();
-        TimerTable = BuildTimerTable();
+        TimerRoutines = BuildTimerTable();
         KeyCheckTable = BuildKeyCheckTable();
         FiveOpTable = BuildFiveOpTable();
         ArithmeticTable = BuildArithmeticTable();
@@ -135,10 +136,10 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private void ApplyLoadStoreIncrementsI()
     {
-        TimerTable[0x55] = _loadStoreIncrementsI
+        TimerRoutines[0x55] = _loadStoreIncrementsI
             ? Chip8InstructionSet.ExecuteStoreRegistersIncIIns
             : Chip8InstructionSet.ExecuteStoreRegistersKeepIIns;
-        TimerTable[0x65] = _loadStoreIncrementsI
+        TimerRoutines[0x65] = _loadStoreIncrementsI
             ? Chip8InstructionSet.ExecuteLoadRegistersIncIIns
             : Chip8InstructionSet.ExecuteLoadRegistersKeepIIns;
     }
@@ -306,7 +307,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public void DispatchSystemInstruction(int ins) => SystemInsTable[ins & 0x00FF](this, ins);
     public void DispatchArithmeticInstruction(int ins) => ArithmeticTable[ins & 0x000F](this, ins);
     public void DispatchKeyCheckInstruction(int ins) => KeyCheckTable[ins & 0x00FF](this, ins);
-    public void DispatchTimerInstruction(int ins) => TimerTable[ins & 0x00FF](this, ins);
+    public void DispatchTimerInstruction(int ins) => TimerRoutines[ins & 0x00FF](this, ins);
     public void DispatchFiveOpInstruction(int ins) => FiveOpTable[ins & 0x000F](this, ins);
 
     public void WriteMemory(int address, ReadOnlySpan<byte> data)
