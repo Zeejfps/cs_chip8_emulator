@@ -368,7 +368,7 @@ internal static class Chip8InstructionSet
                 if (wrap) dstY %= displayHeight;
                 else if (dstY >= displayHeight) break;
 
-                var row = cpu.ReadMemory(cpu.ReadIndexRegisterWithOffset(spriteBase + y));
+                var row = cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(spriteBase + y));
                 for (var bit = 0; bit < 8; bit++)
                 {
                     var dstX = sx + bit;
@@ -458,9 +458,9 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var bcd = cpu.ReadGeneralPurposeRegister(x);
-        cpu.WriteMemory(cpu.ReadIndexRegisterWithOffset(0), (byte)(bcd / 100));
-        cpu.WriteMemory(cpu.ReadIndexRegisterWithOffset(1), (byte)(bcd / 10 % 10));
-        cpu.WriteMemory(cpu.ReadIndexRegisterWithOffset(2), (byte)(bcd % 10));
+        cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(0), (byte)(bcd / 100));
+        cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(1), (byte)(bcd / 10 % 10));
+        cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(2), (byte)(bcd % 10));
     }
 
     // FX55/FX65 : store/load V0..Vx. Quirk-sensitive (inc I or keep I).
@@ -477,7 +477,7 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            cpu.WriteGeneralPurposeRegister(i, cpu.ReadMemory(cpu.ReadIndexRegisterWithOffset(i)));
+            cpu.WriteGeneralPurposeRegister(i, cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(i)));
         }
     }
 
@@ -486,7 +486,7 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            cpu.WriteGeneralPurposeRegister(i, cpu.ReadMemory(cpu.ReadIndexRegisterWithOffset(i)));
+            cpu.WriteGeneralPurposeRegister(i, cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(i)));
         }
         cpu.WriteIndexRegister(cpu.ReadIndexRegister() + x + 1);
     }
@@ -502,7 +502,7 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            cpu.WriteMemory(cpu.ReadIndexRegisterWithOffset(i), cpu.ReadGeneralPurposeRegister(i));
+            cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(i), cpu.ReadGeneralPurposeRegister(i));
         }
     }
 
@@ -511,7 +511,7 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            cpu.WriteMemory(cpu.ReadIndexRegisterWithOffset(i), cpu.ReadGeneralPurposeRegister(i));
+            cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(i), cpu.ReadGeneralPurposeRegister(i));
         }
         cpu.WriteIndexRegister(cpu.ReadIndexRegister() + x + 1);
     }

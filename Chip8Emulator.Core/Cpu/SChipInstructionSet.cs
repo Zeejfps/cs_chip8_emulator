@@ -79,8 +79,8 @@ internal static class SChipInstructionSet
                 }
 
                 var offset = spriteBase + i * 2;
-                var spritePixelsRow = (ushort)(cpu.ReadMemory(cpu.ReadIndexRegisterWithOffset(offset)) << 8 |
-                                               cpu.ReadMemory(cpu.ReadIndexRegisterWithOffset(offset + 1)));
+                var spritePixelsRow = (ushort)(cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(offset)) << 8 |
+                                               cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(offset + 1)));
                 for (var bit = 0; bit < 16; bit++)
                 {
                     var dstX = x + bit;

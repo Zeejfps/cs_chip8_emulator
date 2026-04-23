@@ -20,8 +20,8 @@ internal static class XoChipInstructionSet
         // F000 NNNN matches only when X is 0; ignore F1nn–FFnn slotted here.
         if (ExtractX(ins) != 0) return;
         var pc = cpu.ReadProgramCounter();
-        var hi = cpu.ReadMemory(pc);
-        var lo = cpu.ReadMemory(pc + 1);
+        var hi = cpu.Memory.Read(pc);
+        var lo = cpu.Memory.Read(pc + 1);
         cpu.WriteIndexRegister((hi << 8) | lo);
         cpu.AdvanceProgramCounter();
     }
@@ -58,7 +58,7 @@ internal static class XoChipInstructionSet
         var count = Math.Abs(y - x) + 1;
         for (var k = 0; k < count; k++)
         {
-            cpu.WriteMemory(
+            cpu.Memory.Write(
                 cpu.ReadIndexRegisterWithOffset(k),
                 cpu.ReadGeneralPurposeRegister(x + k * step));
         }
@@ -73,7 +73,7 @@ internal static class XoChipInstructionSet
         for (var k = 0; k < count; k++)
         {
             var address = cpu.ReadIndexRegisterWithOffset(k);
-            var value = cpu.ReadMemory(address);
+            var value = cpu.Memory.Read(address);
             cpu.WriteGeneralPurposeRegister(x + k * step, value);
         }
     }

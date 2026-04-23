@@ -17,8 +17,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private readonly IClock _clock;
     private readonly IInput _input;
     private readonly IPersistentFlags _persistentFlags;
+    private readonly IMemory _memory;
     private readonly Display _display = new();
-    private readonly byte[] _memory = new byte[64 * 1024];
     private readonly byte[] _vRegisters = new byte[16];
 
     private readonly int[] _stack = new int[16];
@@ -69,8 +69,9 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
-        LowResFont.CopyTo(_memory.AsSpan(LowResFontBaseAddress));
-        HighResFont.CopyTo(_memory.AsSpan(HighResFontBaseAddress));
+        _memory = new Memory64K();
+        _memory.Write(LowResFontBaseAddress, LowResFont);
+        _memory.Write(HighResFontBaseAddress, HighResFont);
         Debugger = new Chip8MachineDebugger(this);
 
         RootOpcodeTable = BuildRootOpcodeTable();
@@ -86,6 +87,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         ApplyLogicResetsVf();
     }
 
+    public IMemory Memory => _memory;
+    
     public IMachineDebugger Debugger { get; }
 
     public int InstructionsPerSecond
@@ -192,7 +195,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     {
         for (var i = 0; i < AudioPatternSize; i++)
         {
-            _audioPattern[i] = _memory[ReadIndexRegisterWithOffset(i)];
+            var value = _memory.Read(ReadIndexRegisterWithOffset(i));
+            _audioPattern[i] = value;
         }
         PushPatternToAudio();
     }
@@ -251,10 +255,10 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public int ReadIndexRegisterWithOffset(int offset) => (_indexRegister + offset) & 0xFFFF;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public byte ReadMemory(int address) => _memory[address];
+    public byte ReadMemory(int address) => _memory.Read(address);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void WriteMemory(int address, byte value) => _memory[address] = value;
+    public void WriteMemory(int address, byte value) => _memory.Write(address, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public int ReadProgramCounter() => _programCounter;
@@ -326,7 +330,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     public void WriteMemory(int address, ReadOnlySpan<byte> data)
     {
-        data.CopyTo(_memory.AsSpan(address));
+        _memory.Write(address, data);
     }
 
     public void LoadProgram(ReadOnlySpan<byte> program)
@@ -342,7 +346,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _isWaitingForKey = false;
         _waitForVBlank = false;
         _keyRegisterIndex = 0;
-        program.CopyTo(_memory.AsSpan(0x200));
+        _memory.Write(0x200, program);
         _programCounter = 0x200;
 
         // Classic CHIP-8 HIRES signature: programs starting with `1260` (JP 0x260)
@@ -372,9 +376,9 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private void ResetMemory()
     {
-        Array.Clear(_memory);
-        LowResFont.CopyTo(_memory.AsSpan(LowResFontBaseAddress));
-        HighResFont.CopyTo(_memory.AsSpan(HighResFontBaseAddress));
+        _memory.Clear();
+        _memory.Write(LowResFontBaseAddress, LowResFont);
+        _memory.Write(HighResFontBaseAddress, HighResFont);
     }
 
     private void ResetDisplay()
@@ -497,7 +501,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private sealed class Chip8MachineDebugger(Chip8Machine machine) : IMachineDebugger
     {
-        public ReadOnlySpan<byte> Memory => machine._memory;
+        public ReadOnlySpan<byte> Memory => machine._memory.AsReadOnlySpan();
         public ReadOnlySpan<byte> Registers => machine._vRegisters;
         public ReadOnlySpan<int> Stack => machine._stack;
         public int ProgramCounter => machine._programCounter;

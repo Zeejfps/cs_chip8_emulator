@@ -4,6 +4,7 @@ public interface ICpu
 {
     IDisplay Display { get; }
     IInput Input { get; }
+    IMemory Memory { get; }
     byte SelectedPlanes { get; set; }
     bool ShiftUsesVy { get; }
     bool SpritesWrap { get; }
@@ -18,8 +19,6 @@ public interface ICpu
     int ReadIndexRegister();
     void WriteIndexRegister(int value);
     int ReadIndexRegisterWithOffset(int offset);
-    byte ReadMemory(int address);
-    void WriteMemory(int address, byte value);
     int ReadProgramCounter();
     void WriteProgramCounter(int value);
     void AdvanceProgramCounter();
