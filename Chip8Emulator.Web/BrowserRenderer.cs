@@ -1,6 +1,6 @@
 using Chip8Emulator.Core;
 
-namespace Chip8Emulator.App.Wasm;
+namespace Chip8Emulator.Web;
 
 internal sealed class BrowserRenderer : IRenderer
 {

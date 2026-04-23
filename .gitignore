@@ -6,7 +6,7 @@ riderModule.iml
 /_ReSharper.Caches/
 
 # Vite build output (sources in Chip8Emulator.App.Wasm/web/)
-/Chip8Emulator.App.Wasm/wwwroot/*
+/Chip8Emulator.Web/wwwroot/*
 
 # Node
-/Chip8Emulator.App.Wasm/web/node_modules/
+/Chip8Emulator.Web/web/node_modules/

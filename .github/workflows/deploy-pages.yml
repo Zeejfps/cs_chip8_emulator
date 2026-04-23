@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: Chip8Emulator.App.Wasm/web/package-lock.json
+          cache-dependency-path: Chip8Emulator.Web/web/package-lock.json
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -35,19 +35,19 @@ jobs:
         run: dotnet workload install wasm-tools
 
       - name: Install frontend deps
-        working-directory: Chip8Emulator.App.Wasm/web
+        working-directory: Chip8Emulator.Web/web
         run: npm ci
 
       - name: Publish
         env:
           APP_VERSION: ${{ github.ref_name }}
-        run: dotnet publish Chip8Emulator.App.Wasm/Chip8Emulator.App.Wasm.csproj -c Release -o publish
+        run: dotnet publish Chip8Emulator.Web/Chip8Emulator.Web.csproj -c Release -o publish
 
       - name: Disable Jekyll
         run: touch publish/wwwroot/.nojekyll
 
       - name: Copy sitemap into bundle
-        run: cp Chip8Emulator.App.Wasm/web/public/sitemap.xml publish/wwwroot/sitemap.xml
+        run: cp Chip8Emulator.Web/web/public/sitemap.xml publish/wwwroot/sitemap.xml
 
       - uses: actions/configure-pages@v5
 

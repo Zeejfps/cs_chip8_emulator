@@ -1,7 +1,7 @@
 using System.Buffers;
 using System.Runtime.InteropServices.JavaScript;
 using Chip8Emulator.App;
-using Chip8Emulator.App.Wasm;
+using Chip8Emulator.Web;
 using Chip8Emulator.Core;
 
 await Task.CompletedTask;

@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices.JavaScript;
 using Chip8Emulator.Core;
 
-namespace Chip8Emulator.App.Wasm;
+namespace Chip8Emulator.Web;
 
 internal sealed partial class LocalStoragePersistentFlags : IPersistentFlags
 {
