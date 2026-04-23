@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chip8Emulator.Core.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chip8Emulator.App", "Chip8Emulator.App\Chip8Emulator.App.csproj", "{9CF59EE1-A947-475F-82DC-0EA02F5B8F24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chip8Emulator.App.Cli", "Chip8Emulator.App.Cli\Chip8Emulator.App.Cli.csproj", "{0E363514-D41F-4455-9B02-B89017783E5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chip8Emulator.Cli", "Chip8Emulator.Cli\Chip8Emulator.Cli.csproj", "{0E363514-D41F-4455-9B02-B89017783E5E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chip8Emulator.Desktop", "Chip8Emulator.Desktop\Chip8Emulator.Desktop.csproj", "{18719A91-3D25-4799-A623-E5C87E80EBA4}"
 EndProject

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Chip8Emulator.Core;
 
-namespace Chip8Emulator.App.Cli;
+namespace Chip8Emulator.Cli;
 
 public sealed class ConsoleInput : IInput, IDisposable
 {

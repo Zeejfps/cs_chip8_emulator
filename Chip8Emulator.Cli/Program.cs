@@ -1,12 +1,12 @@
 using Chip8Emulator.App;
-using Chip8Emulator.App.Cli;
+using Chip8Emulator.Cli;
 using Chip8Emulator.Core;
 
 try
 {
     if (args.Length < 1)
     {
-        Console.Error.WriteLine("Usage: Chip8Emulator.App.Cli <rom-path>");
+        Console.Error.WriteLine("Usage: Chip8Emulator.Cli <rom-path>");
         return 1;
     }
 
@@ -15,7 +15,7 @@ try
     if (!File.Exists(romPath))
     {
         Console.Error.WriteLine($"ROM file not found: {romPath}");
-        Console.Error.WriteLine("Usage: Chip8Emulator.App.Cli <rom-path>");
+        Console.Error.WriteLine("Usage: Chip8Emulator.Cli <rom-path>");
         return 1;
     }
 

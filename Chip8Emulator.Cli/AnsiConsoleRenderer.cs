@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Chip8Emulator.Core;
 
-namespace Chip8Emulator.App.Cli;
+namespace Chip8Emulator.Cli;
 
 public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
 {
