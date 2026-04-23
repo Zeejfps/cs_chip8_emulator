@@ -1,4 +1,3 @@
-using Chip8Emulator.Core;
 using Chip8Emulator.Core.Cpu;
 using Chip8Emulator.Core.Tests.Fakes;
 
@@ -34,7 +33,7 @@ public class XoChipTests
     public void SelectPlane_ZeroMakesDrawsNoOp()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
         emulator.TimerRoutines[0xF001 & 0x00FF](emulator, 0xF001); // mask = 0
@@ -48,7 +47,7 @@ public class XoChipTests
     public void SelectPlane_PlaneOneDrawsIntoBit1()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
         emulator.TimerRoutines[0xF201 & 0x00FF](emulator, 0xF201); // mask = 2
@@ -63,7 +62,7 @@ public class XoChipTests
         var emulator = CreateEmulator();
         // plane 0 sprite: 1 byte = 0xFF (all on)
         // plane 1 sprite: 1 byte = 0x0F (low nibble on)
-        emulator.WriteMemory(0x300, [0xFF, 0x0F]);
+        emulator.Memory.Write(0x300, [0xFF, 0x0F]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         emulator.TimerRoutines[0xF301 & 0x00FF](emulator, 0xF301); // mask = 3 (both planes)
 
@@ -79,7 +78,7 @@ public class XoChipTests
     public void SelectPlane_BothPlanesCollisionVfOne()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0xFF, 0xFF]);
+        emulator.Memory.Write(0x300, [0xFF, 0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         emulator.TimerRoutines[0xF301 & 0x00FF](emulator, 0xF301); // mask = 3
 
@@ -97,7 +96,7 @@ public class XoChipTests
     {
         var emulator = CreateEmulator();
         // Set plane 0 pixels
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
         // Set plane 1 pixels on the same row
@@ -116,7 +115,7 @@ public class XoChipTests
     public void ScrollRight_OnlyMovesSelectedPlane()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
         // Draw into plane 0
@@ -145,7 +144,7 @@ public class XoChipTests
         var emulator = CreateEmulator(audio);
         var pattern = new byte[16];
         for (var i = 0; i < pattern.Length; i++) pattern[i] = (byte)(i + 1);
-        emulator.WriteMemory(0x400, pattern);
+        emulator.Memory.Write(0x400, pattern);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA400);
 
         emulator.TimerRoutines[0xF002 & 0x00FF](emulator, 0xF002);
@@ -268,7 +267,7 @@ public class XoChipTests
     public void LongLoadI_ReadsNextTwoBytesIntoIndexRegister()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x400, [0x12, 0x34]);
+        emulator.Memory.Write(0x400, [0x12, 0x34]);
         // Simulate the fetch/decode phase: PC points at the NNNN word after the F000 opcode.
         emulator.WriteProgramCounter(0x400);
 

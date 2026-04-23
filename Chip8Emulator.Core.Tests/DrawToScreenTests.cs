@@ -26,7 +26,7 @@ public class DrawToScreenTests
     public void DrawsSpriteBitsIntoFramebuffer()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0b10100101]);
+        emulator.Memory.Write(0x300, [0b10100101]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
@@ -45,7 +45,7 @@ public class DrawToScreenTests
     public void DrawsMultipleRows()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0xFF, 0x81, 0xFF]);
+        emulator.Memory.Write(0x300, [0xFF, 0x81, 0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
         Chip8InstructionSet.DrawToScreen(emulator, 0xD003);
@@ -64,7 +64,7 @@ public class DrawToScreenTests
     public void DrawsAtCoordinatesFromVxVy()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0x80]);
+        emulator.Memory.Write(0x300, [0x80]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x620A); // V2 = 10
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6305); // V3 = 5
@@ -79,7 +79,7 @@ public class DrawToScreenTests
     public void StartCoordinateIsTakenModuloScreenSize()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0x80]);
+        emulator.Memory.Write(0x300, [0x80]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6246); // V2 = 70 -> x = 70 % 64 = 6
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6328); // V3 = 40 -> y = 40 % 32 = 8
@@ -95,7 +95,7 @@ public class DrawToScreenTests
     {
         var emulator = CreateEmulator();
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6F01); // VF = 1 from some earlier op
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
@@ -107,7 +107,7 @@ public class DrawToScreenTests
     public void CollisionSetsVfToOne()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
 
@@ -120,7 +120,7 @@ public class DrawToScreenTests
     public void DrawingSameSpriteTwiceErasesIt()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0xFF, 0xFF]);
+        emulator.Memory.Write(0x300, [0xFF, 0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD002);
 
@@ -134,18 +134,18 @@ public class DrawToScreenTests
     {
         var emulator = CreateEmulator();
         // Row 1: 0xF0 = 11110000
-        emulator.WriteMemory(0x300, [0xF0]);
+        emulator.Memory.Write(0x300, [0xF0]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
 
         // Row 2: 0x0F = 00001111 — no overlap with row 1
-        emulator.WriteMemory(0x301, [0x0F]);
+        emulator.Memory.Write(0x301, [0x0F]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA301);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
         Assert.Equal(0, emulator.Debugger.Registers[0xF]); // no collision
 
         // Row 3: 0x81 = 10000001 — overlaps both existing bits
-        emulator.WriteMemory(0x302, [0x81]);
+        emulator.Memory.Write(0x302, [0x81]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA302);
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);
         Assert.Equal(1, emulator.Debugger.Registers[0xF]); // collision
@@ -165,7 +165,7 @@ public class DrawToScreenTests
     public void ClipsAtRightEdge()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x623C); // V2 = 60 -> only 4 bits fit on screen
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6300); // V3 = 0
@@ -181,7 +181,7 @@ public class DrawToScreenTests
     public void ClipsAtBottomEdge()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x300, [0x80, 0x80, 0x80, 0x80]);
+        emulator.Memory.Write(0x300, [0x80, 0x80, 0x80, 0x80]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6200); // V2 = 0
         Chip8InstructionSet.SetRegisterValue(emulator, 0x631E); // V3 = 30 -> only rows 30,31 fit
@@ -198,7 +198,7 @@ public class DrawToScreenTests
     {
         var emulator = CreateEmulator();
         emulator.SpritesWrap = true;
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x623C); // V2 = 60 -> bits 0..3 at x=60..63, bits 4..7 wrap to x=0..3
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6300); // V3 = 0
@@ -217,7 +217,7 @@ public class DrawToScreenTests
     {
         var emulator = CreateEmulator();
         emulator.SpritesWrap = true;
-        emulator.WriteMemory(0x300, [0x80, 0x80, 0x80, 0x80]);
+        emulator.Memory.Write(0x300, [0x80, 0x80, 0x80, 0x80]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6200); // V2 = 0
         Chip8InstructionSet.SetRegisterValue(emulator, 0x631E); // V3 = 30 -> rows at y=30,31, then wrap to y=0,1
@@ -236,7 +236,7 @@ public class DrawToScreenTests
     {
         var emulator = CreateEmulator();
         emulator.SpritesWrap = true;
-        emulator.WriteMemory(0x300, [0b11000000, 0b11000000]); // 2x2 block in top-left of sprite
+        emulator.Memory.Write(0x300, [0b11000000, 0b11000000]); // 2x2 block in top-left of sprite
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x623F); // V2 = 63 -> x=63, then wrap to 0
         Chip8InstructionSet.SetRegisterValue(emulator, 0x631F); // V3 = 31 -> y=31, then wrap to 0
@@ -255,7 +255,7 @@ public class DrawToScreenTests
     {
         var emulator = CreateEmulator();
         emulator.SpritesWrap = true;
-        emulator.WriteMemory(0x300, [0x80]); // single lit pixel at sprite x=0
+        emulator.Memory.Write(0x300, [0x80]); // single lit pixel at sprite x=0
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
 
         // First draw: lights pixel at (0,0)
@@ -277,7 +277,7 @@ public class DrawToScreenTests
         var emulator = CreateEmulator();
         Assert.False(emulator.SpritesWrap);
 
-        emulator.WriteMemory(0x300, [0xFF]);
+        emulator.Memory.Write(0x300, [0xFF]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA300);
         Chip8InstructionSet.SetRegisterValue(emulator, 0x623C); // V2 = 60
         Chip8InstructionSet.SetRegisterValue(emulator, 0x6300);
@@ -294,7 +294,7 @@ public class DrawToScreenTests
     public void ReadsSpriteFromIndexRegister()
     {
         var emulator = CreateEmulator();
-        emulator.WriteMemory(0x050, [0b11000011]);
+        emulator.Memory.Write(0x050, [0b11000011]);
         Chip8InstructionSet.SetIndexRegisterIns(emulator, 0xA050);
 
         Chip8InstructionSet.DrawToScreen(emulator, 0xD001);

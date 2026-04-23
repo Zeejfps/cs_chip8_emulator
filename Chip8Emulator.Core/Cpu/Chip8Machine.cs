@@ -188,7 +188,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private int Fetch()
     {
         var pc = ReadProgramCounter();
-        var ins = ReadMemory(pc) << 8 | ReadMemory(pc + 1);
+        var ins = _memory.Read(pc) << 8 | _memory.Read(pc + 1);
         return ins;
     }
     
@@ -254,13 +254,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public int ReadIndexRegisterWithOffset(int offset) => (_indexRegister + offset) & 0xFFFF;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public byte ReadMemory(int address) => _memory.Read(address);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void WriteMemory(int address, byte value) => _memory.Write(address, value);
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public int ReadProgramCounter() => _programCounter;
 
@@ -302,11 +296,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     public void BeginWaitForVBlank()
     {
         _waitForVBlank = true;
-    }
-    
-    public void WriteMemory(int address, ReadOnlySpan<byte> data)
-    {
-        _memory.Write(address, data);
     }
 
     public void LoadProgram(ReadOnlySpan<byte> program)
