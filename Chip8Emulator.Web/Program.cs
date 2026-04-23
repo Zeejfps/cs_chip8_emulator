@@ -9,7 +9,6 @@ namespace Chip8Emulator.Web
     public static partial class Interop
     {
         private static IChip8Machine? _machine;
-        private static ICpu? _cpu;
         private static BrowserInput? _input;
         private static StopwatchClock? _clock;
         private static MemoryHandle _pixelsHandle;
@@ -41,7 +40,6 @@ namespace Chip8Emulator.Web
                 .WithRegisters(registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
-            _cpu = (ICpu)_machine;
             _pixelsHandle = _pixelBuffer.AsMemory().Pin();
         }
 
@@ -61,10 +59,10 @@ namespace Chip8Emulator.Web
         public static void Stop() => _machine!.Stop();
 
         [JSExport]
-        public static void Step() => _cpu!.FetchDecodeExecute();
+        public static void Step() => _machine!.Cpu.StepInstruction();
 
         [JSExport]
-        public static int GetProgramCounter() => _cpu!.ReadProgramCounter();
+        public static int GetProgramCounter() => _machine!.Cpu.ProgramCounter;
 
         [JSExport]
         public static int GetMemoryByte(int address) => _machine!.Memory.Read(address);
@@ -73,16 +71,16 @@ namespace Chip8Emulator.Web
         public static byte[] GetVRegisters() => _vRegistersBuffer!;
 
         [JSExport]
-        public static int GetIndexRegister() => _machine!.Registers.ReadI();
+        public static int GetIndexRegister() => _machine!.Cpu.Registers.ReadI();
 
         [JSExport]
-        public static int GetDelayTimer() => _machine!.Registers.ReadDt();
+        public static int GetDelayTimer() => _machine!.Cpu.Registers.ReadDt();
 
         [JSExport]
-        public static int GetSoundTimer() => _machine!.Registers.ReadSt();
+        public static int GetSoundTimer() => _machine!.Cpu.Registers.ReadSt();
 
         [JSExport]
-        public static int GetStackPointer() => _machine!.Stack.StackPointer;
+        public static int GetStackPointer() => _machine!.Cpu.Stack.StackPointer;
 
         [JSExport]
         public static int[] GetStack() => _stackBuffer!;
@@ -112,45 +110,45 @@ namespace Chip8Emulator.Web
         public static void SetInstructionsPerSecond(int ips) => _machine!.InstructionsPerSecond = ips;
 
         [JSExport]
-        public static bool GetShiftUsesVy() => _machine!.ShiftUsesVy;
+        public static bool GetShiftUsesVy() => _machine!.Cpu.ShiftUsesVy;
 
         [JSExport]
-        public static void SetShiftUsesVy(bool value) => _machine!.ShiftUsesVy = value;
+        public static void SetShiftUsesVy(bool value) => _machine!.Cpu.ShiftUsesVy = value;
 
         [JSExport]
-        public static bool GetJumpUsesVx() => _machine!.JumpUsesVx;
+        public static bool GetJumpUsesVx() => _machine!.Cpu.JumpUsesVx;
 
         [JSExport]
-        public static void SetJumpUsesVx(bool value) => _machine!.JumpUsesVx = value;
+        public static void SetJumpUsesVx(bool value) => _machine!.Cpu.JumpUsesVx = value;
 
         [JSExport]
-        public static bool GetLoadStoreIncrementsI() => _machine!.LoadStoreIncrementsI;
+        public static bool GetLoadStoreIncrementsI() => _machine!.Cpu.LoadStoreIncrementsI;
 
         [JSExport]
-        public static void SetLoadStoreIncrementsI(bool value) => _machine!.LoadStoreIncrementsI = value;
+        public static void SetLoadStoreIncrementsI(bool value) => _machine!.Cpu.LoadStoreIncrementsI = value;
 
         [JSExport]
-        public static bool GetLogicResetsVf() => _machine!.LogicResetsVf;
+        public static bool GetLogicResetsVf() => _machine!.Cpu.LogicResetsVf;
 
         [JSExport]
-        public static void SetLogicResetsVf(bool value) => _machine!.LogicResetsVf = value;
+        public static void SetLogicResetsVf(bool value) => _machine!.Cpu.LogicResetsVf = value;
 
         [JSExport]
-        public static bool GetSpritesWrap() => _machine!.SpritesWrap;
+        public static bool GetSpritesWrap() => _machine!.Cpu.SpritesWrap;
 
         [JSExport]
-        public static void SetSpritesWrap(bool value) => _machine!.SpritesWrap = value;
+        public static void SetSpritesWrap(bool value) => _machine!.Cpu.SpritesWrap = value;
 
         [JSExport]
-        public static bool GetDisplayWait() => _machine!.DisplayWait;
+        public static bool GetDisplayWait() => _machine!.Cpu.DisplayWait;
 
         [JSExport]
-        public static void SetDisplayWait(bool value) => _machine!.DisplayWait = value;
+        public static void SetDisplayWait(bool value) => _machine!.Cpu.DisplayWait = value;
 
         [JSExport]
-        public static bool GetVfResultWrittenLast() => _machine!.VfResultWrittenLast;
+        public static bool GetVfResultWrittenLast() => _machine!.Cpu.VfResultWrittenLast;
 
         [JSExport]
-        public static void SetVfResultWrittenLast(bool value) => _machine!.VfResultWrittenLast = value;
+        public static void SetVfResultWrittenLast(bool value) => _machine!.Cpu.VfResultWrittenLast = value;
     }
 }

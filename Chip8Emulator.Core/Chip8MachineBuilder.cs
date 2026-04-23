@@ -32,13 +32,13 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
     public IChip8MachineBuilder WithStack(IStack stack)
     {
         _stack = stack;
-        return this;   
+        return this;
     }
-    
+
     public IChip8MachineBuilder WithRegisters(IRegisters registers)
     {
         _registers = registers;
-        return this;   
+        return this;
     }
 
     public IChip8MachineBuilder WithPersistentFlags(IPersistentFlags flags)
@@ -50,9 +50,9 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
     public IChip8MachineBuilder WithMemory(IMemory memory)
     {
         _memory = memory;
-        return this;  
+        return this;
     }
-    
+
     public IChip8MachineBuilder WithDisplay(IDisplay display)
     {
         _display = display;
@@ -76,15 +76,8 @@ internal sealed class Chip8MachineBuilder : IChip8MachineBuilder
         var display = _display ?? throw new InvalidOperationException(
             $"{nameof(WithDisplay)} must be called before {nameof(Build)}.");
         var persistentFlags = _persistentFlags ?? new EmulatedPersistentFlags();
-        return new Chip8Machine(
-            display,
-            audio, 
-            clock,
-            input, 
-            stack, 
-            memory,
-            registers, 
-            persistentFlags
-        );
+
+        var cpu = new Cpu(memory, display, input, audio, registers, stack, persistentFlags);
+        return new Chip8Machine(clock, display, memory, cpu);
     }
 }

@@ -8,29 +8,29 @@ internal static class SChipRoutines
 {
     // ---- 00FF / 00FE : high-res mode toggle ---------------------------------
 
-    public static void EnableHiresMode(ICpu cpu, int ins)
+    public static void EnableHiresMode(Cpu cpu, int ins)
     {
         cpu.Display.EnableHighResMode();
     }
 
-    public static void DisableHiresMode(ICpu cpu, int ins)
+    public static void DisableHiresMode(Cpu cpu, int ins)
     {
         cpu.Display.DisableHighResMode();
     }
 
     // ---- 00FB / 00FC / 00CN : scroll ----------------------------------------
 
-    public static void ScrollRight(ICpu cpu, int ins)
+    public static void ScrollRight(Cpu cpu, int ins)
     {
         cpu.Display.ScrollRight(4);
     }
 
-    public static void ScrollLeft(ICpu cpu, int ins)
+    public static void ScrollLeft(Cpu cpu, int ins)
     {
         cpu.Display.ScrollLeft(4);
     }
 
-    public static void ScrollDown(ICpu cpu, int ins)
+    public static void ScrollDown(Cpu cpu, int ins)
     {
         cpu.Display.ScrollDown(ins & 0x0F);
     }
@@ -39,7 +39,7 @@ internal static class SChipRoutines
 
     // Called from Chip8Cpu.ExeuteDrawToScreenIns when the display is in hi-res
     // mode and N == 0. Extended for XO-Chip bitplanes (mask param).
-    public static void DrawHighResSprite(ICpu cpu, int x, int y, byte planeMask)
+    public static void DrawHighResSprite(Cpu cpu, int x, int y, byte planeMask)
     {
         // S-CHIP 1.1 DXY0 hi-res collision semantics (extended for XO-Chip bitplanes):
         // VF = number of sprite rows with at least one collision in any selected plane
@@ -111,7 +111,7 @@ internal static class SChipRoutines
 
     // ---- FX30 : load hi-res font character ----------------------------------
 
-    public static void LoadHighResFontCharacter(ICpu cpu, int ins)
+    public static void LoadHighResFontCharacter(Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var value = cpu.Registers.ReadV(x);
@@ -120,12 +120,12 @@ internal static class SChipRoutines
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------
 
-    public static void SaveFlags(ICpu cpu, int ins)
+    public static void SaveFlags(Cpu cpu, int ins)
     {
         cpu.SaveFlags(ExtractX(ins));
     }
 
-    public static void LoadFlags(ICpu cpu, int ins)
+    public static void LoadFlags(Cpu cpu, int ins)
     {
         cpu.LoadFlags(ExtractX(ins));
     }

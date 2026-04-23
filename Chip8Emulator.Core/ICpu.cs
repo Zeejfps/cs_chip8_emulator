@@ -2,28 +2,18 @@ namespace Chip8Emulator.Core;
 
 public interface ICpu
 {
-    IAudio Audio { get; }
-    IDisplay Display { get; }
-    IInput Input { get; }
-    IMemory Memory { get; }
-    IStack Stack { get; }
-    IRegisters Registers { get; }
-    
-    bool ShiftUsesVy { get; }
-    bool SpritesWrap { get; }
-    bool DisplayWait { get; }
-    bool VfResultWrittenLast { get; }
-    bool JumpUsesVx { get; }
-    bool LoadStoreIncrementsI { get; }
-    bool LogicResetsVf { get; }
+    int ProgramCounter { get; }
     bool IsWaitingForKey { get; }
+    IRegisters Registers { get; }
+    IStack Stack { get; }
 
-    void FetchDecodeExecute();
-    int ReadProgramCounter();
-    void WriteProgramCounter(int value);
-    void AdvanceProgramCounter();
-    void BeginWaitForKey(int registerIndex);
-    void BeginWaitForVBlank();
-    void SaveFlags(int count);
-    void LoadFlags(int count);
+    bool ShiftUsesVy { get; set; }
+    bool JumpUsesVx { get; set; }
+    bool LoadStoreIncrementsI { get; set; }
+    bool LogicResetsVf { get; set; }
+    bool SpritesWrap { get; set; }
+    bool DisplayWait { get; set; }
+    bool VfResultWrittenLast { get; set; }
+
+    void StepInstruction();
 }

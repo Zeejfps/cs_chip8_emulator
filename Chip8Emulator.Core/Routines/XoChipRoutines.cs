@@ -8,14 +8,14 @@ internal static class XoChipRoutines
 {
     // ---- 00DN : scroll display up N rows ------------------------------------
 
-    public static void ScrollUp(ICpu cpu, int ins)
+    public static void ScrollUp(Cpu cpu, int ins)
     {
         cpu.Display.ScrollUp(ins & 0x0F);
     }
 
     // ---- F000 NNNN : long load I --------------------------------------------
 
-    public static void LongLoadIndexRegister(ICpu cpu, int ins)
+    public static void LongLoadIndexRegister(Cpu cpu, int ins)
     {
         // F000 NNNN matches only when X is 0; ignore F1nn–FFnn slotted here.
         if (ExtractX(ins) != 0) return;
@@ -28,14 +28,14 @@ internal static class XoChipRoutines
 
     // ---- FN01 : select bitplane mask ----------------------------------------
 
-    public static void SelectPlane(ICpu cpu, int ins)
+    public static void SelectPlane(Cpu cpu, int ins)
     {
         cpu.Display.SelectedPlanes = (byte)ExtractX(ins);
     }
 
     // ---- F002 / FX3A : audio pattern buffer + pitch -------------------------
 
-    public static void LoadAudioPattern(ICpu cpu, int ins)
+    public static void LoadAudioPattern(Cpu cpu, int ins)
     {
         // F002 — only defined when X == 0; other slots (F102, F202, ...) are undefined.
         if (ExtractX(ins) != 0) return;
@@ -54,7 +54,7 @@ internal static class XoChipRoutines
         });
     }
 
-    public static void SetPitch(ICpu cpu, int ins)
+    public static void SetPitch(Cpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var pitch = cpu.Registers.ReadV(x);
@@ -63,7 +63,7 @@ internal static class XoChipRoutines
 
     // ---- 5XY2 / 5XY3 : store / load register range --------------------------
 
-    public static void StoreRegisterRange(ICpu cpu, int ins)  // 5XY2
+    public static void StoreRegisterRange(Cpu cpu, int ins)  // 5XY2
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
@@ -77,7 +77,7 @@ internal static class XoChipRoutines
         }
     }
 
-    public static void LoadRegisterRange(ICpu cpu, int ins)  // 5XY3
+    public static void LoadRegisterRange(Cpu cpu, int ins)  // 5XY3
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
