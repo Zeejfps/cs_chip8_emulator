@@ -7,8 +7,4 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Chip8Emulator.App\Chip8Emulator.App.csproj" />
-    </ItemGroup>
-
 </Project>

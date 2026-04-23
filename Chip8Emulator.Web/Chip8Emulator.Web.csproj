@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chip8Emulator.Core\Chip8Emulator.Core.csproj" />
-    <ProjectReference Include="..\Chip8Emulator.App\Chip8Emulator.App.csproj" />
   </ItemGroup>
 
   <ItemGroup>
