@@ -19,8 +19,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private readonly IPersistentFlags _persistentFlags;
     private readonly IMemory _memory;
     private readonly IStack _stack;
+    private readonly IRegisters _registers = new Registers();
     private readonly Display _display = new();
-    private readonly byte[] _vRegisters = new byte[16];
 
     private readonly byte[] _audioPattern = new byte[AudioPatternSize];
     private byte _pitch = DefaultPitch;
@@ -28,10 +28,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private readonly long _ticksPerFrame;
     
     private int _instructionsPerSecond = 1000;
-    private byte _delayTimer;
-    private byte _soundTimer;
     private int _programCounter;
-    private int _indexRegister;
 
     private long _ticksPerInstruction;
     private long _lastTimestamp;
@@ -87,9 +84,10 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         ApplyLogicResetsVf();
     }
 
+    public IAudio Audio => _audio;
     public IMemory Memory => _memory;
     public IStack Stack => _stack;
-
+    public IRegisters Registers => _registers;
     public IMachineDebugger Debugger { get; }
 
     public int InstructionsPerSecond
@@ -196,7 +194,8 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     {
         for (var i = 0; i < AudioPatternSize; i++)
         {
-            var value = _memory.Read(ReadIndexRegisterWithOffset(i));
+            var iRegister = _registers.ReadIWithOffset(i);
+            var value = _memory.Read(iRegister);
             _audioPattern[i] = value;
         }
         PushPatternToAudio();
@@ -225,7 +224,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _persistentFlags.Read(buffer);
         for (var i = 0; i <= count && i < buffer.Length; i++)
         {
-            buffer[i] = _vRegisters[i];
+            buffer[i] = _registers.ReadV(i);
         }
         _persistentFlags.Write(buffer);
     }
@@ -236,24 +235,9 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _persistentFlags.Read(buffer);
         for (var i = 0; i <= count && i < buffer.Length; i++)
         {
-            _vRegisters[i] = buffer[i];
+            _registers.WriteV(i, buffer[i]);
         }
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public byte ReadGeneralPurposeRegister(int register) => _vRegisters[register];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void WriteGeneralPurposeRegister(int register, byte value) => _vRegisters[register] = value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public int ReadIndexRegister() => _indexRegister;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void WriteIndexRegister(int value) => _indexRegister = value & 0xFFFF;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public int ReadIndexRegisterWithOffset(int offset) => (_indexRegister + offset) & 0xFFFF;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public int ReadProgramCounter() => _programCounter;
@@ -263,29 +247,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void AdvanceProgramCounter() => _programCounter += InstructionSizeInBytes;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public byte ReadDelayTimer() => _delayTimer;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void WriteDelayTimer(byte value) => _delayTimer = value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public byte ReadSoundTimer() => _soundTimer;
-
-    public void WriteSoundTimer(byte value)
-    {
-        var prev = _soundTimer;
-        _soundTimer = value;
-        if (prev == 0 && _soundTimer != 0)
-        {
-            _audio.PlaySound();
-        }
-        else if (prev != 0 && _soundTimer == 0)
-        {
-            _audio.StopSound();
-        }
-    }
 
     public void BeginWaitForKey(int registerIndex)
     {
@@ -302,12 +263,11 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     {
         ResetMemory();
         ResetClock();
-        ResetTimers();
         ResetDisplay();
         ResetRegisters();
         ResetStack();
         ResetAudioPattern();
-        _indexRegister = 0;
+        _audio.StopSound();
         _isWaitingForKey = false;
         _waitForVBlank = false;
         _keyRegisterIndex = 0;
@@ -329,16 +289,6 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _lastTimestamp = _clock.Timestamp;
     }
 
-    private void ResetTimers()
-    {
-        _delayTimer = 0;
-        if (_soundTimer > 0)
-        {
-            _soundTimer = 0;
-            _audio.StopSound();
-        }
-    }
-
     private void ResetMemory()
     {
         _memory.Clear();
@@ -353,7 +303,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private void ResetRegisters()
     {
-        Array.Clear(_vRegisters);
+        _registers.Clear();
     }
 
     private void ResetStack()
@@ -373,7 +323,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         _lastTimestamp = _clock.Timestamp;
         _clock.Ticked += OnTicked;
         _running = true;
-        if (_soundTimer > 0)
+        if (_registers.ReadSt() > 0)
         {
             _audio.PlaySound();
         }
@@ -384,7 +334,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         if (!_running) return;
         _clock.Ticked -= OnTicked;
         _running = false;
-        if (_soundTimer > 0)
+        if (_registers.ReadSt() > 0)
         {
             _audio.StopSound();
         }
@@ -410,7 +360,7 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
         {
             if (_input.WasAnyKeyPressedAndReleased(out var key))
             {
-                _vRegisters[_keyRegisterIndex] = key;
+                _registers.WriteV(_keyRegisterIndex, key);
                 _isWaitingForKey = false;
             }
         }
@@ -444,15 +394,19 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
 
     private void StepFrame()
     {
-        if (_delayTimer > 0)
+        var delayTimer = _registers.ReadDt();
+        if (delayTimer > 0)
         {
-            _delayTimer--;
+            delayTimer--;
+            _registers.WriteDt(delayTimer);
         }
 
-        if (_soundTimer > 0)
+        var soundTimer = _registers.ReadSt();
+        if (soundTimer > 0)
         {
-            _soundTimer--;
-            if (_soundTimer == 0)
+            soundTimer--;
+            _registers.WriteSt(soundTimer);
+            if (soundTimer == 0)
             {
                 _audio.StopSound();
             }
@@ -466,13 +420,13 @@ internal sealed partial class Chip8Machine : IChip8Machine, ICpu
     private sealed class Chip8MachineDebugger(Chip8Machine machine) : IMachineDebugger
     {
         public ReadOnlySpan<byte> Memory => machine._memory.AsReadOnlySpan();
-        public ReadOnlySpan<byte> Registers => machine._vRegisters;
+        public ReadOnlySpan<byte> Registers => machine._registers.AsReadOnlySpan();
         public ReadOnlySpan<int> Stack => machine._stack.AsReadOnlySpan();
         public int ProgramCounter => machine._programCounter;
-        public int IndexRegister => machine._indexRegister;
+        public int IndexRegister => machine._registers.ReadI();
         public int StackPointer => machine._stack.StackPointer;
-        public byte DelayTimer => machine._delayTimer;
-        public byte SoundTimer => machine._soundTimer;
+        public byte DelayTimer => machine._registers.ReadDt();
+        public byte SoundTimer => machine._registers.ReadSt();
         public bool IsWaitingForKey => machine._isWaitingForKey;
         public bool IsWaitingForVBlank => machine._waitForVBlank;
 

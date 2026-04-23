@@ -79,8 +79,8 @@ internal static class SChipInstructionSet
                 }
 
                 var offset = spriteBase + i * 2;
-                var spritePixelsRow = (ushort)(cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(offset)) << 8 |
-                                               cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(offset + 1)));
+                var spritePixelsRow = (ushort)(cpu.Memory.Read(cpu.Registers.ReadIWithOffset(offset)) << 8 |
+                                               cpu.Memory.Read(cpu.Registers.ReadIWithOffset(offset + 1)));
                 for (var bit = 0; bit < 16; bit++)
                 {
                     var dstX = x + bit;
@@ -104,7 +104,7 @@ internal static class SChipInstructionSet
             if (rowCollisions[i]) collidedRows++;
         clippedRows = anyClipped;
 
-        cpu.WriteGeneralPurposeRegister(0xF, (byte)(collidedRows + clippedRows));
+        cpu.Registers.WriteV(0xF, (byte)(collidedRows + clippedRows));
     }
 
     // ---- FX30 : load hi-res font character ----------------------------------
@@ -112,8 +112,8 @@ internal static class SChipInstructionSet
     public static void LoadHighResFontCharacter(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var value = cpu.ReadGeneralPurposeRegister(x);
-        cpu.WriteIndexRegister((value & 0x0F) * Chip8Machine.HighRestFontCharWidth + Chip8Machine.HighResFontBaseAddress);
+        var value = cpu.Registers.ReadV(x);
+        cpu.Registers.WriteI((value & 0x0F) * Chip8Machine.HighRestFontCharWidth + Chip8Machine.HighResFontBaseAddress);
     }
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------

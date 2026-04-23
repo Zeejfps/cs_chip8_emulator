@@ -22,7 +22,7 @@ internal static class XoChipInstructionSet
         var pc = cpu.ReadProgramCounter();
         var hi = cpu.Memory.Read(pc);
         var lo = cpu.Memory.Read(pc + 1);
-        cpu.WriteIndexRegister((hi << 8) | lo);
+        cpu.Registers.WriteI((hi << 8) | lo);
         cpu.AdvanceProgramCounter();
     }
 
@@ -45,7 +45,7 @@ internal static class XoChipInstructionSet
     public static void SetPitch(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        cpu.SetPitch(cpu.ReadGeneralPurposeRegister(x));
+        cpu.SetPitch(cpu.Registers.ReadV(x));
     }
 
     // ---- 5XY2 / 5XY3 : store / load register range --------------------------
@@ -59,8 +59,8 @@ internal static class XoChipInstructionSet
         for (var k = 0; k < count; k++)
         {
             cpu.Memory.Write(
-                cpu.ReadIndexRegisterWithOffset(k),
-                cpu.ReadGeneralPurposeRegister(x + k * step));
+                cpu.Registers.ReadIWithOffset(k),
+                cpu.Registers.ReadV(x + k * step));
         }
     }
 
@@ -72,9 +72,9 @@ internal static class XoChipInstructionSet
         var count = Math.Abs(y - x) + 1;
         for (var k = 0; k < count; k++)
         {
-            var address = cpu.ReadIndexRegisterWithOffset(k);
+            var address = cpu.Registers.ReadIWithOffset(k);
             var value = cpu.Memory.Read(address);
-            cpu.WriteGeneralPurposeRegister(x + k * step, value);
+            cpu.Registers.WriteV(x + k * step, value);
         }
     }
 }

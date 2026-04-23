@@ -43,7 +43,7 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        if (cpu.ReadGeneralPurposeRegister(x) == nn)
+        if (cpu.Registers.ReadV(x) == nn)
         {
             cpu.AdvanceProgramCounter();
         }
@@ -53,7 +53,7 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        if (cpu.ReadGeneralPurposeRegister(x) != nn)
+        if (cpu.Registers.ReadV(x) != nn)
         {
             cpu.AdvanceProgramCounter();
         }
@@ -63,7 +63,7 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        if (cpu.ReadGeneralPurposeRegister(x) != cpu.ReadGeneralPurposeRegister(y))
+        if (cpu.Registers.ReadV(x) != cpu.Registers.ReadV(y))
         {
             cpu.AdvanceProgramCounter();
         }
@@ -75,7 +75,7 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        if (cpu.ReadGeneralPurposeRegister(x) == cpu.ReadGeneralPurposeRegister(y))
+        if (cpu.Registers.ReadV(x) == cpu.Registers.ReadV(y))
         {
             cpu.AdvanceProgramCounter();
         }
@@ -87,14 +87,14 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        cpu.WriteGeneralPurposeRegister(x, nn);
+        cpu.Registers.WriteV(x, nn);
     }
 
     public static void AddValueToRegister(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
-        cpu.WriteGeneralPurposeRegister(x, (byte)(cpu.ReadGeneralPurposeRegister(x) + nn));
+        cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) + nn));
     }
 
     // ---- 0x8XY* arithmetic/logic --------------------------------------------
@@ -103,7 +103,7 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        cpu.WriteGeneralPurposeRegister(x, cpu.ReadGeneralPurposeRegister(y));
+        cpu.Registers.WriteV(x, cpu.Registers.ReadV(y));
     }
 
     // Thin dispatcher (still used by tests).
@@ -117,15 +117,15 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        cpu.WriteGeneralPurposeRegister(x, (byte)(cpu.ReadGeneralPurposeRegister(x) | cpu.ReadGeneralPurposeRegister(y)));
+        cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) | cpu.Registers.ReadV(y)));
     }
 
     public static void ExecuteBitwiseOrResetVfIns(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        cpu.WriteGeneralPurposeRegister(x, (byte)(cpu.ReadGeneralPurposeRegister(x) | cpu.ReadGeneralPurposeRegister(y)));
-        cpu.WriteGeneralPurposeRegister(0xF, 0);
+        cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) | cpu.Registers.ReadV(y)));
+        cpu.Registers.WriteV(0xF, 0);
     }
 
     // Thin dispatcher (still used by tests).
@@ -139,15 +139,15 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        cpu.WriteGeneralPurposeRegister(x, (byte)(cpu.ReadGeneralPurposeRegister(x) & cpu.ReadGeneralPurposeRegister(y)));
+        cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) & cpu.Registers.ReadV(y)));
     }
 
     public static void ExecuteBitwiseAndResetVfIns(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        cpu.WriteGeneralPurposeRegister(x, (byte)(cpu.ReadGeneralPurposeRegister(x) & cpu.ReadGeneralPurposeRegister(y)));
-        cpu.WriteGeneralPurposeRegister(0xF, 0);
+        cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) & cpu.Registers.ReadV(y)));
+        cpu.Registers.WriteV(0xF, 0);
     }
 
     // Thin dispatcher (still used by tests).
@@ -161,40 +161,40 @@ internal static class Chip8InstructionSet
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        cpu.WriteGeneralPurposeRegister(x, (byte)(cpu.ReadGeneralPurposeRegister(x) ^ cpu.ReadGeneralPurposeRegister(y)));
+        cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) ^ cpu.Registers.ReadV(y)));
     }
 
     public static void ExecuteXorResetVfIns(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        cpu.WriteGeneralPurposeRegister(x, (byte)(cpu.ReadGeneralPurposeRegister(x) ^ cpu.ReadGeneralPurposeRegister(y)));
-        cpu.WriteGeneralPurposeRegister(0xF, 0);
+        cpu.Registers.WriteV(x, (byte)(cpu.Registers.ReadV(x) ^ cpu.Registers.ReadV(y)));
+        cpu.Registers.WriteV(0xF, 0);
     }
 
     public static void ExecuteAddValueToRegisterWithCarryIns(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        var sum = cpu.ReadGeneralPurposeRegister(x) + cpu.ReadGeneralPurposeRegister(y);
+        var sum = cpu.Registers.ReadV(x) + cpu.Registers.ReadV(y);
         var carry = (byte)(sum > 0xFF ? 1 : 0);
         var result = (byte)sum;
-        cpu.WriteGeneralPurposeRegister(x, result);
-        cpu.WriteGeneralPurposeRegister(0xF, carry);
-        if (cpu.VfResultWrittenLast) cpu.WriteGeneralPurposeRegister(x, result);
+        cpu.Registers.WriteV(x, result);
+        cpu.Registers.WriteV(0xF, carry);
+        if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
     public static void ExecuteVxSubVyIns(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
         var y = ExtractY(ins);
-        var minuend = cpu.ReadGeneralPurposeRegister(x);
-        var subtrahend = cpu.ReadGeneralPurposeRegister(y);
+        var minuend = cpu.Registers.ReadV(x);
+        var subtrahend = cpu.Registers.ReadV(y);
         var flag = (byte)(minuend >= subtrahend ? 1 : 0);
         var result = (byte)(minuend - subtrahend);
-        cpu.WriteGeneralPurposeRegister(x, result);
-        cpu.WriteGeneralPurposeRegister(0xF, flag);
-        if (cpu.VfResultWrittenLast) cpu.WriteGeneralPurposeRegister(x, result);
+        cpu.Registers.WriteV(x, result);
+        cpu.Registers.WriteV(0xF, flag);
+        if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
     public static void ExecuteVySubVxIns(ICpu cpu, int ins)
@@ -202,49 +202,49 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         var y = ExtractY(ins);
         // NOTE(Zee): y first
-        var minuend = cpu.ReadGeneralPurposeRegister(y);
-        var subtrahend = cpu.ReadGeneralPurposeRegister(x);
+        var minuend = cpu.Registers.ReadV(y);
+        var subtrahend = cpu.Registers.ReadV(x);
         var flag = (byte)(minuend >= subtrahend ? 1 : 0);
         var result = (byte)(minuend - subtrahend);
-        cpu.WriteGeneralPurposeRegister(x, result);
-        cpu.WriteGeneralPurposeRegister(0xF, flag);
-        if (cpu.VfResultWrittenLast) cpu.WriteGeneralPurposeRegister(x, result);
+        cpu.Registers.WriteV(x, result);
+        cpu.Registers.WriteV(0xF, flag);
+        if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
     public static void ExecuteShiftRightIns(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var value = cpu.ReadGeneralPurposeRegister(x);
+        var value = cpu.Registers.ReadV(x);
 
         if (cpu.ShiftUsesVy)
         {
             var y = ExtractY(ins);
-            value = cpu.ReadGeneralPurposeRegister(y);
+            value = cpu.Registers.ReadV(y);
         }
 
         var flag = (byte)(value & 0x1);
         var result = (byte)(value >> 1);
-        cpu.WriteGeneralPurposeRegister(x, result);
-        cpu.WriteGeneralPurposeRegister(0xF, flag);
-        if (cpu.VfResultWrittenLast) cpu.WriteGeneralPurposeRegister(x, result);
+        cpu.Registers.WriteV(x, result);
+        cpu.Registers.WriteV(0xF, flag);
+        if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
     public static void ExecuteShiftLeftIns(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var value = cpu.ReadGeneralPurposeRegister(x);
+        var value = cpu.Registers.ReadV(x);
 
         if (cpu.ShiftUsesVy)
         {
             var y = ExtractY(ins);
-            value = cpu.ReadGeneralPurposeRegister(y);
+            value = cpu.Registers.ReadV(y);
         }
 
         var flag = (byte)((value >> 7) & 0x1);
         var result = (byte)(value << 1);
-        cpu.WriteGeneralPurposeRegister(x, result);
-        cpu.WriteGeneralPurposeRegister(0xF, flag);
-        if (cpu.VfResultWrittenLast) cpu.WriteGeneralPurposeRegister(x, result);
+        cpu.Registers.WriteV(x, result);
+        cpu.Registers.WriteV(0xF, flag);
+        if (cpu.VfResultWrittenLast) cpu.Registers.WriteV(x, result);
     }
 
     // ---- 0xANNN / 0xBNNN / 0xCXNN ------------------------------------------
@@ -252,7 +252,7 @@ internal static class Chip8InstructionSet
     public static void SetIndexRegisterIns(ICpu cpu, int ins)
     {
         var nnn = ExtractNnn(ins);
-        cpu.WriteIndexRegister(nnn);
+        cpu.Registers.WriteI(nnn);
     }
 
     // Thin dispatcher (still used by tests).
@@ -265,14 +265,14 @@ internal static class Chip8InstructionSet
     public static void ExecuteJumpWithV0OffsetIns(ICpu cpu, int ins)
     {
         var address = ExtractNnn(ins);
-        cpu.WriteProgramCounter(address + cpu.ReadGeneralPurposeRegister(0));
+        cpu.WriteProgramCounter(address + cpu.Registers.ReadV(0));
     }
 
     public static void ExecuteJumpWithVxOffsetIns(ICpu cpu, int ins)
     {
         var address = ExtractNnn(ins);
         var x = ExtractX(ins);
-        cpu.WriteProgramCounter(address + cpu.ReadGeneralPurposeRegister(x));
+        cpu.WriteProgramCounter(address + cpu.Registers.ReadV(x));
     }
 
     public static void GenerateRandomNum(ICpu cpu, int ins)
@@ -280,7 +280,7 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         var nn = ExtractNn(ins);
         var randNum = (byte)Random.Shared.Next(0, 256);
-        cpu.WriteGeneralPurposeRegister(x, (byte)(randNum & nn));
+        cpu.Registers.WriteV(x, (byte)(randNum & nn));
     }
 
     // ---- 0xDXYN draw --------------------------------------------------------
@@ -288,14 +288,14 @@ internal static class Chip8InstructionSet
     public static void DrawToScreen(ICpu cpu, int ins)
     {
         var display = cpu.Display;
-        var x = cpu.ReadGeneralPurposeRegister(ExtractX(ins)) % display.Width;
-        var y = cpu.ReadGeneralPurposeRegister(ExtractY(ins)) % display.Height;
+        var x = cpu.Registers.ReadV(ExtractX(ins)) % display.Width;
+        var y = cpu.Registers.ReadV(ExtractY(ins)) % display.Height;
         var n = ExtractN(ins);
         var planeMask = (byte)(cpu.SelectedPlanes & Display.AllPlanesMask);
 
         if (planeMask == 0)
         {
-            cpu.WriteGeneralPurposeRegister(0xF, 0);
+            cpu.Registers.WriteV(0xF, 0);
             if (cpu.DisplayWait) cpu.BeginWaitForVBlank();
             return;
         }
@@ -339,7 +339,7 @@ internal static class Chip8InstructionSet
                 if (wrap) dstY %= displayHeight;
                 else if (dstY >= displayHeight) break;
 
-                var row = cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(spriteBase + y));
+                var row = cpu.Memory.Read(cpu.Registers.ReadIWithOffset(spriteBase + y));
                 for (var bit = 0; bit < 8; bit++)
                 {
                     var dstX = sx + bit;
@@ -359,7 +359,7 @@ internal static class Chip8InstructionSet
             spriteBase += height;
         }
 
-        cpu.WriteGeneralPurposeRegister(0xF, collision);
+        cpu.Registers.WriteV(0xF, collision);
     }
 
     // ---- 0xEX* keyboard skips -----------------------------------------------
@@ -367,7 +367,7 @@ internal static class Chip8InstructionSet
     public static void SkipNextInsIfKeyIsPressed(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var key = cpu.ReadGeneralPurposeRegister(x);
+        var key = cpu.Registers.ReadV(x);
         if (cpu.Input.IsKeyPressed(key))
         {
             cpu.AdvanceProgramCounter();
@@ -377,7 +377,7 @@ internal static class Chip8InstructionSet
     public static void SkipNextInsIfKeyIsReleased(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var key = cpu.ReadGeneralPurposeRegister(x);
+        var key = cpu.Registers.ReadV(x);
         if (!cpu.Input.IsKeyPressed(key))
         {
             cpu.AdvanceProgramCounter();
@@ -389,7 +389,7 @@ internal static class Chip8InstructionSet
     public static void ReadDelayTimer(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        cpu.WriteGeneralPurposeRegister(x, cpu.ReadDelayTimer());
+        cpu.Registers.WriteV(x, cpu.Registers.ReadDt());
     }
 
     public static void WaitForKeyPressAndRelease(ICpu cpu, int ins)
@@ -401,37 +401,48 @@ internal static class Chip8InstructionSet
     public static void SetDelayTimer(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        cpu.WriteDelayTimer(cpu.ReadGeneralPurposeRegister(x));
+        cpu.Registers.WriteDt(cpu.Registers.ReadV(x));
     }
 
     public static void SetSoundTimer(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        cpu.WriteSoundTimer(cpu.ReadGeneralPurposeRegister(x));
+        var prevValue = cpu.Registers.ReadSt();
+        var newValue = cpu.Registers.ReadV(x);
+        cpu.Registers.WriteSt(newValue);
+        
+        if (prevValue == 0 && newValue != 0)
+        {
+            cpu.Audio.PlaySound();
+        }
+        else if (prevValue != 0 && newValue == 0)
+        {
+            cpu.Audio.StopSound();
+        }
     }
 
     public static void AddVxToI(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var i = cpu.ReadIndexRegister();
-        var vx = cpu.ReadGeneralPurposeRegister(x);
-        cpu.WriteIndexRegister(i + vx);
+        var i = cpu.Registers.ReadI();
+        var vx = cpu.Registers.ReadV(x);
+        cpu.Registers.WriteI(i + vx);
     }
 
     public static void LoadLowResFontCharacter(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var value = cpu.ReadGeneralPurposeRegister(x);
-        cpu.WriteIndexRegister((value & 0x0F) * Chip8Machine.LowRestFontCharWidth + Chip8Machine.LowResFontBaseAddress);
+        var value = cpu.Registers.ReadV(x);
+        cpu.Registers.WriteI((value & 0x0F) * Chip8Machine.LowRestFontCharWidth + Chip8Machine.LowResFontBaseAddress);
     }
 
     public static void StoreBcdInMemory(ICpu cpu, int ins)
     {
         var x = ExtractX(ins);
-        var bcd = cpu.ReadGeneralPurposeRegister(x);
-        cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(0), (byte)(bcd / 100));
-        cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(1), (byte)(bcd / 10 % 10));
-        cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(2), (byte)(bcd % 10));
+        var bcd = cpu.Registers.ReadV(x);
+        cpu.Memory.Write(cpu.Registers.ReadIWithOffset(0), (byte)(bcd / 100));
+        cpu.Memory.Write(cpu.Registers.ReadIWithOffset(1), (byte)(bcd / 10 % 10));
+        cpu.Memory.Write(cpu.Registers.ReadIWithOffset(2), (byte)(bcd % 10));
     }
 
     // FX55/FX65 : store/load V0..Vx. Quirk-sensitive (inc I or keep I).
@@ -448,7 +459,7 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            cpu.WriteGeneralPurposeRegister(i, cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(i)));
+            cpu.Registers.WriteV(i, cpu.Memory.Read(cpu.Registers.ReadIWithOffset(i)));
         }
     }
 
@@ -457,9 +468,9 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            cpu.WriteGeneralPurposeRegister(i, cpu.Memory.Read(cpu.ReadIndexRegisterWithOffset(i)));
+            cpu.Registers.WriteV(i, cpu.Memory.Read(cpu.Registers.ReadIWithOffset(i)));
         }
-        cpu.WriteIndexRegister(cpu.ReadIndexRegister() + x + 1);
+        cpu.Registers.WriteI(cpu.Registers.ReadI() + x + 1);
     }
 
     public static void StoreRegisters(ICpu cpu, int ins)
@@ -473,7 +484,7 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(i), cpu.ReadGeneralPurposeRegister(i));
+            cpu.Memory.Write(cpu.Registers.ReadIWithOffset(i), cpu.Registers.ReadV(i));
         }
     }
 
@@ -482,8 +493,8 @@ internal static class Chip8InstructionSet
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            cpu.Memory.Write(cpu.ReadIndexRegisterWithOffset(i), cpu.ReadGeneralPurposeRegister(i));
+            cpu.Memory.Write(cpu.Registers.ReadIWithOffset(i), cpu.Registers.ReadV(i));
         }
-        cpu.WriteIndexRegister(cpu.ReadIndexRegister() + x + 1);
+        cpu.Registers.WriteI(cpu.Registers.ReadI() + x + 1);
     }
 }
