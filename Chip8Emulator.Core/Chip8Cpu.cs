@@ -158,29 +158,29 @@ public sealed class Chip8Cpu : ICpu
 
     private static void NoOp(Chip8Cpu cpu, int ins) { }
 
-    private Routine[] LoadMainRoutines()
+    private static Routine[] LoadMainRoutines()
     {
         var table = new Routine[16];
-        table[0x0] = (cpu, ins) => { if ((ins & 0xFF00) == 0x0000) SystemRoutines[ins & 0x00FF](cpu, ins); };
+        table[0x0] = (cpu, ins) => { if ((ins & 0xFF00) == 0x0000) cpu.SystemRoutines[ins & 0x00FF](cpu, ins); };
         table[0x1] = Chip8Routines.JumpToAddress;
         table[0x2] = Chip8Routines.CallSubroutine;
         table[0x3] = Chip8Routines.SkipNextInsIfRegisterValueEqualsValue;
         table[0x4] = Chip8Routines.SkipNextInsIfRegisterValueNotEqualsValue;
-        table[0x5] = (cpu, ins) => FiveOpRoutines[ins & 0x000F](cpu, ins);
+        table[0x5] = (cpu, ins) => cpu.FiveOpRoutines[ins & 0x000F](cpu, ins);
         table[0x6] = Chip8Routines.SetRegisterValue;
         table[0x7] = Chip8Routines.AddValueToRegister;
-        table[0x8] = (cpu, ins) => ArithmeticRoutines[ins & 0x000F](cpu, ins);
+        table[0x8] = (cpu, ins) => cpu.ArithmeticRoutines[ins & 0x000F](cpu, ins);
         table[0x9] = Chip8Routines.SkipNextInsIfRegisterValueNotEqualsRegisterValue;
         table[0xA] = Chip8Routines.SetIndexRegisterIns;
         table[0xB] = Chip8Routines.JumpWithOffsetIns;
         table[0xC] = Chip8Routines.GenerateRandomNum;
         table[0xD] = Chip8Routines.DrawToScreen;
-        table[0xE] = (cpu, ins) => InputRoutines[ins & 0x00FF](cpu, ins);
-        table[0xF] = (cpu, ins) => UtilityRoutines[ins & 0x00FF](cpu, ins);
+        table[0xE] = (cpu, ins) => cpu.InputRoutines[ins & 0x00FF](cpu, ins);
+        table[0xF] = (cpu, ins) => cpu.UtilityRoutines[ins & 0x00FF](cpu, ins);
         return table;
     }
 
-    private Routine[] LoadSystemRoutines()
+    private static Routine[] LoadSystemRoutines()
     {
         var table = new Routine[256];
         Array.Fill(table, NoOp);
@@ -200,7 +200,7 @@ public sealed class Chip8Cpu : ICpu
         return table;
     }
 
-    private Routine[] LoadUtilityRoutines()
+    private static Routine[] LoadUtilityRoutines()
     {
         var table = new Routine[256];
         Array.Fill(table, NoOp);
@@ -228,7 +228,7 @@ public sealed class Chip8Cpu : ICpu
         return table;
     }
 
-    private Routine[] LoadInputRoutines()
+    private static Routine[] LoadInputRoutines()
     {
         var table = new Routine[256];
         Array.Fill(table, NoOp);
@@ -237,7 +237,7 @@ public sealed class Chip8Cpu : ICpu
         return table;
     }
 
-    private Routine[] LoadFiveOpRoutines()
+    private static Routine[] LoadFiveOpRoutines()
     {
         var table = new Routine[16];
         Array.Fill(table, NoOp);
@@ -247,7 +247,7 @@ public sealed class Chip8Cpu : ICpu
         return table;
     }
 
-    private Routine[] LoadArithmeticRoutines()
+    private static Routine[] LoadArithmeticRoutines()
     {
         var table = new Routine[16];
         Array.Fill(table, NoOp);
