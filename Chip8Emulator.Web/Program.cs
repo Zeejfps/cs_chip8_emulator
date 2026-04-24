@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics;
 using System.Runtime.InteropServices.JavaScript;
 using Chip8Emulator.Core;
 
@@ -10,7 +11,7 @@ namespace Chip8Emulator.Web
     {
         private static IInterpreter? _interpreter;
         private static BrowserInput? _input;
-        private static StopwatchClock? _clock;
+        private static ManualClock? _clock;
         private static MemoryHandle _pixelsHandle;
         private static int[]? _stackBuffer;
         private static byte[]? _memoryBuffer;
@@ -18,53 +19,81 @@ namespace Chip8Emulator.Web
         private static byte[]? _pixelBuffer;
         private static IMemory? _memory;
         private static IDisplay? _display;
+        private static IStack? _stack;
+        private static IRegisters? _registers;
+        private static long _lastRealTimestamp;
 
         [JSExport]
         public static void Init()
         {
             _input = new BrowserInput();
-            _clock = new StopwatchClock();
+            _clock = new ManualClock();
             _stackBuffer = new int[16];
             _memoryBuffer = new byte[4096];
             _vRegistersBuffer = new byte[16];
             _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-            var stack = new Chip8Stack(size => _stackBuffer.AsMemory(0, size));
+            _stack = new Chip8Stack(size => _stackBuffer.AsMemory(0, size));
             _memory = new Chip8Memory(size => _memoryBuffer.AsMemory(0, size));
-            var registers = new Chip8Registers(size => _vRegistersBuffer.AsMemory(0, size));
+            _registers = new Chip8Registers(size => _vRegistersBuffer.AsMemory(0, size));
             _display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
             _interpreter = Chip8.Builder()
                 .WithDisplay(_display)
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
-                .WithStack(stack)
+                .WithStack(_stack)
                 .WithMemory(_memory)
-                .WithRegisters(registers)
+                .WithRegisters(_registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
             _pixelsHandle = _pixelBuffer.AsMemory().Pin();
+            _lastRealTimestamp = Stopwatch.GetTimestamp();
         }
 
         [JSExport]
         public static void LoadProgram(byte[] rom)
         {
             _interpreter!.LoadProgram(rom);
+            _lastRealTimestamp = Stopwatch.GetTimestamp();
         }
 
         [JSExport]
-        public static void Tick() => _clock!.Tick();
+        public static void Tick()
+        {
+            var now = Stopwatch.GetTimestamp();
+            var delta = now - _lastRealTimestamp;
+            _lastRealTimestamp = now;
+            _clock!.Advance(delta);
+        }
 
         [JSExport]
-        public static void Start() => _interpreter!.Start();
+        public static void Start()
+        {
+            _interpreter!.Start();
+            _lastRealTimestamp = Stopwatch.GetTimestamp();
+        }
 
         [JSExport]
         public static void Stop() => _interpreter!.Stop();
 
         [JSExport]
-        public static void Step() => _interpreter!.Cpu.FetchDecodeExecute();
+        public static void Step()
+        {
+            // A vblank-wait draw suspends instruction execution until ~1 frame of ticks accumulates,
+            // so a single one-instruction advance can land in a no-op window. Loop up to
+            // (steps-per-frame + 1) times until the PC actually moves.
+            var pcBefore = _registers!.ReadPc();
+            var delta = _clock!.Frequency / _interpreter!.InstructionsPerSecond;
+            var maxSteps = _interpreter.InstructionsPerSecond / 60 + 1;
+            for (var i = 0; i < maxSteps; i++)
+            {
+                _clock.Advance(delta);
+                if (_registers.ReadPc() != pcBefore) return;
+            }
+        }
 
         [JSExport]
-        public static int GetProgramCounter() => _interpreter!.Cpu.ReadProgramCounter();
+        public static int GetProgramCounter() => _registers!.ReadPc();
 
         [JSExport]
         public static int GetMemoryByte(int address) => _memory!.Read(address);
@@ -73,16 +102,16 @@ namespace Chip8Emulator.Web
         public static byte[] GetVRegisters() => _vRegistersBuffer!;
 
         [JSExport]
-        public static int GetIndexRegister() => _interpreter!.Cpu.Registers.ReadI();
+        public static int GetIndexRegister() => _registers!.ReadI();
 
         [JSExport]
-        public static int GetDelayTimer() => _interpreter!.Cpu.Registers.ReadDt();
+        public static int GetDelayTimer() => _registers!.ReadDt();
 
         [JSExport]
-        public static int GetSoundTimer() => _interpreter!.Cpu.Registers.ReadSt();
+        public static int GetSoundTimer() => _registers!.ReadSt();
 
         [JSExport]
-        public static int GetStackPointer() => _interpreter!.Cpu.Stack.StackPointer;
+        public static int GetStackPointer() => _stack!.StackPointer;
 
         [JSExport]
         public static int[] GetStack() => _stackBuffer!;
@@ -112,45 +141,45 @@ namespace Chip8Emulator.Web
         public static void SetInstructionsPerSecond(int ips) => _interpreter!.InstructionsPerSecond = ips;
 
         [JSExport]
-        public static bool GetShiftUsesVy() => _interpreter!.Cpu.ShiftUsesVy;
+        public static bool GetShiftUsesVy() => _interpreter!.ShiftUsesVy;
 
         [JSExport]
-        public static void SetShiftUsesVy(bool value) => _interpreter!.Cpu.ShiftUsesVy = value;
+        public static void SetShiftUsesVy(bool value) => _interpreter!.ShiftUsesVy = value;
 
         [JSExport]
-        public static bool GetJumpUsesVx() => _interpreter!.Cpu.JumpUsesVx;
+        public static bool GetJumpUsesVx() => _interpreter!.JumpUsesVx;
 
         [JSExport]
-        public static void SetJumpUsesVx(bool value) => _interpreter!.Cpu.JumpUsesVx = value;
+        public static void SetJumpUsesVx(bool value) => _interpreter!.JumpUsesVx = value;
 
         [JSExport]
-        public static bool GetLoadStoreIncrementsI() => _interpreter!.Cpu.LoadStoreIncrementsI;
+        public static bool GetLoadStoreIncrementsI() => _interpreter!.LoadStoreIncrementsI;
 
         [JSExport]
-        public static void SetLoadStoreIncrementsI(bool value) => _interpreter!.Cpu.LoadStoreIncrementsI = value;
+        public static void SetLoadStoreIncrementsI(bool value) => _interpreter!.LoadStoreIncrementsI = value;
 
         [JSExport]
-        public static bool GetLogicResetsVf() => _interpreter!.Cpu.LogicResetsVf;
+        public static bool GetLogicResetsVf() => _interpreter!.LogicResetsVf;
 
         [JSExport]
-        public static void SetLogicResetsVf(bool value) => _interpreter!.Cpu.LogicResetsVf = value;
+        public static void SetLogicResetsVf(bool value) => _interpreter!.LogicResetsVf = value;
 
         [JSExport]
-        public static bool GetSpritesWrap() => _interpreter!.Cpu.SpritesWrap;
+        public static bool GetSpritesWrap() => _interpreter!.SpritesWrap;
 
         [JSExport]
-        public static void SetSpritesWrap(bool value) => _interpreter!.Cpu.SpritesWrap = value;
+        public static void SetSpritesWrap(bool value) => _interpreter!.SpritesWrap = value;
 
         [JSExport]
-        public static bool GetDisplayWait() => _interpreter!.Cpu.DisplayWait;
+        public static bool GetDisplayWait() => _interpreter!.DisplayWait;
 
         [JSExport]
-        public static void SetDisplayWait(bool value) => _interpreter!.Cpu.DisplayWait = value;
+        public static void SetDisplayWait(bool value) => _interpreter!.DisplayWait = value;
 
         [JSExport]
-        public static bool GetVfResultWrittenLast() => _interpreter!.Cpu.VfResultWrittenLast;
+        public static bool GetVfResultWrittenLast() => _interpreter!.VfResultWrittenLast;
 
         [JSExport]
-        public static void SetVfResultWrittenLast(bool value) => _interpreter!.Cpu.VfResultWrittenLast = value;
+        public static void SetVfResultWrittenLast(bool value) => _interpreter!.VfResultWrittenLast = value;
     }
 }

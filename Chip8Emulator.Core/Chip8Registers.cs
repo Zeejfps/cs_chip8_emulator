@@ -5,6 +5,7 @@ public sealed class Chip8Registers : IRegisters
     private byte _delayTimer;
     private byte _soundTimer;
     private int _indexRegister;
+    private int _programCounter;
     private readonly Memory<byte> _vRegisters;
 
     public Chip8Registers(Func<int, Memory<byte>> alloc)
@@ -54,10 +55,20 @@ public sealed class Chip8Registers : IRegisters
     {
         return _soundTimer;
     }
-    
+
     public void WriteSt(byte value)
     {
         _soundTimer = value;
+    }
+
+    public int ReadPc()
+    {
+        return _programCounter;
+    }
+
+    public void WritePc(int value)
+    {
+        _programCounter = value;
     }
 
     public void Clear()
@@ -65,6 +76,7 @@ public sealed class Chip8Registers : IRegisters
         _delayTimer = 0;
         _soundTimer = 0;
         _indexRegister = 0;
+        _programCounter = 0;
         _vRegisters.Span.Clear();
     }
 }

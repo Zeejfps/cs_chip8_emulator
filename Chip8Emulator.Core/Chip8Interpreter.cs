@@ -1,4 +1,8 @@
+using System.Runtime.CompilerServices;
+
 namespace Chip8Emulator.Core;
+
+internal delegate void Routine(int ins);
 
 internal sealed partial class Chip8Interpreter : IInterpreter
 {
@@ -7,10 +11,13 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     public const int LowResFontCharWidth = 5;
     public const int HighResFontCharWidth = 10;
 
+    private const int InstructionSizeInBytes = 2;
+
     public IDisplay Display { get; }
     public IMemory Memory { get; }
-    public ICpu Cpu { get; }
-    
+    public IRegisters Registers { get; }
+    public IStack Stack { get; }
+
     public bool IsWaitingForKey => _isWaitingForKey;
 
     public int InstructionsPerSecond
@@ -24,11 +31,34 @@ internal sealed partial class Chip8Interpreter : IInterpreter
             _instructionAcc = 0;
         }
     }
-    
+
+    public bool ShiftUsesVy { get; set; }
+    public bool SpritesWrap { get; set; }
+    public bool DisplayWait { get; set; }
+    public bool VfResultWrittenLast { get; set; }
+
+    public bool JumpUsesVx
+    {
+        get => _jumpUsesVx;
+        set { _jumpUsesVx = value; ApplyJumpUsesVx(); }
+    }
+
+    public bool LoadStoreIncrementsI
+    {
+        get => _loadStoreIncrementsI;
+        set { _loadStoreIncrementsI = value; ApplyLoadStoreIncrementsI(); }
+    }
+
+    public bool LogicResetsVf
+    {
+        get => _logicResetsVf;
+        set { _logicResetsVf = value; ApplyLogicResetsVf(); }
+    }
+
     private readonly IClock _clock;
     private readonly IAudio _audio;
     private readonly IInput _input;
-    private readonly IBus _bus;
+    private readonly IPersistentFlags _persistentFlags;
 
     private readonly long _ticksPerFrame;
     private long _ticksPerInstruction;
@@ -42,48 +72,70 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     private int _keyRegisterIndex;
     private bool _waitForVBlank;
 
-    public Chip8Interpreter(IClock clock, IDisplay display, IMemory memory, IAudio audio, IInput input, IBus bus, ICpu cpu)
+    private bool _jumpUsesVx = true;
+    private bool _loadStoreIncrementsI;
+    private bool _logicResetsVf;
+
+    internal readonly Routine[] UtilityRoutines;
+    internal readonly Routine[] MainRoutines;
+    internal readonly Routine[] SystemRoutines;
+    internal readonly Routine[] InputRoutines;
+    internal readonly Routine[] FiveOpRoutines;
+    internal readonly Routine[] ArithmeticRoutines;
+
+    public Chip8Interpreter(
+        IClock clock,
+        IDisplay display,
+        IMemory memory,
+        IAudio audio,
+        IInput input,
+        IRegisters registers,
+        IStack stack,
+        IPersistentFlags persistentFlags)
     {
         _clock = clock;
         Display = display;
         Memory = memory;
         _audio = audio;
         _input = input;
-        _bus = bus;
-        Cpu = cpu;
+        Registers = registers;
+        Stack = stack;
+        _persistentFlags = persistentFlags;
 
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
 
-        _bus.Subscribe<SetPitchEvent>(OnSetPitch);
-        _bus.Subscribe<LoadAudioPatternEvent>(OnLoadAudioPattern);
-        _bus.Subscribe<KeyIsPressedSkipEvent>(OnKeyIsPressedSkip);
-        _bus.Subscribe<KeyIsReleasedSkipEvent>(OnKeyIsReleasedSkip);
-        _bus.Subscribe<BeginWaitForKeyEvent>(OnBeginWaitForKey);
-        _bus.Subscribe<BeginWaitForVBlankEvent>(OnBeginWaitForVBlank);
+        MainRoutines = LoadMainRoutines();
+        SystemRoutines = LoadSystemRoutines();
+        UtilityRoutines = LoadUtilityRoutines();
+        InputRoutines = LoadInputRoutines();
+        FiveOpRoutines = LoadFiveOpRoutines();
+        ArithmeticRoutines = LoadArithmeticRoutines();
 
-        ResetMemory();
+        ApplyJumpUsesVx();
+        ApplyLoadStoreIncrementsI();
+        ApplyLogicResetsVf();
     }
 
     public void LoadProgram(ReadOnlySpan<byte> program)
     {
         ResetMemory();
-        Cpu.Registers.Clear();
-        Cpu.Stack.Clear();
-        Cpu.WriteProgramCounter(0x200);
+        Registers.Clear();
+        Stack.Clear();
+        Registers.WritePc(0x200);
         Memory.Write(0x200, program);
-        
+
         _audio.Reset();
         Display.Reset();
-        
+
         _isWaitingForKey = false;
         _keyRegisterIndex = 0;
         _waitForVBlank = false;
         _instructionAcc = 0;
         _frameAcc = 0;
         _lastTimestamp = _clock.Timestamp;
-        
+
         // Classic CHIP-8 HIRES signature: programs starting with `1260` (JP 0x260)
         // switch the display to a 64x64 canvas. See Hans Christian Egeberg / David Winter.
         if (program.Length >= 2 && program[0] == 0x12 && program[1] == 0x60)
@@ -115,6 +167,26 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         if (_audio.IsPlaying) _audio.StopSound();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void AdvanceProgramCounter() => Registers.WritePc(Registers.ReadPc() + InstructionSizeInBytes);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private void FetchDecodeExecute()
+    {
+        var ins = Fetch();
+        AdvanceProgramCounter();
+        var opcode = (ins & 0xF000) >> 12;
+        var execute = MainRoutines[opcode];
+        execute(ins);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private int Fetch()
+    {
+        var pc = Registers.ReadPc();
+        return Memory.Read(pc) << 8 | Memory.Read(pc + 1);
+    }
+
     private void OnTicked(object? sender, EventArgs e)
     {
         var delta = CalculateDeltaTime();
@@ -125,7 +197,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
 
         if (_isWaitingForKey && _input.WasAnyKeyPressedAndReleased(out var key))
         {
-            Cpu.Registers.WriteV(_keyRegisterIndex, key);
+            Registers.WriteV(_keyRegisterIndex, key);
             _isWaitingForKey = false;
         }
 
@@ -140,7 +212,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
             _instructionAcc += delta;
             while (_instructionAcc >= _ticksPerInstruction)
             {
-                Cpu.FetchDecodeExecute();
+                FetchDecodeExecute();
                 _instructionAcc -= _ticksPerInstruction;
                 if (_isWaitingForKey || _waitForVBlank)
                 {
@@ -155,7 +227,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
             StepFrame();
         }
 
-        var st = Cpu.Registers.ReadSt();
+        var st = Registers.ReadSt();
         if (st > 0 && !_audio.IsPlaying) _audio.PlaySound();
         else if (st == 0 && _audio.IsPlaying) _audio.StopSound();
     }
@@ -170,51 +242,172 @@ internal sealed partial class Chip8Interpreter : IInterpreter
 
     private void StepFrame()
     {
-        var registers = Cpu.Registers;
+        var dt = Registers.ReadDt();
+        if (dt > 0) Registers.WriteDt((byte)(dt - 1));
 
-        var dt = registers.ReadDt();
-        if (dt > 0) registers.WriteDt((byte)(dt - 1));
-
-        var st = registers.ReadSt();
-        if (st > 0) registers.WriteSt((byte)(st - 1));
+        var st = Registers.ReadSt();
+        if (st > 0) Registers.WriteSt((byte)(st - 1));
 
         Display.Render();
         _frameAcc -= _ticksPerFrame;
         _waitForVBlank = false;
     }
 
-    private void OnSetPitch(SetPitchEvent evt) => _audio.Pitch = evt.Pitch;
-
-    private void OnLoadAudioPattern(LoadAudioPatternEvent _)
+    private void SaveFlags(int count)
     {
-        _audio.WritePattern(span =>
+        Span<byte> buffer = stackalloc byte[IPersistentFlags.Capacity];
+        _persistentFlags.Read(buffer);
+        for (var i = 0; i <= count && i < buffer.Length; i++)
         {
-            var registers = Cpu.Registers;
-            for (var i = 0; i < span.Length; i++)
-            {
-                span[i] = Memory.Read(registers.ReadIWithOffset(i));
-            }
-        });
+            buffer[i] = Registers.ReadV(i);
+        }
+        _persistentFlags.Write(buffer);
     }
 
-    private void OnKeyIsPressedSkip(KeyIsPressedSkipEvent evt)
+    private void LoadFlags(int count)
     {
-        if (_input.IsKeyPressed(evt.Key)) Cpu.AdvanceProgramCounter();
+        Span<byte> buffer = stackalloc byte[IPersistentFlags.Capacity];
+        _persistentFlags.Read(buffer);
+        for (var i = 0; i <= count && i < buffer.Length; i++)
+        {
+            Registers.WriteV(i, buffer[i]);
+        }
     }
 
-    private void OnKeyIsReleasedSkip(KeyIsReleasedSkipEvent evt)
+    private void ApplyJumpUsesVx()
     {
-        if (!_input.IsKeyPressed(evt.Key)) Cpu.AdvanceProgramCounter();
+        MainRoutines[0xB] = _jumpUsesVx
+            ? ExecuteJumpWithVxOffsetIns
+            : ExecuteJumpWithV0OffsetIns;
     }
 
-    private void OnBeginWaitForKey(BeginWaitForKeyEvent evt)
+    private void ApplyLoadStoreIncrementsI()
     {
-        _isWaitingForKey = true;
-        _keyRegisterIndex = evt.RegisterIndex;
+        UtilityRoutines[0x55] = _loadStoreIncrementsI
+            ? ExecuteStoreRegistersIncIIns
+            : ExecuteStoreRegistersKeepIIns;
+        UtilityRoutines[0x65] = _loadStoreIncrementsI
+            ? ExecuteLoadRegistersIncIIns
+            : ExecuteLoadRegistersKeepIIns;
     }
 
-    private void OnBeginWaitForVBlank(BeginWaitForVBlankEvent _)
+    private void ApplyLogicResetsVf()
     {
-        _waitForVBlank = true;
+        ArithmeticRoutines[0x1] = _logicResetsVf
+            ? ExecuteBitwiseOrResetVfIns
+            : ExecuteBitwiseOrPreserveVfIns;
+        ArithmeticRoutines[0x2] = _logicResetsVf
+            ? ExecuteBitwiseAndResetVfIns
+            : ExecuteBitwiseAndPreserveVfIns;
+        ArithmeticRoutines[0x3] = _logicResetsVf
+            ? ExecuteXorResetVfIns
+            : ExecuteXorPreserveVfIns;
+    }
+
+    private static void NoOp(int ins) { }
+
+    private Routine[] LoadMainRoutines()
+    {
+        var table = new Routine[16];
+        table[0x0] = ins => { if ((ins & 0xFF00) == 0x0000) SystemRoutines[ins & 0x00FF](ins); };
+        table[0x1] = JumpToAddress;
+        table[0x2] = CallSubroutine;
+        table[0x3] = SkipNextInsIfRegisterValueEqualsValue;
+        table[0x4] = SkipNextInsIfRegisterValueNotEqualsValue;
+        table[0x5] = ins => FiveOpRoutines[ins & 0x000F](ins);
+        table[0x6] = SetRegisterValue;
+        table[0x7] = AddValueToRegister;
+        table[0x8] = ins => ArithmeticRoutines[ins & 0x000F](ins);
+        table[0x9] = SkipNextInsIfRegisterValueNotEqualsRegisterValue;
+        table[0xA] = SetIndexRegisterIns;
+        table[0xB] = JumpWithOffsetIns;
+        table[0xC] = GenerateRandomNum;
+        table[0xD] = DrawToScreen;
+        table[0xE] = ins => InputRoutines[ins & 0x00FF](ins);
+        table[0xF] = ins => UtilityRoutines[ins & 0x00FF](ins);
+        return table;
+    }
+
+    private Routine[] LoadSystemRoutines()
+    {
+        var routines = new Routine[256];
+        Array.Fill(routines, NoOp);
+        routines[0xE0] = ClearDisplay;
+        routines[0xEE] = ReturnFromSubroutine;
+        routines[0xFF] = EnableHiresMode;
+        routines[0xFE] = DisableHiresMode;
+        routines[0xFB] = ScrollRight;
+        routines[0xFC] = ScrollLeft;
+        for (var n = 0; n < 16; n++)
+        {
+            // 00CN — S-CHIP: scroll display down N rows.
+            routines[0xC0 + n] = ScrollDown;
+            // 00DN — XO-CHIP: scroll display up N rows.
+            routines[0xD0 + n] = ScrollUp;
+        }
+        return routines;
+    }
+
+    private Routine[] LoadUtilityRoutines()
+    {
+        var routines = new Routine[256];
+        Array.Fill(routines, NoOp);
+        // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
+        routines[0x00] = LongLoadIndexRegister;
+        // FN01 — XO-CHIP select bitplane mask (N = 0..3).
+        routines[0x01] = SelectPlane;
+        // F002 — XO-CHIP copy 16 bytes at [I] into audio pattern buffer.
+        routines[0x02] = LoadAudioPattern;
+        routines[0x07] = ReadDelayTimer;
+        routines[0x0A] = WaitForKeyPressAndRelease;
+        routines[0x15] = SetDelayTimer;
+        routines[0x18] = SetSoundTimer;
+        routines[0x1E] = AddVxToI;
+        routines[0x29] = LoadLowResFontCharacter;
+        routines[0x30] = LoadHighResFontCharacter;
+        routines[0x33] = StoreBcdInMemory;
+        // FX3A — XO-CHIP set audio playback pitch from Vx.
+        routines[0x3A] = SetPitch;
+        routines[0x55] = StoreRegisters;
+        routines[0x65] = LoadRegisters;
+        // FX75 / FX85 — SCHIP save/load V0..Vx to persistent user flags.
+        routines[0x75] = SaveFlagsIns;
+        routines[0x85] = LoadFlagsIns;
+        return routines;
+    }
+
+    private Routine[] LoadInputRoutines()
+    {
+        var routines = new Routine[256];
+        Array.Fill(routines, NoOp);
+        routines[0x9E] = SkipNextInsIfKeyIsPressed;
+        routines[0xA1] = SkipNextInsIfKeyIsReleased;
+        return routines;
+    }
+
+    private Routine[] LoadFiveOpRoutines()
+    {
+        var routines = new Routine[16];
+        Array.Fill(routines, NoOp);
+        routines[0] = SkipIfVxEqualsVy;
+        routines[2] = StoreRegisterRange;
+        routines[3] = LoadRegisterRange;
+        return routines;
+    }
+
+    private Routine[] LoadArithmeticRoutines()
+    {
+        var routines = new Routine[16];
+        Array.Fill(routines, NoOp);
+        routines[0x0] = SetRegisterValueFromRegister;
+        routines[0x1] = BitwiseOrOnRegisters;
+        routines[0x2] = BitwiseAndOnRegisters;
+        routines[0x3] = XorRegisterValueFromRegister;
+        routines[0x4] = AddValueToRegisterWithCarry;
+        routines[0x5] = VxSubVy;
+        routines[0x6] = ShiftRight;
+        routines[0x7] = VySubVx;
+        routines[0xE] = ShiftLeft;
+        return routines;
     }
 }
