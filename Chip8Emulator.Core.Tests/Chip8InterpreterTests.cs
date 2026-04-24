@@ -15,7 +15,7 @@ public class Chip8InterpreterTests
         var stack = new Chip8Stack(size => new int[size]);
         var memory = new Chip8Memory(size => new byte[size]);
         var registers = new Chip8Registers(size => new byte[size]);
-        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, new EmulatedPersistentFlags());
+        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, new InMemoryPersistentFlags());
     }
 
     private Chip8Interpreter CreateEmulator() => CreateEmulator(out _, out _, out _);

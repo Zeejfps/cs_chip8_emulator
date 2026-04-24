@@ -116,8 +116,6 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         ApplyJumpUsesVx();
         ApplyLoadStoreIncrementsI();
         ApplyLogicResetsVf();
-
-        ResetMemory();
     }
 
     public void LoadProgram(ReadOnlySpan<byte> program)

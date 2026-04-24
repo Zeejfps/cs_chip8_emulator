@@ -21,7 +21,7 @@ public class SuperChipTests
             new FakeClock(), display, memory, audio, input,
             new Chip8Registers(size => new byte[size]),
             new Chip8Stack(size => new int[size]),
-            new EmulatedPersistentFlags());
+            new InMemoryPersistentFlags());
     }
 
     private byte PixelAt(Chip8Interpreter emulator, int x, int y)

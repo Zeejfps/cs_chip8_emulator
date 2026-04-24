@@ -75,7 +75,7 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
             $"{nameof(WithMemory)} must be called before {nameof(Build)}.");
         var display = _display ?? throw new InvalidOperationException(
             $"{nameof(WithDisplay)} must be called before {nameof(Build)}.");
-        var persistentFlags = _persistentFlags ?? new EmulatedPersistentFlags();
+        var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();
 
         return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, persistentFlags);
     }
