@@ -4,35 +4,35 @@ namespace Chip8Emulator.Core;
 
 // SUPER-CHIP 1.1 additions: hi-res mode, 4-pixel scrolls, scroll down N,
 // 16x16 sprite drawing (DXY0), 10-byte high-res font, persistent user flags.
-public sealed partial class Chip8Cpu
+internal sealed partial class Chip8Interpreter
 {
     // ---- 00FF / 00FE : high-res mode toggle ---------------------------------
 
     internal void EnableHiresMode(int ins)
     {
-        _display.EnableHighResMode();
+        Display.EnableHighResMode();
     }
 
     internal void DisableHiresMode(int ins)
     {
-        _display.DisableHighResMode();
+        Display.DisableHighResMode();
     }
 
     // ---- 00FB / 00FC / 00CN : scroll ----------------------------------------
 
     internal void ScrollRight(int ins)
     {
-        _display.ScrollRight(4);
+        Display.ScrollRight(4);
     }
 
     internal void ScrollLeft(int ins)
     {
-        _display.ScrollLeft(4);
+        Display.ScrollLeft(4);
     }
 
     internal void ScrollDown(int ins)
     {
-        _display.ScrollDown(ins & 0x0F);
+        Display.ScrollDown(ins & 0x0F);
     }
 
     // ---- DXY0 : 16x16 hi-res sprite -----------------------------------------
@@ -44,7 +44,7 @@ public sealed partial class Chip8Cpu
         // S-CHIP 1.1 DXY0 hi-res collision semantics (extended for XO-Chip bitplanes):
         // VF = number of sprite rows with at least one collision in any selected plane
         //    + number of sprite rows clipped off the bottom edge (when not wrapping).
-        _display.WritePixels(displayPixels =>
+        Display.WritePixels(displayPixels =>
         {
             Span<bool> rowCollisions = stackalloc bool[16];
             var anyClipped = 0;
@@ -74,8 +74,8 @@ public sealed partial class Chip8Cpu
         Span<byte> displayPixels, int x, int y,
         int spriteBase, byte planeBitMask, Span<bool> rowCollisions)
     {
-        var width = _display.Width;
-        var height = _display.Height;
+        var width = Display.Width;
+        var height = Display.Height;
         var wrap = SpritesWrap;
 
         for (var i = 0; i < 16; i++)
@@ -100,8 +100,8 @@ public sealed partial class Chip8Cpu
 
     private ushort ReadHighResSpriteRow(int offset)
     {
-        var hi = _memory.Read(Registers.ReadIWithOffset(offset));
-        var lo = _memory.Read(Registers.ReadIWithOffset(offset + 1));
+        var hi = Memory.Read(Registers.ReadIWithOffset(offset));
+        var lo = Memory.Read(Registers.ReadIWithOffset(offset + 1));
         return (ushort)((hi << 8) | lo);
     }
 
@@ -133,7 +133,7 @@ public sealed partial class Chip8Cpu
     {
         var x = ExtractX(ins);
         var value = Registers.ReadV(x);
-        Registers.WriteI((value & 0x0F) * Chip8Interpreter.HighResFontCharWidth + Chip8Interpreter.HighResFontBaseAddress);
+        Registers.WriteI((value & 0x0F) * HighResFontCharWidth + HighResFontBaseAddress);
     }
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------

@@ -6,7 +6,7 @@ public class Chip8InterpreterTests
 {
     private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
 
-    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(out FakeAudio audio, out FakeClock clock, out FakeInput input)
+    private Chip8Interpreter CreateEmulator(out FakeAudio audio, out FakeClock clock, out FakeInput input)
     {
         audio = new FakeAudio();
         clock = new FakeClock();
@@ -15,13 +15,10 @@ public class Chip8InterpreterTests
         var stack = new Chip8Stack(size => new int[size]);
         var memory = new Chip8Memory(size => new byte[size]);
         var registers = new Chip8Registers(size => new byte[size]);
-        var bus = new EmulatorBus();
-        var cpu = new Chip8Cpu(memory, display, registers, stack, new EmulatedPersistentFlags(), bus);
-        var emulator = new Chip8Interpreter(clock, display, memory, audio, input, bus, cpu);
-        return (emulator, cpu);
+        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, new EmulatedPersistentFlags());
     }
 
-    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator() => CreateEmulator(out _, out _, out _);
+    private Chip8Interpreter CreateEmulator() => CreateEmulator(out _, out _, out _);
 
     private static byte[] ReadMemorySlice(Chip8Interpreter emulator, int address, int length)
     {
@@ -30,35 +27,35 @@ public class Chip8InterpreterTests
             result[i] = emulator.Memory.Read(address + i);
         return result;
     }
-    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out input);
-    private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(out FakeClock clock, out FakeInput input) => CreateEmulator(out _, out clock, out input);
+    private Chip8Interpreter CreateEmulator(out FakeInput input) => CreateEmulator(out _, out _, out input);
+    private Chip8Interpreter CreateEmulator(out FakeClock clock, out FakeInput input) => CreateEmulator(out _, out clock, out input);
 
     [Fact]
     public void InitialState_IsZeroed()
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
-        Assert.Equal(0, cpu.ReadProgramCounter());
-        Assert.Equal(0, cpu.Registers.ReadI());
-        Assert.Equal(0, cpu.Registers.ReadDt());
-        Assert.Equal(0, cpu.Registers.ReadSt());
+        Assert.Equal(0, emulator.ReadProgramCounter());
+        Assert.Equal(0, emulator.Registers.ReadI());
+        Assert.Equal(0, emulator.Registers.ReadDt());
+        Assert.Equal(0, emulator.Registers.ReadSt());
     }
 
     [Fact]
     public void InitialState_AllRegistersAreZero()
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
         for (var i = 0; i < 16; i++)
         {
-            Assert.Equal(0, cpu.Registers.ReadV(i));
+            Assert.Equal(0, emulator.Registers.ReadV(i));
         }
     }
 
     [Fact]
     public void InitialState_MemoryIsZeroOutsideFontRegion()
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
         for (var i = 0; i < 4096; i++)
         {
@@ -71,7 +68,7 @@ public class Chip8InterpreterTests
     [Fact]
     public void InitialState_FontLoadedAt0x050()
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
         var zeroSprite = ReadMemorySlice(emulator, 0x050, 5);
         Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, zeroSprite);
@@ -84,47 +81,47 @@ public class Chip8InterpreterTests
     [InlineData(0x6F01, 0xF, 0x01)]
     public void SetRegisterValue_StoresNnIntoVx(int instruction, int x, byte expected)
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
-        cpu.SetRegisterValue(instruction);
+        emulator.SetRegisterValue(instruction);
 
-        Assert.Equal(expected, cpu.Registers.ReadV(x));
+        Assert.Equal(expected, emulator.Registers.ReadV(x));
     }
 
     [Fact]
     public void SetRegisterValue_DoesNotAffectOtherRegisters()
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
-        cpu.SetRegisterValue(0x6342);
+        emulator.SetRegisterValue(0x6342);
 
         for (var i = 0; i < 16; i++)
         {
             if (i == 3) continue;
-            Assert.Equal(0, cpu.Registers.ReadV(i));
+            Assert.Equal(0, emulator.Registers.ReadV(i));
         }
     }
 
     [Fact]
     public void AddValueToRegister_AddsNnToVx()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6205);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6205);
 
-        cpu.AddValueToRegister(0x7203);
+        emulator.AddValueToRegister(0x7203);
 
-        Assert.Equal(8, cpu.Registers.ReadV(2));
+        Assert.Equal(8, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void AddValueToRegister_WrapsOnByteOverflow()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x62FF);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x62FF);
 
-        cpu.AddValueToRegister(0x7202);
+        emulator.AddValueToRegister(0x7202);
 
-        Assert.Equal(0x01, cpu.Registers.ReadV(2));
+        Assert.Equal(0x01, emulator.Registers.ReadV(2));
     }
 
     [Theory]
@@ -133,11 +130,11 @@ public class Chip8InterpreterTests
     [InlineData(0xAFFF, 0xFFF)]
     public void SetIndexRegister_StoresNnn(int instruction, int expected)
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
-        cpu.SetIndexRegisterIns(instruction);
+        emulator.SetIndexRegisterIns(instruction);
 
-        Assert.Equal(expected, cpu.Registers.ReadI());
+        Assert.Equal(expected, emulator.Registers.ReadI());
     }
 
     [Theory]
@@ -146,348 +143,348 @@ public class Chip8InterpreterTests
     [InlineData(0x1FFF, 0xFFF)]
     public void JumpToAddress_SetsProgramCounterToNnn(int instruction, int expected)
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
-        cpu.JumpToAddress(instruction);
+        emulator.JumpToAddress(instruction);
 
-        Assert.Equal(expected, cpu.ReadProgramCounter());
+        Assert.Equal(expected, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfRegisterEqualsValue_SkipsNextInstruction_WhenEqual()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6242);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6242);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfRegisterValueEqualsValue(0x3242);
+        emulator.SkipNextInsIfRegisterValueEqualsValue(0x3242);
 
-        Assert.Equal(pcBefore + 2, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfRegisterEqualsValue_DoesNotSkip_WhenNotEqual()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6242);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6242);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfRegisterValueEqualsValue(0x3201);
+        emulator.SkipNextInsIfRegisterValueEqualsValue(0x3201);
 
-        Assert.Equal(pcBefore, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfRegisterNotEqualsValue_SkipsNextInstruction_WhenNotEqual()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6242);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6242);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfRegisterValueNotEqualsValue(0x4201);
+        emulator.SkipNextInsIfRegisterValueNotEqualsValue(0x4201);
 
-        Assert.Equal(pcBefore + 2, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfRegisterNotEqualsValue_DoesNotSkip_WhenEqual()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6242);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6242);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfRegisterValueNotEqualsValue(0x4242);
+        emulator.SkipNextInsIfRegisterValueNotEqualsValue(0x4242);
 
-        Assert.Equal(pcBefore, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfRegisterEqualsRegister_SkipsNextInstruction_WhenEqual()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6142);
-        cpu.SetRegisterValue(0x6242);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6142);
+        emulator.SetRegisterValue(0x6242);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.FiveOpRoutines[0x5120 & 0x000F](0x5120);
+        emulator.FiveOpRoutines[0x5120 & 0x000F](0x5120);
 
-        Assert.Equal(pcBefore + 2, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfRegisterEqualsRegister_DoesNotSkip_WhenNotEqual()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6142);
-        cpu.SetRegisterValue(0x6201);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6142);
+        emulator.SetRegisterValue(0x6201);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.FiveOpRoutines[0x5120 & 0x000F](0x5120);
+        emulator.FiveOpRoutines[0x5120 & 0x000F](0x5120);
 
-        Assert.Equal(pcBefore, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void CallSubroutine_JumpsToAddressAndPushesReturnAddress()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.JumpToAddress(0x1246);
-        var spBefore = cpu.Stack.StackPointer;
+        var emulator = CreateEmulator();
+        emulator.JumpToAddress(0x1246);
+        var spBefore = emulator.Stack.StackPointer;
 
-        cpu.CallSubroutine(0x2ABC);
+        emulator.CallSubroutine(0x2ABC);
 
-        Assert.Equal(0xABC, cpu.ReadProgramCounter());
-        Assert.Equal(spBefore + 1, cpu.Stack.StackPointer);
-        Assert.Equal(0x246, cpu.Stack.Pop());
+        Assert.Equal(0xABC, emulator.ReadProgramCounter());
+        Assert.Equal(spBefore + 1, emulator.Stack.StackPointer);
+        Assert.Equal(0x246, emulator.Stack.Pop());
     }
 
     [Fact]
     public void ReturnFromSubroutine_RestoresProgramCounterFromStack()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.JumpToAddress(0x1246);
-        cpu.CallSubroutine(0x2ABC);
+        var emulator = CreateEmulator();
+        emulator.JumpToAddress(0x1246);
+        emulator.CallSubroutine(0x2ABC);
 
-        cpu.ReturnFromSubroutine(0x00EE);
+        emulator.ReturnFromSubroutine(0x00EE);
 
-        Assert.Equal(0x246, cpu.ReadProgramCounter());
+        Assert.Equal(0x246, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SetRegisterValueFromRegister_CopiesVyIntoVx()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6142);
-        cpu.SetRegisterValue(0x62AB);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6142);
+        emulator.SetRegisterValue(0x62AB);
 
-        cpu.SetRegisterValueFromRegister(0x8120);
+        emulator.SetRegisterValueFromRegister(0x8120);
 
-        Assert.Equal(0xAB, cpu.Registers.ReadV(1));
-        Assert.Equal(0xAB, cpu.Registers.ReadV(2));
+        Assert.Equal(0xAB, emulator.Registers.ReadV(1));
+        Assert.Equal(0xAB, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void BitwiseOrOnRegisters_StoresVxOrVyIntoVx()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x61F0);
-        cpu.SetRegisterValue(0x620F);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x61F0);
+        emulator.SetRegisterValue(0x620F);
 
-        cpu.BitwiseOrOnRegisters(0x8121);
+        emulator.BitwiseOrOnRegisters(0x8121);
 
-        Assert.Equal(0xFF, cpu.Registers.ReadV(1));
-        Assert.Equal(0x0F, cpu.Registers.ReadV(2));
+        Assert.Equal(0xFF, emulator.Registers.ReadV(1));
+        Assert.Equal(0x0F, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void BitwiseAndOnRegisters_StoresVxAndVyIntoVx()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x61FC);
-        cpu.SetRegisterValue(0x620F);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x61FC);
+        emulator.SetRegisterValue(0x620F);
 
-        cpu.BitwiseAndOnRegisters(0x8122);
+        emulator.BitwiseAndOnRegisters(0x8122);
 
-        Assert.Equal(0x0C, cpu.Registers.ReadV(1));
-        Assert.Equal(0x0F, cpu.Registers.ReadV(2));
+        Assert.Equal(0x0C, emulator.Registers.ReadV(1));
+        Assert.Equal(0x0F, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void XorRegisterValueFromRegister_StoresVxXorVyIntoVx()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x61FC);
-        cpu.SetRegisterValue(0x620F);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x61FC);
+        emulator.SetRegisterValue(0x620F);
 
-        cpu.XorRegisterValueFromRegister(0x8123);
+        emulator.XorRegisterValueFromRegister(0x8123);
 
-        Assert.Equal(0xF3, cpu.Registers.ReadV(1));
-        Assert.Equal(0x0F, cpu.Registers.ReadV(2));
+        Assert.Equal(0xF3, emulator.Registers.ReadV(1));
+        Assert.Equal(0x0F, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void AddValueToRegisterWithCarry_NoOverflow_StoresSumAndClearsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6105);
-        cpu.SetRegisterValue(0x6203);
-        cpu.SetRegisterValue(0x6F01);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6105);
+        emulator.SetRegisterValue(0x6203);
+        emulator.SetRegisterValue(0x6F01);
 
-        cpu.AddValueToRegisterWithCarry(0x8124);
+        emulator.AddValueToRegisterWithCarry(0x8124);
 
-        Assert.Equal(0x08, cpu.Registers.ReadV(1));
-        Assert.Equal(0x03, cpu.Registers.ReadV(2));
-        Assert.Equal(0, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x08, emulator.Registers.ReadV(1));
+        Assert.Equal(0x03, emulator.Registers.ReadV(2));
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void AddValueToRegisterWithCarry_Overflow_WrapsAndSetsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x61FF);
-        cpu.SetRegisterValue(0x6202);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x61FF);
+        emulator.SetRegisterValue(0x6202);
 
-        cpu.AddValueToRegisterWithCarry(0x8124);
+        emulator.AddValueToRegisterWithCarry(0x8124);
 
-        Assert.Equal(0x01, cpu.Registers.ReadV(1));
-        Assert.Equal(0x02, cpu.Registers.ReadV(2));
-        Assert.Equal(1, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x01, emulator.Registers.ReadV(1));
+        Assert.Equal(0x02, emulator.Registers.ReadV(2));
+        Assert.Equal(1, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void AddValueToRegisterWithCarry_AtBoundary_DoesNotSetVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x61F0);
-        cpu.SetRegisterValue(0x620F);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x61F0);
+        emulator.SetRegisterValue(0x620F);
 
-        cpu.AddValueToRegisterWithCarry(0x8124);
+        emulator.AddValueToRegisterWithCarry(0x8124);
 
-        Assert.Equal(0xFF, cpu.Registers.ReadV(1));
-        Assert.Equal(0, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0xFF, emulator.Registers.ReadV(1));
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void VxSubVy_NoBorrow_StoresDifferenceAndSetsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x610A);
-        cpu.SetRegisterValue(0x6203);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x610A);
+        emulator.SetRegisterValue(0x6203);
 
-        cpu.VxSubVy(0x8125);
+        emulator.VxSubVy(0x8125);
 
-        Assert.Equal(0x07, cpu.Registers.ReadV(1));
-        Assert.Equal(0x03, cpu.Registers.ReadV(2));
-        Assert.Equal(1, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x07, emulator.Registers.ReadV(1));
+        Assert.Equal(0x03, emulator.Registers.ReadV(2));
+        Assert.Equal(1, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void VxSubVy_Borrow_WrapsAndClearsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6103);
-        cpu.SetRegisterValue(0x620A);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6103);
+        emulator.SetRegisterValue(0x620A);
 
-        cpu.VxSubVy(0x8125);
+        emulator.VxSubVy(0x8125);
 
-        Assert.Equal(0xF9, cpu.Registers.ReadV(1));
-        Assert.Equal(0x0A, cpu.Registers.ReadV(2));
-        Assert.Equal(0, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0xF9, emulator.Registers.ReadV(1));
+        Assert.Equal(0x0A, emulator.Registers.ReadV(2));
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void VxSubVy_WhenEqual_SetsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6142);
-        cpu.SetRegisterValue(0x6242);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6142);
+        emulator.SetRegisterValue(0x6242);
 
-        cpu.VxSubVy(0x8125);
+        emulator.VxSubVy(0x8125);
 
-        Assert.Equal(0x00, cpu.Registers.ReadV(1));
-        Assert.Equal(1, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x00, emulator.Registers.ReadV(1));
+        Assert.Equal(1, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void VySubVx_NoBorrow_StoresDifferenceAndSetsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6103);
-        cpu.SetRegisterValue(0x620A);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6103);
+        emulator.SetRegisterValue(0x620A);
 
-        cpu.VySubVx(0x8127);
+        emulator.VySubVx(0x8127);
 
-        Assert.Equal(0x07, cpu.Registers.ReadV(1));
-        Assert.Equal(0x0A, cpu.Registers.ReadV(2));
-        Assert.Equal(1, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x07, emulator.Registers.ReadV(1));
+        Assert.Equal(0x0A, emulator.Registers.ReadV(2));
+        Assert.Equal(1, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void VySubVx_Borrow_WrapsAndClearsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x610A);
-        cpu.SetRegisterValue(0x6203);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x610A);
+        emulator.SetRegisterValue(0x6203);
 
-        cpu.VySubVx(0x8127);
+        emulator.VySubVx(0x8127);
 
-        Assert.Equal(0xF9, cpu.Registers.ReadV(1));
-        Assert.Equal(0x03, cpu.Registers.ReadV(2));
-        Assert.Equal(0, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0xF9, emulator.Registers.ReadV(1));
+        Assert.Equal(0x03, emulator.Registers.ReadV(2));
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void ShiftRight_EvenValue_ShiftsAndClearsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6108);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6108);
 
-        cpu.ShiftRight(0x8106);
+        emulator.ShiftRight(0x8106);
 
-        Assert.Equal(0x04, cpu.Registers.ReadV(1));
-        Assert.Equal(0, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x04, emulator.Registers.ReadV(1));
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void ShiftRight_OddValue_ShiftsAndSetsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6109);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6109);
 
-        cpu.ShiftRight(0x8106);
+        emulator.ShiftRight(0x8106);
 
-        Assert.Equal(0x04, cpu.Registers.ReadV(1));
-        Assert.Equal(1, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x04, emulator.Registers.ReadV(1));
+        Assert.Equal(1, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void ShiftLeft_MsbClear_ShiftsAndClearsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6141);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6141);
 
-        cpu.ShiftLeft(0x810E);
+        emulator.ShiftLeft(0x810E);
 
-        Assert.Equal(0x82, cpu.Registers.ReadV(1));
-        Assert.Equal(0, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x82, emulator.Registers.ReadV(1));
+        Assert.Equal(0, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void ShiftLeft_MsbSet_ShiftsAndSetsVf()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6181);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6181);
 
-        cpu.ShiftLeft(0x810E);
+        emulator.ShiftLeft(0x810E);
 
-        Assert.Equal(0x02, cpu.Registers.ReadV(1));
-        Assert.Equal(1, cpu.Registers.ReadV(0xF));
+        Assert.Equal(0x02, emulator.Registers.ReadV(1));
+        Assert.Equal(1, emulator.Registers.ReadV(0xF));
     }
 
     [Fact]
     public void SkipIfRegisterNotEqualsRegister_SkipsNextInstruction_WhenNotEqual()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6142);
-        cpu.SetRegisterValue(0x6201);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6142);
+        emulator.SetRegisterValue(0x6201);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
+        emulator.SkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
 
-        Assert.Equal(pcBefore + 2, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfRegisterNotEqualsRegister_DoesNotSkip_WhenEqual()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6142);
-        cpu.SetRegisterValue(0x6242);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6142);
+        emulator.SetRegisterValue(0x6242);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
+        emulator.SkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
 
-        Assert.Equal(pcBefore, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Theory]
@@ -497,208 +494,208 @@ public class Chip8InterpreterTests
     [InlineData(0x8123, 0xFC, 0x0F, 0xF3)]
     public void ArithmeticOperation_DispatchesToCorrectOperation(int instruction, byte vx, byte vy, byte expected)
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6100 | vx);
-        cpu.SetRegisterValue(0x6200 | vy);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6100 | vx);
+        emulator.SetRegisterValue(0x6200 | vy);
 
-        cpu.ArithmeticRoutines[instruction & 0x000F](instruction);
+        emulator.ArithmeticRoutines[instruction & 0x000F](instruction);
 
-        Assert.Equal(expected, cpu.Registers.ReadV(1));
+        Assert.Equal(expected, emulator.Registers.ReadV(1));
     }
 
     [Fact]
     public void SkipIfKeyIsPressed_SkipsNextInstruction_WhenPressed()
     {
-        var (emulator, cpu) = CreateEmulator(out var input);
-        cpu.SetRegisterValue(0x6105);
+        var emulator = CreateEmulator(out var input);
+        emulator.SetRegisterValue(0x6105);
         input.Press(0x5);
-        var pcBefore = cpu.ReadProgramCounter();
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfKeyIsPressed(0xE19E);
+        emulator.SkipNextInsIfKeyIsPressed(0xE19E);
 
-        Assert.Equal(pcBefore + 2, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfKeyIsPressed_DoesNotSkip_WhenNotPressed()
     {
-        var (emulator, cpu) = CreateEmulator(out var input);
-        cpu.SetRegisterValue(0x6105);
+        var emulator = CreateEmulator(out var input);
+        emulator.SetRegisterValue(0x6105);
         input.Press(0x3);
-        var pcBefore = cpu.ReadProgramCounter();
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfKeyIsPressed(0xE19E);
+        emulator.SkipNextInsIfKeyIsPressed(0xE19E);
 
-        Assert.Equal(pcBefore, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfKeyIsReleased_SkipsNextInstruction_WhenNotPressed()
     {
-        var (emulator, cpu) = CreateEmulator(out var input);
-        cpu.SetRegisterValue(0x6105);
+        var emulator = CreateEmulator(out var input);
+        emulator.SetRegisterValue(0x6105);
         input.Press(0x3);
-        var pcBefore = cpu.ReadProgramCounter();
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfKeyIsReleased(0xE1A1);
+        emulator.SkipNextInsIfKeyIsReleased(0xE1A1);
 
-        Assert.Equal(pcBefore + 2, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfKeyIsReleased_DoesNotSkip_WhenPressed()
     {
-        var (emulator, cpu) = CreateEmulator(out var input);
-        cpu.SetRegisterValue(0x6105);
+        var emulator = CreateEmulator(out var input);
+        emulator.SetRegisterValue(0x6105);
         input.Press(0x5);
-        var pcBefore = cpu.ReadProgramCounter();
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.SkipNextInsIfKeyIsReleased(0xE1A1);
+        emulator.SkipNextInsIfKeyIsReleased(0xE1A1);
 
-        Assert.Equal(pcBefore, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfKeyIsPressedOrReleased_Dispatches9EToIsPressed()
     {
-        var (emulator, cpu) = CreateEmulator(out var input);
-        cpu.SetRegisterValue(0x6107);
+        var emulator = CreateEmulator(out var input);
+        emulator.SetRegisterValue(0x6107);
         input.Press(0x7);
-        var pcBefore = cpu.ReadProgramCounter();
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.InputRoutines[0xE19E & 0x00FF](0xE19E);
+        emulator.InputRoutines[0xE19E & 0x00FF](0xE19E);
 
-        Assert.Equal(pcBefore + 2, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfKeyIsPressedOrReleased_DispatchesA1ToIsReleased()
     {
-        var (emulator, cpu) = CreateEmulator(out var input);
-        cpu.SetRegisterValue(0x6107);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator(out var input);
+        emulator.SetRegisterValue(0x6107);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.InputRoutines[0xE1A1 & 0x00FF](0xE1A1);
+        emulator.InputRoutines[0xE1A1 & 0x00FF](0xE1A1);
 
-        Assert.Equal(pcBefore + 2, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SkipIfKeyIsPressedOrReleased_UnknownSubOp_IsNoOp()
     {
-        var (emulator, cpu) = CreateEmulator(out var input);
-        cpu.SetRegisterValue(0x6107);
+        var emulator = CreateEmulator(out var input);
+        emulator.SetRegisterValue(0x6107);
         input.Press(0x7);
-        var pcBefore = cpu.ReadProgramCounter();
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.InputRoutines[0xE100 & 0x00FF](0xE100);
+        emulator.InputRoutines[0xE100 & 0x00FF](0xE100);
 
-        Assert.Equal(pcBefore, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void SetDelayTimer_StoresVxIntoDelayTimer()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x613C);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x613C);
 
-        cpu.SetDelayTimer(0xF115);
+        emulator.SetDelayTimer(0xF115);
 
-        Assert.Equal(0x3C, cpu.Registers.ReadDt());
+        Assert.Equal(0x3C, emulator.Registers.ReadDt());
     }
 
     [Fact]
     public void SetSoundTimer_StoresVxIntoSoundTimer()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6120);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6120);
 
-        cpu.SetSoundTimer(0xF118);
+        emulator.SetSoundTimer(0xF118);
 
-        Assert.Equal(0x20, cpu.Registers.ReadSt());
+        Assert.Equal(0x20, emulator.Registers.ReadSt());
     }
 
     [Fact]
     public void ReadDelayTimer_StoresDelayTimerIntoVx()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x612A);
-        cpu.SetDelayTimer(0xF115);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x612A);
+        emulator.SetDelayTimer(0xF115);
 
-        cpu.ReadDelayTimer(0xF207);
+        emulator.ReadDelayTimer(0xF207);
 
-        Assert.Equal(0x2A, cpu.Registers.ReadV(2));
+        Assert.Equal(0x2A, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void TimerIns_Dispatches07ToReadDelayTimer()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6155);
-        cpu.SetDelayTimer(0xF115);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6155);
+        emulator.SetDelayTimer(0xF115);
 
-        cpu.UtilityRoutines[0xF207 & 0x00FF](0xF207);
+        emulator.UtilityRoutines[0xF207 & 0x00FF](0xF207);
 
-        Assert.Equal(0x55, cpu.Registers.ReadV(2));
+        Assert.Equal(0x55, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void TimerIns_Dispatches15ToSetDelayTimer()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6199);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6199);
 
-        cpu.UtilityRoutines[0xF115 & 0x00FF](0xF115);
+        emulator.UtilityRoutines[0xF115 & 0x00FF](0xF115);
 
-        Assert.Equal(0x99, cpu.Registers.ReadDt());
+        Assert.Equal(0x99, emulator.Registers.ReadDt());
     }
 
     [Fact]
     public void TimerIns_Dispatches18ToSetSoundTimer()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x617F);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x617F);
 
-        cpu.UtilityRoutines[0xF118 & 0x00FF](0xF118);
+        emulator.UtilityRoutines[0xF118 & 0x00FF](0xF118);
 
-        Assert.Equal(0x7F, cpu.Registers.ReadSt());
+        Assert.Equal(0x7F, emulator.Registers.ReadSt());
     }
 
     [Fact]
     public void TimerIns_UnknownSubOp_IsNoOp()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x61AA);
-        var pcBefore = cpu.ReadProgramCounter();
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x61AA);
+        var pcBefore = emulator.ReadProgramCounter();
 
-        cpu.UtilityRoutines[0xF100 & 0x00FF](0xF100);
+        emulator.UtilityRoutines[0xF100 & 0x00FF](0xF100);
 
-        Assert.Equal(pcBefore, cpu.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
     }
 
     [Fact]
     public void AddVxToI_AddsVxToIndexRegister()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetIndexRegisterIns(0xA100);
-        cpu.SetRegisterValue(0x6125);
+        var emulator = CreateEmulator();
+        emulator.SetIndexRegisterIns(0xA100);
+        emulator.SetRegisterValue(0x6125);
 
-        cpu.AddVxToI(0xF11E);
+        emulator.AddVxToI(0xF11E);
 
-        Assert.Equal(0x125, cpu.Registers.ReadI());
+        Assert.Equal(0x125, emulator.Registers.ReadI());
     }
 
     [Fact]
     public void AddVxToI_AccumulatesAcrossCalls()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetIndexRegisterIns(0xA010);
-        cpu.SetRegisterValue(0x6105);
+        var emulator = CreateEmulator();
+        emulator.SetIndexRegisterIns(0xA010);
+        emulator.SetRegisterValue(0x6105);
 
-        cpu.AddVxToI(0xF11E);
-        cpu.AddVxToI(0xF11E);
+        emulator.AddVxToI(0xF11E);
+        emulator.AddVxToI(0xF11E);
 
-        Assert.Equal(0x01A, cpu.Registers.ReadI());
+        Assert.Equal(0x01A, emulator.Registers.ReadI());
     }
 
     [Theory]
@@ -709,32 +706,32 @@ public class Chip8InterpreterTests
     [InlineData(0xF, 0x09B)]
     public void LoadFontCharacter_SetsIndexToFontBasePlus5TimesVx(byte vx, int expectedIndex)
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6100 | vx);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6100 | vx);
 
-        cpu.LoadLowResFontCharacter(0xF129);
+        emulator.LoadLowResFontCharacter(0xF129);
 
-        Assert.Equal(expectedIndex, cpu.Registers.ReadI());
+        Assert.Equal(expectedIndex, emulator.Registers.ReadI());
     }
 
     [Fact]
     public void LoadFontCharacter_IndexPointsAtFontSpriteData()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6100);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6100);
 
-        cpu.LoadLowResFontCharacter(0xF129);
+        emulator.LoadLowResFontCharacter(0xF129);
 
-        var sprite = ReadMemorySlice(emulator, cpu.Registers.ReadI(), 5);
+        var sprite = ReadMemorySlice(emulator, emulator.Registers.ReadI(), 5);
         Assert.Equal(new byte[] { 0xF0, 0x90, 0x90, 0x90, 0xF0 }, sprite);
     }
 
     [Fact]
     public void WaitForKeyPress_SetsIsWaitingForKeyPressFlag()
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
-        cpu.WaitForKeyPressAndRelease(0xF20A);
+        emulator.WaitForKeyPressAndRelease(0xF20A);
 
         Assert.True(emulator.IsWaitingForKey);
     }
@@ -742,80 +739,80 @@ public class Chip8InterpreterTests
     [Fact]
     public void WaitForKeyPress_DoesNotImmediatelyWriteToRegister()
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
-        cpu.WaitForKeyPressAndRelease(0xF20A);
+        emulator.WaitForKeyPressAndRelease(0xF20A);
 
-        Assert.Equal(0, cpu.Registers.ReadV(2));
+        Assert.Equal(0, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void Update_WhileWaitingForKey_AndNoKeyPressed_StaysWaiting()
     {
-        var (emulator, cpu) = CreateEmulator(out var clock, out _);
+        var emulator = CreateEmulator(out var clock, out _);
         emulator.Start();
-        cpu.WaitForKeyPressAndRelease(0xF20A);
+        emulator.WaitForKeyPressAndRelease(0xF20A);
         clock.Timestamp = clock.Frequency / 60;
 
         clock.Tick();
 
         Assert.True(emulator.IsWaitingForKey);
-        Assert.Equal(0, cpu.Registers.ReadV(2));
+        Assert.Equal(0, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void Update_WhileWaitingForKey_AndKeyPressed_StoresKeyAndResumes()
     {
-        var (emulator, cpu) = CreateEmulator(out var clock, out var input);
+        var emulator = CreateEmulator(out var clock, out var input);
         emulator.Start();
         emulator.Memory.Write(0, [0x10, 0x00]);
-        cpu.WaitForKeyPressAndRelease(0xF20A);
+        emulator.WaitForKeyPressAndRelease(0xF20A);
         input.QueueKeyPressAndReleaseEvent(0xA);
         clock.Timestamp = clock.Frequency / 60;
 
         clock.Tick();
 
         Assert.False(emulator.IsWaitingForKey);
-        Assert.Equal(0xA, cpu.Registers.ReadV(2));
+        Assert.Equal(0xA, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void Update_WhileWaitingForKey_DelayTimerStillTicks()
     {
-        var (emulator, cpu) = CreateEmulator(out var clock, out _);
+        var emulator = CreateEmulator(out var clock, out _);
         emulator.Start();
-        cpu.SetRegisterValue(0x600A);
-        cpu.SetDelayTimer(0xF015);
-        cpu.WaitForKeyPressAndRelease(0xF10A);
+        emulator.SetRegisterValue(0x600A);
+        emulator.SetDelayTimer(0xF015);
+        emulator.WaitForKeyPressAndRelease(0xF10A);
         clock.Timestamp = clock.Frequency / 60;
 
         clock.Tick();
 
-        Assert.Equal(9, cpu.Registers.ReadDt());
+        Assert.Equal(9, emulator.Registers.ReadDt());
         Assert.True(emulator.IsWaitingForKey);
     }
 
     [Fact]
     public void Update_WhileWaitingForKey_SoundTimerStillTicks()
     {
-        var (emulator, cpu) = CreateEmulator(out var clock, out _);
+        var emulator = CreateEmulator(out var clock, out _);
         emulator.Start();
-        cpu.SetRegisterValue(0x6005);
-        cpu.SetSoundTimer(0xF018);
-        cpu.WaitForKeyPressAndRelease(0xF10A);
+        emulator.SetRegisterValue(0x6005);
+        emulator.SetSoundTimer(0xF018);
+        emulator.WaitForKeyPressAndRelease(0xF10A);
         clock.Timestamp = clock.Frequency / 60;
 
         clock.Tick();
 
-        Assert.Equal(4, cpu.Registers.ReadSt());
+        Assert.Equal(4, emulator.Registers.ReadSt());
     }
 
     [Fact]
     public void TimerIns_Dispatches0AToWaitForKeyPress()
     {
-        var (emulator, cpu) = CreateEmulator();
+        var emulator = CreateEmulator();
 
-        cpu.UtilityRoutines[0xF10A & 0x00FF](0xF10A);
+        emulator.UtilityRoutines[0xF10A & 0x00FF](0xF10A);
 
         Assert.True(emulator.IsWaitingForKey);
     }
@@ -823,37 +820,37 @@ public class Chip8InterpreterTests
     [Fact]
     public void TimerIns_Dispatches1EToAddVxToI()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetIndexRegisterIns(0xA020);
-        cpu.SetRegisterValue(0x6103);
+        var emulator = CreateEmulator();
+        emulator.SetIndexRegisterIns(0xA020);
+        emulator.SetRegisterValue(0x6103);
 
-        cpu.UtilityRoutines[0xF11E & 0x00FF](0xF11E);
+        emulator.UtilityRoutines[0xF11E & 0x00FF](0xF11E);
 
-        Assert.Equal(0x023, cpu.Registers.ReadI());
+        Assert.Equal(0x023, emulator.Registers.ReadI());
     }
 
     [Fact]
     public void TimerIns_Dispatches29ToLoadFontCharacter()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6103);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6103);
 
-        cpu.UtilityRoutines[0xF129 & 0x00FF](0xF129);
+        emulator.UtilityRoutines[0xF129 & 0x00FF](0xF129);
 
-        Assert.Equal(0x050 + 5 * 3, cpu.Registers.ReadI());
+        Assert.Equal(0x050 + 5 * 3, emulator.Registers.ReadI());
     }
 
     [Fact]
     public void StoreRegisters_WritesV0ThroughVxIntoMemoryAtI()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6011);
-        cpu.SetRegisterValue(0x6122);
-        cpu.SetRegisterValue(0x6233);
-        cpu.SetRegisterValue(0x6344);
-        cpu.SetIndexRegisterIns(0xA300);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6011);
+        emulator.SetRegisterValue(0x6122);
+        emulator.SetRegisterValue(0x6233);
+        emulator.SetRegisterValue(0x6344);
+        emulator.SetIndexRegisterIns(0xA300);
 
-        cpu.StoreRegisters(0xF355);
+        emulator.StoreRegisters(0xF355);
 
         Assert.Equal(0x11, emulator.Memory.Read(0x300));
         Assert.Equal(0x22, emulator.Memory.Read(0x301));
@@ -865,12 +862,12 @@ public class Chip8InterpreterTests
     [Fact]
     public void StoreRegisters_V0Only_WritesSingleByte()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x60AB);
-        cpu.SetRegisterValue(0x61CD);
-        cpu.SetIndexRegisterIns(0xA300);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x60AB);
+        emulator.SetRegisterValue(0x61CD);
+        emulator.SetIndexRegisterIns(0xA300);
 
-        cpu.StoreRegisters(0xF055);
+        emulator.StoreRegisters(0xF055);
 
         Assert.Equal(0xAB, emulator.Memory.Read(0x300));
         Assert.Equal(0x00, emulator.Memory.Read(0x301));
@@ -879,60 +876,60 @@ public class Chip8InterpreterTests
     [Fact]
     public void LoadRegisters_ReadsMemoryAtIIntoV0ThroughVx()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetIndexRegisterIns(0xA300);
+        var emulator = CreateEmulator();
+        emulator.SetIndexRegisterIns(0xA300);
         emulator.Memory.Write(0x300, [0x11, 0x22, 0x33, 0x44, 0xFF]);
 
-        cpu.LoadRegisters(0xF365);
+        emulator.LoadRegisters(0xF365);
 
-        Assert.Equal(0x11, cpu.Registers.ReadV(0));
-        Assert.Equal(0x22, cpu.Registers.ReadV(1));
-        Assert.Equal(0x33, cpu.Registers.ReadV(2));
-        Assert.Equal(0x44, cpu.Registers.ReadV(3));
-        Assert.Equal(0x00, cpu.Registers.ReadV(4));
+        Assert.Equal(0x11, emulator.Registers.ReadV(0));
+        Assert.Equal(0x22, emulator.Registers.ReadV(1));
+        Assert.Equal(0x33, emulator.Registers.ReadV(2));
+        Assert.Equal(0x44, emulator.Registers.ReadV(3));
+        Assert.Equal(0x00, emulator.Registers.ReadV(4));
     }
 
     [Fact]
     public void LoadRegisters_V0Only_ReadsSingleByte()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetIndexRegisterIns(0xA300);
+        var emulator = CreateEmulator();
+        emulator.SetIndexRegisterIns(0xA300);
         emulator.Memory.Write(0x300, [0xAB, 0xCD]);
 
-        cpu.LoadRegisters(0xF065);
+        emulator.LoadRegisters(0xF065);
 
-        Assert.Equal(0xAB, cpu.Registers.ReadV(0));
-        Assert.Equal(0x00, cpu.Registers.ReadV(1));
+        Assert.Equal(0xAB, emulator.Registers.ReadV(0));
+        Assert.Equal(0x00, emulator.Registers.ReadV(1));
     }
 
     [Fact]
     public void StoreThenLoad_RoundTripsRegisters()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6012);
-        cpu.SetRegisterValue(0x6134);
-        cpu.SetRegisterValue(0x6256);
-        cpu.SetIndexRegisterIns(0xA200);
-        cpu.StoreRegisters(0xF255);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6012);
+        emulator.SetRegisterValue(0x6134);
+        emulator.SetRegisterValue(0x6256);
+        emulator.SetIndexRegisterIns(0xA200);
+        emulator.StoreRegisters(0xF255);
 
-        cpu.SetRegisterValue(0x6000);
-        cpu.SetRegisterValue(0x6100);
-        cpu.SetRegisterValue(0x6200);
-        cpu.LoadRegisters(0xF265);
+        emulator.SetRegisterValue(0x6000);
+        emulator.SetRegisterValue(0x6100);
+        emulator.SetRegisterValue(0x6200);
+        emulator.LoadRegisters(0xF265);
 
-        Assert.Equal(0x12, cpu.Registers.ReadV(0));
-        Assert.Equal(0x34, cpu.Registers.ReadV(1));
-        Assert.Equal(0x56, cpu.Registers.ReadV(2));
+        Assert.Equal(0x12, emulator.Registers.ReadV(0));
+        Assert.Equal(0x34, emulator.Registers.ReadV(1));
+        Assert.Equal(0x56, emulator.Registers.ReadV(2));
     }
 
     [Fact]
     public void TimerIns_Dispatches55ToStoreRegisters()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6099);
-        cpu.SetIndexRegisterIns(0xA400);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6099);
+        emulator.SetIndexRegisterIns(0xA400);
 
-        cpu.UtilityRoutines[0xF055 & 0x00FF](0xF055);
+        emulator.UtilityRoutines[0xF055 & 0x00FF](0xF055);
 
         Assert.Equal(0x99, emulator.Memory.Read(0x400));
     }
@@ -946,11 +943,11 @@ public class Chip8InterpreterTests
     [InlineData(255, 2, 5, 5)]
     public void StoreBcdInMemory_WritesHundredsTensOnesToMemoryAtI(byte vx, byte hundreds, byte tens, byte ones)
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x6100 | vx);
-        cpu.SetIndexRegisterIns(0xA300);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x6100 | vx);
+        emulator.SetIndexRegisterIns(0xA300);
 
-        cpu.StoreBcdInMemory(0xF133);
+        emulator.StoreBcdInMemory(0xF133);
 
         Assert.Equal(hundreds, emulator.Memory.Read(0x300));
         Assert.Equal(tens, emulator.Memory.Read(0x301));
@@ -960,24 +957,24 @@ public class Chip8InterpreterTests
     [Fact]
     public void StoreBcdInMemory_DoesNotModifyRegisterOrIndex()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x617B);
-        cpu.SetIndexRegisterIns(0xA300);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x617B);
+        emulator.SetIndexRegisterIns(0xA300);
 
-        cpu.StoreBcdInMemory(0xF133);
+        emulator.StoreBcdInMemory(0xF133);
 
-        Assert.Equal(0x7B, cpu.Registers.ReadV(1));
-        Assert.Equal(0x300, cpu.Registers.ReadI());
+        Assert.Equal(0x7B, emulator.Registers.ReadV(1));
+        Assert.Equal(0x300, emulator.Registers.ReadI());
     }
 
     [Fact]
     public void TimerIns_Dispatches33ToStoreBcdInMemory()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetRegisterValue(0x61C8);
-        cpu.SetIndexRegisterIns(0xA400);
+        var emulator = CreateEmulator();
+        emulator.SetRegisterValue(0x61C8);
+        emulator.SetIndexRegisterIns(0xA400);
 
-        cpu.UtilityRoutines[0xF133 & 0x00FF](0xF133);
+        emulator.UtilityRoutines[0xF133 & 0x00FF](0xF133);
 
         Assert.Equal(2, emulator.Memory.Read(0x400));
         Assert.Equal(0, emulator.Memory.Read(0x401));
@@ -987,25 +984,25 @@ public class Chip8InterpreterTests
     [Fact]
     public void TimerIns_Dispatches65ToLoadRegisters()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetIndexRegisterIns(0xA400);
+        var emulator = CreateEmulator();
+        emulator.SetIndexRegisterIns(0xA400);
         emulator.Memory.Write(0x400, [0x77]);
 
-        cpu.UtilityRoutines[0xF065 & 0x00FF](0xF065);
+        emulator.UtilityRoutines[0xF065 & 0x00FF](0xF065);
 
-        Assert.Equal(0x77, cpu.Registers.ReadV(0));
+        Assert.Equal(0x77, emulator.Registers.ReadV(0));
     }
 
     [Fact]
     public void ClearDisplay_ZerosAllDisplayPixels()
     {
-        var (emulator, cpu) = CreateEmulator();
-        cpu.SetIndexRegisterIns(0xA000);
+        var emulator = CreateEmulator();
+        emulator.SetIndexRegisterIns(0xA000);
         emulator.Memory.Write(0, [0xFF]);
-        cpu.DrawToScreen(0xD001);
+        emulator.DrawToScreen(0xD001);
         Assert.Contains(_pixelBuffer, p => p == 1);
 
-        cpu.ClearDisplay(0x00E0);
+        emulator.ClearDisplay(0x00E0);
 
         foreach (var p in _pixelBuffer)
             Assert.Equal(0, p);

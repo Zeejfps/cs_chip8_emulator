@@ -7,13 +7,13 @@ namespace Chip8Emulator.Core;
 // inc-I). The quirk variants live here because they are alternate interpretations
 // of CHIP-8 ops, not later-CPU additions; the Apply* methods pick between them at
 // flag-set time.
-public sealed partial class Chip8Cpu
+internal sealed partial class Chip8Interpreter
 {
     // ---- 0x0*** system ops --------------------------------------------------
 
     internal void ClearDisplay(int ins)
     {
-        _display.Clear();
+        Display.Clear();
     }
 
     internal void ReturnFromSubroutine(int ins)
@@ -287,21 +287,21 @@ public sealed partial class Chip8Cpu
 
     internal void DrawToScreen(int ins)
     {
-        var x = Registers.ReadV(ExtractX(ins)) % _display.Width;
-        var y = Registers.ReadV(ExtractY(ins)) % _display.Height;
+        var x = Registers.ReadV(ExtractX(ins)) % Display.Width;
+        var y = Registers.ReadV(ExtractY(ins)) % Display.Height;
         var n = ExtractN(ins);
-        var planeMask = (byte)(_display.SelectedPlanes & Chip8Display.AllPlanesMask);
+        var planeMask = (byte)(Display.SelectedPlanes & Chip8Display.AllPlanesMask);
 
         if (planeMask == 0)
         {
             Registers.WriteV(0xF, 0);
-            if (DisplayWait) _bus.Publish<BeginWaitForVBlankEvent>();
+            if (DisplayWait) _waitForVBlank = true;
             return;
         }
 
         if (n == 0)
         {
-            if (_display.IsHighRes)
+            if (Display.IsHighRes)
                 DrawHighResSprite(x, y, planeMask);
             else
                 DrawLowResSprite(x, y, 8, planeMask);
@@ -313,16 +313,16 @@ public sealed partial class Chip8Cpu
 
         if (DisplayWait)
         {
-            _bus.Publish<BeginWaitForVBlankEvent>();
+            _waitForVBlank = true;
         }
     }
 
     private void DrawLowResSprite(int sx, int sy, int height, byte planeMask)
     {
-        _display.WritePixels(displayPixels =>
+        Display.WritePixels(displayPixels =>
         {
-            var width = _display.Width;
-            var displayHeight = _display.Height;
+            var width = Display.Width;
+            var displayHeight = Display.Height;
             var wrap = SpritesWrap;
             byte collision = 0;
 
@@ -338,7 +338,7 @@ public sealed partial class Chip8Cpu
                     if (wrap) dstY %= displayHeight;
                     else if (dstY >= displayHeight) break;
 
-                    var row = _memory.Read(Registers.ReadIWithOffset(spriteBase + y));
+                    var row = Memory.Read(Registers.ReadIWithOffset(spriteBase + y));
                     for (var bit = 0; bit < 8; bit++)
                     {
                         var dstX = sx + bit;
@@ -368,14 +368,14 @@ public sealed partial class Chip8Cpu
     {
         var x = ExtractX(ins);
         var key = Registers.ReadV(x);
-        _bus.Publish(new KeyIsPressedSkipEvent(key));
+        if (_input.IsKeyPressed(key)) AdvanceProgramCounter();
     }
 
     internal void SkipNextInsIfKeyIsReleased(int ins)
     {
         var x = ExtractX(ins);
         var key = Registers.ReadV(x);
-        _bus.Publish(new KeyIsReleasedSkipEvent(key));
+        if (!_input.IsKeyPressed(key)) AdvanceProgramCounter();
     }
 
     // ---- 0xFX** timer / system ops ------------------------------------------
@@ -389,7 +389,8 @@ public sealed partial class Chip8Cpu
     internal void WaitForKeyPressAndRelease(int ins)
     {
         var x = ExtractX(ins);
-        _bus.Publish(new BeginWaitForKeyEvent(x));
+        _isWaitingForKey = true;
+        _keyRegisterIndex = x;
     }
 
     internal void SetDelayTimer(int ins)
@@ -416,16 +417,16 @@ public sealed partial class Chip8Cpu
     {
         var x = ExtractX(ins);
         var value = Registers.ReadV(x);
-        Registers.WriteI((value & 0x0F) * Chip8Interpreter.LowResFontCharWidth + Chip8Interpreter.LowResFontBaseAddress);
+        Registers.WriteI((value & 0x0F) * LowResFontCharWidth + LowResFontBaseAddress);
     }
 
     internal void StoreBcdInMemory(int ins)
     {
         var x = ExtractX(ins);
         var bcd = Registers.ReadV(x);
-        _memory.Write(Registers.ReadIWithOffset(0), (byte)(bcd / 100));
-        _memory.Write(Registers.ReadIWithOffset(1), (byte)(bcd / 10 % 10));
-        _memory.Write(Registers.ReadIWithOffset(2), (byte)(bcd % 10));
+        Memory.Write(Registers.ReadIWithOffset(0), (byte)(bcd / 100));
+        Memory.Write(Registers.ReadIWithOffset(1), (byte)(bcd / 10 % 10));
+        Memory.Write(Registers.ReadIWithOffset(2), (byte)(bcd % 10));
     }
 
     // FX55/FX65 : store/load V0..Vx. Quirk-sensitive (inc I or keep I).
@@ -442,7 +443,7 @@ public sealed partial class Chip8Cpu
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            Registers.WriteV(i, _memory.Read(Registers.ReadIWithOffset(i)));
+            Registers.WriteV(i, Memory.Read(Registers.ReadIWithOffset(i)));
         }
     }
 
@@ -451,7 +452,7 @@ public sealed partial class Chip8Cpu
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            Registers.WriteV(i, _memory.Read(Registers.ReadIWithOffset(i)));
+            Registers.WriteV(i, Memory.Read(Registers.ReadIWithOffset(i)));
         }
         Registers.WriteI(Registers.ReadI() + x + 1);
     }
@@ -467,7 +468,7 @@ public sealed partial class Chip8Cpu
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            _memory.Write(Registers.ReadIWithOffset(i), Registers.ReadV(i));
+            Memory.Write(Registers.ReadIWithOffset(i), Registers.ReadV(i));
         }
     }
 
@@ -476,7 +477,7 @@ public sealed partial class Chip8Cpu
         var x = ExtractX(ins);
         for (var i = 0; i <= x; i++)
         {
-            _memory.Write(Registers.ReadIWithOffset(i), Registers.ReadV(i));
+            Memory.Write(Registers.ReadIWithOffset(i), Registers.ReadV(i));
         }
         Registers.WriteI(Registers.ReadI() + x + 1);
     }

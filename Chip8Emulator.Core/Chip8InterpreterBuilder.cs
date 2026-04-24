@@ -77,8 +77,6 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
             $"{nameof(WithDisplay)} must be called before {nameof(Build)}.");
         var persistentFlags = _persistentFlags ?? new EmulatedPersistentFlags();
 
-        var bus = new EmulatorBus();
-        var cpu = new Chip8Cpu(memory, display, registers, stack, persistentFlags, bus);
-        return new Chip8Interpreter(clock, display, memory, audio, input, bus, cpu);
+        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, persistentFlags);
     }
 }
