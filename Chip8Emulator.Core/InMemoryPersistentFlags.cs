@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class EmulatedPersistentFlags : IPersistentFlags
+public sealed class InMemoryPersistentFlags : IPersistentFlags
 {
     private readonly byte[] _bytes = new byte[IPersistentFlags.Capacity];
 
