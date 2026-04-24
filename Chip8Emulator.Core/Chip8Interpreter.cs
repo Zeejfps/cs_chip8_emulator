@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-internal sealed partial class Chip8Interpreter : IChip8Interpreter
+internal sealed partial class Chip8Interpreter : IInterpreter
 {
     public const int LowResFontBaseAddress = 0x050;
     public const int HighResFontBaseAddress = 0x0A0;

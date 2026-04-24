@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public interface IChip8Interpreter
+public interface IInterpreter
 {
     ICpu Cpu { get; }
     int InstructionsPerSecond { get; set; }
