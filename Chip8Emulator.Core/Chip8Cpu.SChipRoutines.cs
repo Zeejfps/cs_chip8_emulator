@@ -1,50 +1,50 @@
 using static Chip8Emulator.Core.Chip8Disassembler;
 
-namespace Chip8Emulator.Core.Routines;
+namespace Chip8Emulator.Core;
 
 // SUPER-CHIP 1.1 additions: hi-res mode, 4-pixel scrolls, scroll down N,
 // 16x16 sprite drawing (DXY0), 10-byte high-res font, persistent user flags.
-internal static class SChipRoutines
+public sealed partial class Chip8Cpu
 {
     // ---- 00FF / 00FE : high-res mode toggle ---------------------------------
 
-    public static void EnableHiresMode(Chip8Cpu cpu, int ins)
+    internal void EnableHiresMode(int ins)
     {
-        cpu.Display.EnableHighResMode();
+        _display.EnableHighResMode();
     }
 
-    public static void DisableHiresMode(Chip8Cpu cpu, int ins)
+    internal void DisableHiresMode(int ins)
     {
-        cpu.Display.DisableHighResMode();
+        _display.DisableHighResMode();
     }
 
     // ---- 00FB / 00FC / 00CN : scroll ----------------------------------------
 
-    public static void ScrollRight(Chip8Cpu cpu, int ins)
+    internal void ScrollRight(int ins)
     {
-        cpu.Display.ScrollRight(4);
+        _display.ScrollRight(4);
     }
 
-    public static void ScrollLeft(Chip8Cpu cpu, int ins)
+    internal void ScrollLeft(int ins)
     {
-        cpu.Display.ScrollLeft(4);
+        _display.ScrollLeft(4);
     }
 
-    public static void ScrollDown(Chip8Cpu cpu, int ins)
+    internal void ScrollDown(int ins)
     {
-        cpu.Display.ScrollDown(ins & 0x0F);
+        _display.ScrollDown(ins & 0x0F);
     }
 
     // ---- DXY0 : 16x16 hi-res sprite -----------------------------------------
 
-    // Called from Chip8Cpu.DrawToScreenIns when the display is in hi-res
-    // mode and N == 0. Extended for XO-Chip bitplanes (mask param).
-    public static void DrawHighResSprite(Chip8Cpu cpu, int x, int y, byte planeMask)
+    // Called from DrawToScreen when the display is in hi-res mode and N == 0.
+    // Extended for XO-Chip bitplanes (mask param).
+    private void DrawHighResSprite(int x, int y, byte planeMask)
     {
         // S-CHIP 1.1 DXY0 hi-res collision semantics (extended for XO-Chip bitplanes):
         // VF = number of sprite rows with at least one collision in any selected plane
         //    + number of sprite rows clipped off the bottom edge (when not wrapping).
-        cpu.Display.WritePixels(displayPixels =>
+        _display.WritePixels(displayPixels =>
         {
             Span<bool> rowCollisions = stackalloc bool[16];
             var anyClipped = 0;
@@ -55,7 +55,7 @@ internal static class SChipRoutines
                 var planeBitMask = (byte)(1 << planeBit);
                 if ((planeMask & planeBitMask) == 0) continue;
 
-                var clipped = DrawHighResPlane(cpu, displayPixels, x, y, spriteBase, planeBitMask, rowCollisions);
+                var clipped = DrawHighResPlane(displayPixels, x, y, spriteBase, planeBitMask, rowCollisions);
                 anyClipped = Math.Max(anyClipped, clipped);
 
                 // 16 rows * 2 bytes per row = next plane's sprite data.
@@ -66,18 +66,17 @@ internal static class SChipRoutines
             for (var i = 0; i < 16; i++)
                 if (rowCollisions[i]) collidedRows++;
 
-            cpu.Registers.WriteV(0xF, (byte)(collidedRows + anyClipped));
+            Registers.WriteV(0xF, (byte)(collidedRows + anyClipped));
         });
     }
 
-    private static int DrawHighResPlane(
-        Chip8Cpu cpu, Span<byte> displayPixels, int x, int y,
+    private int DrawHighResPlane(
+        Span<byte> displayPixels, int x, int y,
         int spriteBase, byte planeBitMask, Span<bool> rowCollisions)
     {
-        var display = cpu.Display;
-        var width = display.Width;
-        var height = display.Height;
-        var wrap = cpu.SpritesWrap;
+        var width = _display.Width;
+        var height = _display.Height;
+        var wrap = SpritesWrap;
 
         for (var i = 0; i < 16; i++)
         {
@@ -91,7 +90,7 @@ internal static class SChipRoutines
                 return 16 - i;
             }
 
-            var spriteRow = ReadHighResSpriteRow(cpu, spriteBase + i * 2);
+            var spriteRow = ReadHighResSpriteRow(spriteBase + i * 2);
             if (DrawHighResRow(displayPixels, spriteRow, x, dstY, width, wrap, planeBitMask))
                 rowCollisions[i] = true;
         }
@@ -99,10 +98,10 @@ internal static class SChipRoutines
         return 0;
     }
 
-    private static ushort ReadHighResSpriteRow(Chip8Cpu cpu, int offset)
+    private ushort ReadHighResSpriteRow(int offset)
     {
-        var hi = cpu.Memory.Read(cpu.Registers.ReadIWithOffset(offset));
-        var lo = cpu.Memory.Read(cpu.Registers.ReadIWithOffset(offset + 1));
+        var hi = _memory.Read(Registers.ReadIWithOffset(offset));
+        var lo = _memory.Read(Registers.ReadIWithOffset(offset + 1));
         return (ushort)((hi << 8) | lo);
     }
 
@@ -130,22 +129,22 @@ internal static class SChipRoutines
 
     // ---- FX30 : load hi-res font character ----------------------------------
 
-    public static void LoadHighResFontCharacter(Chip8Cpu cpu, int ins)
+    internal void LoadHighResFontCharacter(int ins)
     {
         var x = ExtractX(ins);
-        var value = cpu.Registers.ReadV(x);
-        cpu.Registers.WriteI((value & 0x0F) * Chip8Interpreter.HighResFontCharWidth + Chip8Interpreter.HighResFontBaseAddress);
+        var value = Registers.ReadV(x);
+        Registers.WriteI((value & 0x0F) * Chip8Interpreter.HighResFontCharWidth + Chip8Interpreter.HighResFontBaseAddress);
     }
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------
 
-    public static void SaveFlags(Chip8Cpu cpu, int ins)
+    internal void SaveFlagsIns(int ins)
     {
-        cpu.SaveFlags(ExtractX(ins));
+        SaveFlags(ExtractX(ins));
     }
 
-    public static void LoadFlags(Chip8Cpu cpu, int ins)
+    internal void LoadFlagsIns(int ins)
     {
-        cpu.LoadFlags(ExtractX(ins));
+        LoadFlags(ExtractX(ins));
     }
 }
