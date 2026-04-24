@@ -3,7 +3,6 @@ namespace Chip8Emulator.Core;
 public interface IInterpreter
 {
     int InstructionsPerSecond { get; set; }
-
     bool ShiftUsesVy { get; set; }
     bool JumpUsesVx { get; set; }
     bool LoadStoreIncrementsI { get; set; }

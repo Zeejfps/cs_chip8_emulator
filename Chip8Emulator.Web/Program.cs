@@ -77,7 +77,20 @@ namespace Chip8Emulator.Web
         public static void Stop() => _interpreter!.Stop();
 
         [JSExport]
-        public static void Step() => _clock!.Advance(_clock!.Frequency / _interpreter!.InstructionsPerSecond);
+        public static void Step()
+        {
+            // A vblank-wait draw suspends instruction execution until ~1 frame of ticks accumulates,
+            // so a single one-instruction advance can land in a no-op window. Loop up to
+            // (steps-per-frame + 1) times until the PC actually moves.
+            var pcBefore = _registers!.ReadPc();
+            var delta = _clock!.Frequency / _interpreter!.InstructionsPerSecond;
+            var maxSteps = _interpreter.InstructionsPerSecond / 60 + 1;
+            for (var i = 0; i < maxSteps; i++)
+            {
+                _clock.Advance(delta);
+                if (_registers.ReadPc() != pcBefore) return;
+            }
+        }
 
         [JSExport]
         public static int GetProgramCounter() => _registers!.ReadPc();
