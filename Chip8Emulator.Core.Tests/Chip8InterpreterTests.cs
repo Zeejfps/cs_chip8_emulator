@@ -5,7 +5,7 @@ namespace Chip8Emulator.Core.Tests;
 
 public class Chip8InterpreterTests
 {
-    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
+    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
 
     private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(out FakeAudio audio, out FakeClock clock, out FakeInput input)
     {

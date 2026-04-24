@@ -27,7 +27,7 @@ namespace Chip8Emulator.Web
             _stackBuffer = new int[16];
             _memoryBuffer = new byte[4096];
             _vRegistersBuffer = new byte[16];
-            _pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
+            _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
             var stack = new Chip8Stack(size => _stackBuffer.AsMemory(0, size));
             _memory = new Chip8Memory(size => _memoryBuffer.AsMemory(0, size));
             var registers = new Chip8Registers(size => _vRegistersBuffer.AsMemory(0, size));

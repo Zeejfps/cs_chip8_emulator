@@ -2,12 +2,12 @@ namespace Chip8Emulator.Core;
 
 public sealed class Chip8Display : IDisplay
 {
-    public const int HighRestWidth = 128;
-    public const int HighRestHeight = 64;
+    public const int HighResWidth = 128;
+    public const int HighResHeight = 64;
     public const int ClassicHiresWidth = 64;
     public const int ClassicHiresHeight = 64;
-    public const int LowRestWidth = 64;
-    public const int LowRestHeight = 32;
+    public const int LowResWidth = 64;
+    public const int LowResHeight = 32;
 
     // Pixel encoding: bit 0 = plane 0, bit 1 = plane 1. Value range 0..3.
     public const byte Plane0Mask = 0x01;
@@ -22,10 +22,10 @@ public sealed class Chip8Display : IDisplay
     
     public Chip8Display(Func<int, Memory<byte>> alloc)
     {
-        Width = LowRestWidth;
-        Height = LowRestHeight;
+        Width = LowResWidth;
+        Height = LowResHeight;
         //NOTE (Zee): Allocate enough space for the high resolution display.
-        const int requiredSize = HighRestWidth * HighRestHeight;
+        const int requiredSize = HighResWidth * HighResHeight;
         _pixels = alloc(requiredSize);
         if (_pixels.Length < requiredSize)
             throw new InvalidOperationException($"Allocator returned {_pixels.Length} bytes, expected at least {requiredSize}.");
@@ -46,8 +46,8 @@ public sealed class Chip8Display : IDisplay
     public void Reset()
     {
         IsHighRes = false;
-        Width = LowRestWidth;
-        Height = LowRestHeight;
+        Width = LowResWidth;
+        Height = LowResHeight;
         SelectedPlanes = Plane0Mask;
         _pixels.Span.Clear();
     }
@@ -71,15 +71,15 @@ public sealed class Chip8Display : IDisplay
     public void EnableHighResMode()
     {
         IsHighRes = true;
-        Width = HighRestWidth;
-        Height = HighRestHeight;
+        Width = HighResWidth;
+        Height = HighResHeight;
     }
 
     public void DisableHighResMode()
     {
         IsHighRes = false;
-        Width = LowRestWidth;
-        Height = LowRestHeight;
+        Width = LowResWidth;
+        Height = LowResHeight;
     }
 
     public void EnableClassicHiresMode()

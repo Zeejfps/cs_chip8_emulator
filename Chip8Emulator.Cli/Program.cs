@@ -29,7 +29,7 @@ try
     var audio = new ConsoleBeepAudio();
 
     var clock = new StopwatchClock();
-    var pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
+    var pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
     var emulatedDisplay = new Chip8Display(size => pixelBuffer.AsMemory(0, size));
     using var consoleDisplay = new AnsiConsoleDisplay(emulatedDisplay, pixelBuffer);
     var machine = Chip8.Builder()

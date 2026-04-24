@@ -10,7 +10,7 @@ public class SuperChipTests
     private const int HighResWidth = 128;
     private const int HighResHeight = 64;
 
-    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
+    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
 
     private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator()
     {

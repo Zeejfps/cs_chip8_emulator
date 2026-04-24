@@ -7,7 +7,7 @@ public class XoChipTests
 {
     private const int LowResWidth = 64;
 
-    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
+    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
 
     private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator(IPersistentFlags? flags = null)
         => BuildMachine(new FakeAudio(), flags ?? new EmulatedPersistentFlags());

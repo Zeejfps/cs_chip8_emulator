@@ -8,7 +8,7 @@ public class DrawToScreenTests
     private const int ScreenWidth = 64;
     private const int ScreenHeight = 32;
 
-    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighRestWidth * Chip8Display.HighRestHeight];
+    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
 
     private (Chip8Interpreter Emulator, Chip8Cpu Cpu) CreateEmulator()
     {

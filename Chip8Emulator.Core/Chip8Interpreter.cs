@@ -4,8 +4,8 @@ internal sealed partial class Chip8Interpreter : IChip8Interpreter
 {
     public const int LowResFontBaseAddress = 0x050;
     public const int HighResFontBaseAddress = 0x0A0;
-    public const int LowRestFontCharWidth = 5;
-    public const int HighRestFontCharWidth = 10;
+    public const int LowResFontCharWidth = 5;
+    public const int HighResFontCharWidth = 10;
 
     public IDisplay Display { get; }
     public IMemory Memory { get; }

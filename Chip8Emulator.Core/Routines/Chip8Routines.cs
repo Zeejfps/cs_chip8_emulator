@@ -418,7 +418,7 @@ internal static class Chip8Routines
     {
         var x = ExtractX(ins);
         var value = cpu.Registers.ReadV(x);
-        cpu.Registers.WriteI((value & 0x0F) * Chip8Interpreter.LowRestFontCharWidth + Chip8Interpreter.LowResFontBaseAddress);
+        cpu.Registers.WriteI((value & 0x0F) * Chip8Interpreter.LowResFontCharWidth + Chip8Interpreter.LowResFontBaseAddress);
     }
 
     public static void StoreBcdInMemory(Chip8Cpu cpu, int ins)
