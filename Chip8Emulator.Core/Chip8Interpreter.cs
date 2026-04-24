@@ -117,9 +117,7 @@ internal sealed partial class Chip8Interpreter : IChip8Interpreter
 
     private void OnTicked(object? sender, EventArgs e)
     {
-        var now = _clock.Timestamp;
-        var delta = now - _lastTimestamp;
-        _lastTimestamp = now;
+        var delta = CalculateDeltaTime();
         if (delta == 0) return;
 
         var maxDelta = _ticksPerFrame * 2;
@@ -160,6 +158,14 @@ internal sealed partial class Chip8Interpreter : IChip8Interpreter
         var st = Cpu.Registers.ReadSt();
         if (st > 0 && !_audio.IsPlaying) _audio.PlaySound();
         else if (st == 0 && _audio.IsPlaying) _audio.StopSound();
+    }
+
+    private long CalculateDeltaTime()
+    {
+        var now = _clock.Timestamp;
+        var delta = now - _lastTimestamp;
+        _lastTimestamp = now;
+        return delta;
     }
 
     private void StepFrame()
