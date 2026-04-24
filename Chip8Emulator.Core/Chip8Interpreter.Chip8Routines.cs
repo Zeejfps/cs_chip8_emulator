@@ -19,7 +19,7 @@ internal sealed partial class Chip8Interpreter
     internal void ReturnFromSubroutine(int ins)
     {
         var address = Stack.Pop();
-        WriteProgramCounter(address);
+        Registers.WritePc(address);
     }
 
     // ---- 0x1NNN / 0x2NNN : jump / call --------------------------------------
@@ -27,14 +27,14 @@ internal sealed partial class Chip8Interpreter
     internal void JumpToAddress(int ins)
     {
         var address = ExtractNnn(ins);
-        WriteProgramCounter(address);
+        Registers.WritePc(address);
     }
 
     internal void CallSubroutine(int ins)
     {
         var address = ExtractNnn(ins);
-        Stack.Push(ReadProgramCounter());
-        WriteProgramCounter(address);
+        Stack.Push(Registers.ReadPc());
+        Registers.WritePc(address);
     }
 
     // ---- 0x3XNN / 0x4XNN / 0x9XY0 : conditional skips ------------------------
@@ -265,14 +265,14 @@ internal sealed partial class Chip8Interpreter
     internal void ExecuteJumpWithV0OffsetIns(int ins)
     {
         var address = ExtractNnn(ins);
-        WriteProgramCounter(address + Registers.ReadV(0));
+        Registers.WritePc(address + Registers.ReadV(0));
     }
 
     internal void ExecuteJumpWithVxOffsetIns(int ins)
     {
         var address = ExtractNnn(ins);
         var x = ExtractX(ins);
-        WriteProgramCounter(address + Registers.ReadV(x));
+        Registers.WritePc(address + Registers.ReadV(x));
     }
 
     internal void GenerateRandomNum(int ins)

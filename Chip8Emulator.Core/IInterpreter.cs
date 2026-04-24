@@ -12,8 +12,6 @@ public interface IInterpreter
     bool DisplayWait { get; set; }
     bool VfResultWrittenLast { get; set; }
 
-    int ReadProgramCounter();
-
     void LoadProgram(ReadOnlySpan<byte> program);
     void Start();
     void Stop();

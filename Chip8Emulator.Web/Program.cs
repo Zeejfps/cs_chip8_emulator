@@ -80,7 +80,7 @@ namespace Chip8Emulator.Web
         public static void Step() => _clock!.Advance(_clock!.Frequency / _interpreter!.InstructionsPerSecond);
 
         [JSExport]
-        public static int GetProgramCounter() => _interpreter!.ReadProgramCounter();
+        public static int GetProgramCounter() => _registers!.ReadPc();
 
         [JSExport]
         public static int GetMemoryByte(int address) => _memory!.Read(address);

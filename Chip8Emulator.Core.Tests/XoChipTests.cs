@@ -256,7 +256,7 @@ public class XoChipTests
         var emulator = CreateEmulator();
         emulator.Memory.Write(0x400, [0x12, 0x34]);
         // Simulate the fetch/decode phase: PC points at the NNNN word after the F000 opcode.
-        emulator.WriteProgramCounter(0x400);
+        emulator.Registers.WritePc(0x400);
 
         emulator.UtilityRoutines[0xF000 & 0x00FF](0xF000);
 

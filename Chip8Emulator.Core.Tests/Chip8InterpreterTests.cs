@@ -35,7 +35,7 @@ public class Chip8InterpreterTests
     {
         var emulator = CreateEmulator();
 
-        Assert.Equal(0, emulator.ReadProgramCounter());
+        Assert.Equal(0, emulator.Registers.ReadPc());
         Assert.Equal(0, emulator.Registers.ReadI());
         Assert.Equal(0, emulator.Registers.ReadDt());
         Assert.Equal(0, emulator.Registers.ReadSt());
@@ -147,7 +147,7 @@ public class Chip8InterpreterTests
 
         emulator.JumpToAddress(instruction);
 
-        Assert.Equal(expected, emulator.ReadProgramCounter());
+        Assert.Equal(expected, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -155,11 +155,11 @@ public class Chip8InterpreterTests
     {
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x6242);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfRegisterValueEqualsValue(0x3242);
 
-        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -167,11 +167,11 @@ public class Chip8InterpreterTests
     {
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x6242);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfRegisterValueEqualsValue(0x3201);
 
-        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -179,11 +179,11 @@ public class Chip8InterpreterTests
     {
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x6242);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfRegisterValueNotEqualsValue(0x4201);
 
-        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -191,11 +191,11 @@ public class Chip8InterpreterTests
     {
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x6242);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfRegisterValueNotEqualsValue(0x4242);
 
-        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -204,11 +204,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x6142);
         emulator.SetRegisterValue(0x6242);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.FiveOpRoutines[0x5120 & 0x000F](0x5120);
 
-        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -217,11 +217,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x6142);
         emulator.SetRegisterValue(0x6201);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.FiveOpRoutines[0x5120 & 0x000F](0x5120);
 
-        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -233,7 +233,7 @@ public class Chip8InterpreterTests
 
         emulator.CallSubroutine(0x2ABC);
 
-        Assert.Equal(0xABC, emulator.ReadProgramCounter());
+        Assert.Equal(0xABC, emulator.Registers.ReadPc());
         Assert.Equal(spBefore + 1, emulator.Stack.StackPointer);
         Assert.Equal(0x246, emulator.Stack.Pop());
     }
@@ -247,7 +247,7 @@ public class Chip8InterpreterTests
 
         emulator.ReturnFromSubroutine(0x00EE);
 
-        Assert.Equal(0x246, emulator.ReadProgramCounter());
+        Assert.Equal(0x246, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -467,11 +467,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x6142);
         emulator.SetRegisterValue(0x6201);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
 
-        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -480,11 +480,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x6142);
         emulator.SetRegisterValue(0x6242);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfRegisterValueNotEqualsRegisterValue(0x9120);
 
-        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.Registers.ReadPc());
     }
 
     [Theory]
@@ -509,11 +509,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator(out var input);
         emulator.SetRegisterValue(0x6105);
         input.Press(0x5);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfKeyIsPressed(0xE19E);
 
-        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -522,11 +522,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator(out var input);
         emulator.SetRegisterValue(0x6105);
         input.Press(0x3);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfKeyIsPressed(0xE19E);
 
-        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -535,11 +535,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator(out var input);
         emulator.SetRegisterValue(0x6105);
         input.Press(0x3);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfKeyIsReleased(0xE1A1);
 
-        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -548,11 +548,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator(out var input);
         emulator.SetRegisterValue(0x6105);
         input.Press(0x5);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.SkipNextInsIfKeyIsReleased(0xE1A1);
 
-        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -561,11 +561,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator(out var input);
         emulator.SetRegisterValue(0x6107);
         input.Press(0x7);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.InputRoutines[0xE19E & 0x00FF](0xE19E);
 
-        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -573,11 +573,11 @@ public class Chip8InterpreterTests
     {
         var emulator = CreateEmulator(out var input);
         emulator.SetRegisterValue(0x6107);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.InputRoutines[0xE1A1 & 0x00FF](0xE1A1);
 
-        Assert.Equal(pcBefore + 2, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore + 2, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -586,11 +586,11 @@ public class Chip8InterpreterTests
         var emulator = CreateEmulator(out var input);
         emulator.SetRegisterValue(0x6107);
         input.Press(0x7);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.InputRoutines[0xE100 & 0x00FF](0xE100);
 
-        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.Registers.ReadPc());
     }
 
     [Fact]
@@ -666,11 +666,11 @@ public class Chip8InterpreterTests
     {
         var emulator = CreateEmulator();
         emulator.SetRegisterValue(0x61AA);
-        var pcBefore = emulator.ReadProgramCounter();
+        var pcBefore = emulator.Registers.ReadPc();
 
         emulator.UtilityRoutines[0xF100 & 0x00FF](0xF100);
 
-        Assert.Equal(pcBefore, emulator.ReadProgramCounter());
+        Assert.Equal(pcBefore, emulator.Registers.ReadPc());
     }
 
     [Fact]

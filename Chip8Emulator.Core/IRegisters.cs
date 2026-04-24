@@ -11,5 +11,7 @@ public interface IRegisters
     void WriteDt(byte value);
     void WriteSt(byte value);
     byte ReadSt();
+    int ReadPc();
+    void WritePc(int value);
     void Clear();
 }

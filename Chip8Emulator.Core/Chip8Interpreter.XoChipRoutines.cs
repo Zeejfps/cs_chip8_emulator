@@ -19,7 +19,7 @@ internal sealed partial class Chip8Interpreter
     {
         // F000 NNNN matches only when X is 0; ignore F1nn–FFnn slotted here.
         if (ExtractX(ins) != 0) return;
-        var pc = ReadProgramCounter();
+        var pc = Registers.ReadPc();
         var hi = Memory.Read(pc);
         var lo = Memory.Read(pc + 1);
         Registers.WriteI((hi << 8) | lo);

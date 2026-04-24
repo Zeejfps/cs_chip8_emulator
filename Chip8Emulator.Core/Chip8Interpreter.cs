@@ -72,7 +72,6 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     private int _keyRegisterIndex;
     private bool _waitForVBlank;
 
-    private int _programCounter;
     private bool _jumpUsesVx = true;
     private bool _loadStoreIncrementsI;
     private bool _logicResetsVf;
@@ -126,7 +125,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         ResetMemory();
         Registers.Clear();
         Stack.Clear();
-        WriteProgramCounter(0x200);
+        Registers.WritePc(0x200);
         Memory.Write(0x200, program);
 
         _audio.Reset();
@@ -171,13 +170,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public int ReadProgramCounter() => _programCounter;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    internal void WriteProgramCounter(int value) => _programCounter = value;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    internal void AdvanceProgramCounter() => _programCounter += InstructionSizeInBytes;
+    internal void AdvanceProgramCounter() => Registers.WritePc(Registers.ReadPc() + InstructionSizeInBytes);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private void FetchDecodeExecute()
@@ -192,7 +185,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private int Fetch()
     {
-        var pc = _programCounter;
+        var pc = Registers.ReadPc();
         return Memory.Read(pc) << 8 | Memory.Read(pc + 1);
     }
 
