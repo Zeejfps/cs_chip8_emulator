@@ -59,7 +59,7 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
         return this;
     }
 
-    public IChip8Interpreter Build()
+    public IInterpreter Build()
     {
         var audio = _audio ?? throw new InvalidOperationException(
             $"{nameof(WithAudio)} must be called before {nameof(Build)}.");
