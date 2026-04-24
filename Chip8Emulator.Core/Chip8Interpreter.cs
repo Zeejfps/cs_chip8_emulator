@@ -168,7 +168,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    internal void AdvanceProgramCounter() => Registers.WritePc(Registers.ReadPc() + InstructionSizeInBytes);
+    private void AdvanceProgramCounter() => Registers.WritePc(Registers.ReadPc() + InstructionSizeInBytes);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private void FetchDecodeExecute()
