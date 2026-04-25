@@ -15,7 +15,7 @@ public class XoChipTests
     private Chip8Interpreter BuildMachine(IAudio audio, IPersistentFlags flags)
     {
         var display = new Chip8Display();
-        var memory = new Chip8Memory(size => new byte[size]);
+        var memory = new Chip8Memory();
         var input = new FakeInput();
         return new Chip8Interpreter(
             new FakeClock(), display, memory, audio, input,

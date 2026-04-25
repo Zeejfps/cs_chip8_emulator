@@ -13,9 +13,7 @@ namespace Chip8Emulator.Web
         private static BrowserInput? _input;
         private static ManualClock? _clock;
         private static MemoryHandle _pixelsHandle;
-        private static byte[]? _memoryBuffer;
         private static byte[]? _vRegistersBuffer;
-        private static IMemory? _memory;
         private static IRegisters? _registers;
         private static long _lastRealTimestamp;
 
@@ -24,15 +22,12 @@ namespace Chip8Emulator.Web
         {
             _input = new BrowserInput();
             _clock = new ManualClock();
-            _memoryBuffer = new byte[4096];
             _vRegistersBuffer = new byte[16];
-            _memory = new Chip8Memory(size => _memoryBuffer.AsMemory(0, size));
             _registers = new Chip8Registers(size => _vRegistersBuffer.AsMemory(0, size));
             _interpreter = Chip8.Builder()
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
-                .WithMemory(_memory)
                 .WithRegisters(_registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
@@ -86,7 +81,7 @@ namespace Chip8Emulator.Web
         public static int GetProgramCounter() => _registers!.ReadPc();
 
         [JSExport]
-        public static int GetMemoryByte(int address) => _memory!.Read(address);
+        public static int GetMemoryByte(int address) => _interpreter!.Memory.Read(address);
 
         [JSExport]
         public static byte[] GetVRegisters() => _vRegistersBuffer!;

@@ -12,7 +12,7 @@ public class SuperChipTests
     private Chip8Interpreter CreateEmulator()
     {
         var display = new Chip8Display();
-        var memory = new Chip8Memory(size => new byte[size]);
+        var memory = new Chip8Memory();
         var audio = new FakeAudio();
         var input = new FakeInput();
         return new Chip8Interpreter(

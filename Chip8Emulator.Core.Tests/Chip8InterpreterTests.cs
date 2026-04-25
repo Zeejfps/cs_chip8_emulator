@@ -11,7 +11,7 @@ public class Chip8InterpreterTests
         input = new FakeInput();
         var display = new Chip8Display();
         var stack = new Chip8Stack();
-        var memory = new Chip8Memory(size => new byte[size]);
+        var memory = new Chip8Memory();
         var registers = new Chip8Registers(size => new byte[size]);
         return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, new InMemoryPersistentFlags());
     }
