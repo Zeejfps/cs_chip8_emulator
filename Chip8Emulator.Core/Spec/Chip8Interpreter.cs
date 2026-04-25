@@ -318,10 +318,10 @@ internal sealed partial class Chip8Interpreter : IInterpreter
 
         table[(int)OpKind.Cls] = ClearDisplay;
         table[(int)OpKind.Ret] = ReturnFromSubroutine;
-        table[(int)OpKind.ScrollDown] = ScrollDown;
-        table[(int)OpKind.ScrollUp] = ScrollUp;
-        table[(int)OpKind.ScrollRight] = ScrollRight;
-        table[(int)OpKind.ScrollLeft] = ScrollLeft;
+        table[(int)OpKind.ScrollDown] = ScrollDisplayDown;
+        table[(int)OpKind.ScrollUp] = ScrollDisplayUp;
+        table[(int)OpKind.ScrollRight] = ScrollDisplayRight;
+        table[(int)OpKind.ScrollLeft] = ScrollDisplayLeft;
         table[(int)OpKind.DisableHires] = DisableHiresMode;
         table[(int)OpKind.EnableHires] = EnableHiresMode;
 

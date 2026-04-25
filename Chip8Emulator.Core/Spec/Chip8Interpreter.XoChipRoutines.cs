@@ -6,7 +6,7 @@ internal sealed partial class Chip8Interpreter
 {
     // ---- 00DN : scroll display up N rows ------------------------------------
 
-    internal void ScrollUp(in DecodedOp op)
+    internal void ScrollDisplayUp(in DecodedOp op)
     {
         Display.ScrollUp(op.N);
     }

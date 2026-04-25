@@ -18,17 +18,17 @@ internal sealed partial class Chip8Interpreter
 
     // ---- 00FB / 00FC / 00CN : scroll ----------------------------------------
 
-    internal void ScrollRight(in DecodedOp op)
+    internal void ScrollDisplayRight(in DecodedOp op)
     {
         Display.ScrollRight(4);
     }
 
-    internal void ScrollLeft(in DecodedOp op)
+    internal void ScrollDisplayLeft(in DecodedOp op)
     {
         Display.ScrollLeft(4);
     }
 
-    internal void ScrollDown(in DecodedOp op)
+    internal void ScrollDisplayDown(in DecodedOp op)
     {
         Display.ScrollDown(op.N);
     }
