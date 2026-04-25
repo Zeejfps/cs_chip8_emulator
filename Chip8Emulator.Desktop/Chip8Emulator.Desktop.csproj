@@ -1,10 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
+        <OutputType>WinExe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="11.3.14" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.14" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.14" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.14" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.14" Condition="'$(Configuration)' == 'Debug'" />
+        <PackageReference Include="Silk.NET.OpenGL" Version="2.23.0" />
+        <PackageReference Include="Silk.NET.OpenAL" Version="2.23.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Chip8Emulator.Core\Chip8Emulator.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Shaders\Display.vert" />
+        <EmbeddedResource Include="Shaders\Display.frag" />
+    </ItemGroup>
 
 </Project>

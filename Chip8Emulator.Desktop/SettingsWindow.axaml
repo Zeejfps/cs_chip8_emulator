@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Chip8Emulator.Desktop.SettingsWindow"
+        Width="420" Height="460"
+        Title="Quirks &amp; Settings"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <DockPanel Margin="16" LastChildFill="True">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+            <Button Content="Cancel" Click="OnCancel" />
+            <Button Content="OK" Click="OnOk" IsDefault="True" />
+        </StackPanel>
+
+        <ScrollViewer>
+            <StackPanel Spacing="10">
+
+                <TextBlock Text="Instructions per second" />
+                <NumericUpDown x:Name="IpsBox"
+                               Minimum="60" Maximum="100000" Increment="100"
+                               FormatString="0" />
+
+                <Separator Margin="0,8" />
+
+                <TextBlock Text="Quirks" FontWeight="Bold" />
+
+                <CheckBox x:Name="ShiftUsesVy" Content="Shift uses Vy (8XY6 / 8XYE)" />
+                <CheckBox x:Name="JumpUsesVx" Content="Jump uses Vx (BNNN / BXNN)" />
+                <CheckBox x:Name="LoadStoreIncrementsI" Content="Load/Store increments I (FX55 / FX65)" />
+                <CheckBox x:Name="LogicResetsVf" Content="Logic ops reset VF (8XY1 / 8XY2 / 8XY3)" />
+                <CheckBox x:Name="SpritesWrap" Content="Sprites wrap at screen edges" />
+                <CheckBox x:Name="DisplayWait" Content="Display wait (sync DXYN to vblank)" />
+                <CheckBox x:Name="VfResultWrittenLast" Content="VF result written last (8XYx)" />
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
