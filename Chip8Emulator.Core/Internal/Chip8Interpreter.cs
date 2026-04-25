@@ -63,7 +63,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     private readonly IClock _clock;
     private readonly IAudio _audio;
     private readonly IInput _input;
-    private readonly IPersistentFlags _persistentFlags;
+    private readonly IFlagStore _flagStore;
     private readonly IRenderer _renderer;
 
     private readonly long _ticksPerFrame;
@@ -97,7 +97,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         IInput input,
         IRegisters registers,
         IStack stack,
-        IPersistentFlags persistentFlags,
+        IFlagStore flagStore,
         IRenderer renderer)
     {
         _clock = clock;
@@ -107,7 +107,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         _input = input;
         Registers = registers;
         Stack = stack;
-        _persistentFlags = persistentFlags;
+        _flagStore = flagStore;
         _renderer = renderer;
 
         _ticksPerFrame = clock.Frequency / 60;
@@ -263,19 +263,19 @@ internal sealed partial class Chip8Interpreter : IInterpreter
 
     private void SaveFlags(int count)
     {
-        Span<byte> buffer = stackalloc byte[IPersistentFlags.Capacity];
-        _persistentFlags.Read(buffer);
+        Span<byte> buffer = stackalloc byte[IFlagStore.Capacity];
+        _flagStore.LoadInto(buffer);
         for (var i = 0; i <= count && i < buffer.Length; i++)
         {
             buffer[i] = Registers.ReadV(i);
         }
-        _persistentFlags.Write(buffer);
+        _flagStore.SaveFrom(buffer);
     }
 
     private void LoadFlags(int count)
     {
-        Span<byte> buffer = stackalloc byte[IPersistentFlags.Capacity];
-        _persistentFlags.Read(buffer);
+        Span<byte> buffer = stackalloc byte[IFlagStore.Capacity];
+        _flagStore.LoadInto(buffer);
         for (var i = 0; i <= count && i < buffer.Length; i++)
         {
             Registers.WriteV(i, buffer[i]);

@@ -7,13 +7,13 @@ public class XoChipTests
 {
     private const int LowResWidth = 64;
 
-    private Chip8Interpreter CreateEmulator(IPersistentFlags? flags = null)
-        => BuildMachine(new FakeAudio(), flags ?? new InMemoryPersistentFlags());
+    private Chip8Interpreter CreateEmulator(IFlagStore? flags = null)
+        => BuildMachine(new FakeAudio(), flags ?? new InMemoryFlagStore());
 
     private Chip8Interpreter CreateEmulator(FakeAudio audio)
-        => BuildMachine(audio, new InMemoryPersistentFlags());
+        => BuildMachine(audio, new InMemoryFlagStore());
 
-    private Chip8Interpreter BuildMachine(IAudio audio, IPersistentFlags flags)
+    private Chip8Interpreter BuildMachine(IAudio audio, IFlagStore flags)
     {
         var display = new Chip8Display();
         var memory = new Chip8Memory();
@@ -195,7 +195,7 @@ public class XoChipTests
     [Fact]
     public void SaveFlags_WritesV0ThroughVxToPersistentStorage()
     {
-        var flags = new InMemoryPersistentFlags();
+        var flags = new InMemoryFlagStore();
         var emulator = CreateEmulator(flags);
         emulator.SetRegisterValue(0x60AA); // V0 = 0xAA
         emulator.SetRegisterValue(0x61BB); // V1 = 0xBB
@@ -204,7 +204,7 @@ public class XoChipTests
         emulator.UtilityRoutines[0xF275 & 0x00FF](0xF275); // FX75 with X=2 saves V0..V2
 
         Span<byte> readBack = stackalloc byte[16];
-        flags.Read(readBack);
+        flags.LoadInto(readBack);
         Assert.Equal(0xAA, readBack[0]);
         Assert.Equal(0xBB, readBack[1]);
         Assert.Equal(0xCC, readBack[2]);
@@ -213,10 +213,10 @@ public class XoChipTests
     [Fact]
     public void LoadFlags_RestoresV0ThroughVxFromPersistentStorage()
     {
-        var flags = new InMemoryPersistentFlags();
+        var flags = new InMemoryFlagStore();
         Span<byte> seed = stackalloc byte[16];
         seed[0] = 0x11; seed[1] = 0x22; seed[2] = 0x33; seed[3] = 0x44;
-        flags.Write(seed);
+        flags.SaveFrom(seed);
         var emulator = CreateEmulator(flags);
 
         emulator.UtilityRoutines[0xF385 & 0x00FF](0xF385); // FX85 with X=3 loads V0..V3
@@ -230,7 +230,7 @@ public class XoChipTests
     [Fact]
     public void SaveLoadFlags_RoundTripPreservesValues()
     {
-        var flags = new InMemoryPersistentFlags();
+        var flags = new InMemoryFlagStore();
         var emulator = CreateEmulator(flags);
         for (var i = 0; i < 16; i++)
         {

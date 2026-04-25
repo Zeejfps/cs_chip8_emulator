@@ -2,16 +2,16 @@ using Chip8Emulator.Core;
 
 namespace Chip8Emulator.Cli;
 
-public sealed class FilePersistentFlags : IPersistentFlags
+public sealed class FileFlagStore : IFlagStore
 {
     private readonly string _path;
 
-    public FilePersistentFlags(string? path = null)
+    public FileFlagStore(string? path = null)
     {
         _path = path ?? DefaultPath();
     }
 
-    public void Read(Span<byte> destination)
+    public void LoadInto(Span<byte> destination)
     {
         if (!File.Exists(_path)) return;
         try
@@ -25,7 +25,7 @@ public sealed class FilePersistentFlags : IPersistentFlags
         }
     }
 
-    public void Write(ReadOnlySpan<byte> source)
+    public void SaveFrom(ReadOnlySpan<byte> source)
     {
         var dir = Path.GetDirectoryName(_path);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);

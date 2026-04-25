@@ -20,7 +20,7 @@ public class SuperChipTests
             new FakeClock(), display, memory, audio, input,
             new Chip8Registers(),
             new Chip8Stack(),
-            new InMemoryPersistentFlags(),
+            new InMemoryFlagStore(),
             new NullRenderer());
     }
 

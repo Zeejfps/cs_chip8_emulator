@@ -35,7 +35,7 @@ try
         .WithClock(clock)
         .WithInput(input)
         .WithRenderer(renderer)
-        .WithPersistentFlags(new FilePersistentFlags())
+        .WithFlagStore(new FileFlagStore())
         .Build();
 
     Console.WriteLine($"Loading ROM: {romPath}");

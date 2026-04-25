@@ -3,9 +3,9 @@ using Chip8Emulator.Core;
 
 namespace Chip8Emulator.Web;
 
-internal sealed partial class LocalStoragePersistentFlags : IPersistentFlags
+internal sealed partial class LocalStorageFlagStore : IFlagStore
 {
-    public void Read(Span<byte> destination)
+    public void LoadInto(Span<byte> destination)
     {
         var encoded = ReadStorageJs();
         if (string.IsNullOrEmpty(encoded)) return;
@@ -20,14 +20,14 @@ internal sealed partial class LocalStoragePersistentFlags : IPersistentFlags
         }
     }
 
-    public void Write(ReadOnlySpan<byte> source)
+    public void SaveFrom(ReadOnlySpan<byte> source)
     {
         WriteStorageJs(Convert.ToBase64String(source));
     }
 
-    [JSImport("persistentFlags.read", "main.js")]
+    [JSImport("flagStore.read", "main.js")]
     private static partial string ReadStorageJs();
 
-    [JSImport("persistentFlags.write", "main.js")]
+    [JSImport("flagStore.write", "main.js")]
     private static partial void WriteStorageJs(string base64);
 }

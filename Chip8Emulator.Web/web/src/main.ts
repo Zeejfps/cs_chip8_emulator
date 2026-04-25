@@ -28,7 +28,7 @@ try {
     display: {
       render: () => renderer.paint(),
     },
-    persistentFlags: {
+    flagStore: {
       read: () => {
         try {
           return localStorage.getItem('chip8.flags') ?? '';

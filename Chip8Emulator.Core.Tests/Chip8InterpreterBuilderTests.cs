@@ -51,6 +51,8 @@ public class Chip8InterpreterBuilderTests
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())
             .WithInput(new FakeInput())
+            .WithFlagStore(new InMemoryFlagStore())
+            .WithRenderer(new NullRenderer())
             .Build();
 
         Assert.NotNull(chip);

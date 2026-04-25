@@ -4,14 +4,10 @@ namespace Chip8Emulator.Core;
 
 internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
 {
-    private IDisplay? _display;
     private IAudio? _audio;
     private IClock? _clock;
     private IInput? _input;
-    private IStack? _stack;
-    private IMemory? _memory;
-    private IRegisters? _registers;
-    private IPersistentFlags? _persistentFlags;
+    private IFlagStore? _flagStore;
     private IRenderer? _renderer;
 
     public IChip8InterpreterBuilder WithInput(IInput input)
@@ -32,9 +28,9 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
         return this;
     }
 
-    public IChip8InterpreterBuilder WithPersistentFlags(IPersistentFlags flags)
+    public IChip8InterpreterBuilder WithFlagStore(IFlagStore flagStore)
     {
-        _persistentFlags = flags;
+        _flagStore = flagStore;
         return this;
     }
 
@@ -54,14 +50,14 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
             $"{nameof(WithInput)} must be called before {nameof(Build)}.");
         var renderer = _renderer ?? throw new InvalidOperationException(
             $"{nameof(WithRenderer)} must be called before {nameof(Build)}.");
+        var flagStore = _flagStore ?? throw new InvalidOperationException(
+            $"{nameof(WithFlagStore)} must be called before {nameof(Build)}.");
 
-        var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();
-        
         var stack = new Chip8Stack();
         var registers = new Chip8Registers();
         var memory = new Chip8Memory();
         var display = new Chip8Display();
 
-        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, persistentFlags, renderer);
+        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, flagStore, renderer);
     }
 }

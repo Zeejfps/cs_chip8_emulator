@@ -25,7 +25,7 @@ namespace Chip8Emulator.Web
                 .WithClock(_clock)
                 .WithInput(_input)
                 .WithRenderer(new BrowserRenderer())
-                .WithPersistentFlags(new LocalStoragePersistentFlags())
+                .WithFlagStore(new LocalStorageFlagStore())
                 .Build();
             _pixelsHandle = _interpreter.Display.VMem.Pin();
             _lastRealTimestamp = Stopwatch.GetTimestamp();
