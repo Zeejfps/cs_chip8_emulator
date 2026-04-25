@@ -9,11 +9,9 @@ public class SuperChipTests
     private const int HighResWidth = 128;
     private const int HighResHeight = 64;
 
-    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-
     private Chip8Interpreter CreateEmulator()
     {
-        var display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
+        var display = new Chip8Display();
         var memory = new Chip8Memory(size => new byte[size]);
         var audio = new FakeAudio();
         var input = new FakeInput();
@@ -25,12 +23,12 @@ public class SuperChipTests
     }
 
     private byte PixelAt(Chip8Interpreter emulator, int x, int y)
-        => _pixelBuffer[y * emulator.Display.Width + x];
+        => emulator.Display.VMem.Span[y * emulator.Display.Width + x];
 
     private int CountLitPixels(Chip8Interpreter emulator)
     {
         var count = 0;
-        foreach (var p in _pixelBuffer)
+        foreach (var p in emulator.Display.VMem.Span)
             if (p == 1) count++;
         return count;
     }

@@ -15,9 +15,7 @@ namespace Chip8Emulator.Web
         private static MemoryHandle _pixelsHandle;
         private static byte[]? _memoryBuffer;
         private static byte[]? _vRegistersBuffer;
-        private static byte[]? _pixelBuffer;
         private static IMemory? _memory;
-        private static IDisplay? _display;
         private static IRegisters? _registers;
         private static long _lastRealTimestamp;
 
@@ -28,12 +26,9 @@ namespace Chip8Emulator.Web
             _clock = new ManualClock();
             _memoryBuffer = new byte[4096];
             _vRegistersBuffer = new byte[16];
-            _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
             _memory = new Chip8Memory(size => _memoryBuffer.AsMemory(0, size));
             _registers = new Chip8Registers(size => _vRegistersBuffer.AsMemory(0, size));
-            _display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
             _interpreter = Chip8.Builder()
-                .WithDisplay(_display)
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
@@ -41,7 +36,7 @@ namespace Chip8Emulator.Web
                 .WithRegisters(_registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
-            _pixelsHandle = _pixelBuffer.AsMemory().Pin();
+            _pixelsHandle = _interpreter.Display.VMem.Pin();
             _lastRealTimestamp = Stopwatch.GetTimestamp();
         }
 
@@ -118,13 +113,13 @@ namespace Chip8Emulator.Web
         public static unsafe int GetPixelDataPtr() => (int)_pixelsHandle.Pointer;
 
         [JSExport]
-        public static int GetPixelDataLength() => _pixelBuffer!.Length;
+        public static int GetPixelDataLength() => _interpreter!.Display.VMem.Length;
 
         [JSExport]
-        public static int GetWidth() => _display!.Width;
+        public static int GetWidth() => _interpreter!.Display.Width;
 
         [JSExport]
-        public static int GetHeight() => _display!.Height;
+        public static int GetHeight() => _interpreter!.Display.Height;
 
         [JSExport]
         public static void SetKey(int key, bool pressed) => _input!.SetKey((byte)key, pressed);

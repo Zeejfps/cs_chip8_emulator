@@ -1,14 +1,10 @@
 namespace Chip8Emulator.Core;
 
-public interface IDisplay
+public interface IDisplay : IReadOnlyDisplay
 {
     byte SelectedPlanes { get; set; }
-    int Width { get; }
-    int Height { get; }
     bool IsHighRes { get; }
-
     void WritePixels(Action<Span<byte>> writeAction);
-
     void Reset();
     void Clear();
     void EnableClassicHiresMode();

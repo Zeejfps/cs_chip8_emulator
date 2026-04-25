@@ -5,7 +5,7 @@ using Chip8Emulator.Core;
 
 namespace Chip8Emulator.Cli;
 
-public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
+public sealed class AnsiConsoleDisplay : IDisposable
 {
     private const string CursorHome = "\x1b[H";
     private const string HideCursor = "\x1b[?25l";
@@ -17,8 +17,7 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private const string DisableAltScroll = "\x1b[?1007l";
     private const string RestoreAltScroll = "\x1b[?1007h";
 
-    private readonly Chip8Display _display;
-    private readonly byte[] _pixels;
+    private readonly IReadOnlyDisplay _display;
     private readonly byte[] _previousPixels;
     private readonly StringBuilder _frame = new(8192);
     private bool _hasRendered;
@@ -28,11 +27,10 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
     private int _lastPixelHeight = -1;
     private readonly string? _savedSttyState;
 
-    public AnsiConsoleDisplay(Chip8Display display, byte[] pixels)
+    public AnsiConsoleDisplay(IReadOnlyDisplay display)
     {
         _display = display;
-        _pixels = pixels;
-        _previousPixels = new byte[pixels.Length];
+        _previousPixels = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
 
         Console.OutputEncoding = Encoding.UTF8;
         EnableWindowsAnsi();
@@ -45,30 +43,9 @@ public sealed class AnsiConsoleDisplay : IDisplay, IDisposable
         Console.Out.Flush();
     }
 
-    public byte SelectedPlanes
-    {
-        get => _display.SelectedPlanes;
-        set => _display.SelectedPlanes = value;
-    }
-
-    public int Width => _display.Width;
-    public int Height => _display.Height;
-    public bool IsHighRes => _display.IsHighRes;
-
-    public void WritePixels(Action<Span<byte>> writeAction) => _display.WritePixels(writeAction);
-    public void Reset() => _display.Reset();
-    public void Clear() => _display.Clear();
-    public void EnableClassicHiresMode() => _display.EnableClassicHiresMode();
-    public void EnableHighResMode() => _display.EnableHighResMode();
-    public void DisableHighResMode() => _display.DisableHighResMode();
-    public void ScrollDown(int n) => _display.ScrollDown(n);
-    public void ScrollUp(int n) => _display.ScrollUp(n);
-    public void ScrollLeft(int n) => _display.ScrollLeft(n);
-    public void ScrollRight(int n) => _display.ScrollRight(n);
-
     public void Render()
     {
-        var pixels = _pixels.AsSpan();
+        var pixels = _display.VMem.Span;
         var pixelWidth = _display.Width;
         var pixelHeight = _display.Height;
         var cellHeight = (pixelHeight + 1) / 2;

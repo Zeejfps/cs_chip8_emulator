@@ -47,7 +47,7 @@ public class Chip8InterpreterBuilderTests
     public void Build_ReturnsChip8Emulator()
     {
         var chip = Chip8.Builder()
-            .WithDisplay(new Chip8Display(size => new byte[size]))
+            .WithDisplay(new Chip8Display())
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())
             .WithInput(new FakeInput())

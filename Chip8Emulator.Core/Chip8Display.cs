@@ -17,26 +17,25 @@ public sealed class Chip8Display : IDisplay
     public int Width { get; private set; }
     public int Height { get; private set; }
     public bool IsHighRes { get; private set; }
+    public ReadOnlyMemory<byte> VMem => _pixels.AsMemory();
+
+    private readonly byte[] _pixels;
     
-    private readonly Memory<byte> _pixels;
-    
-    public Chip8Display(Func<int, Memory<byte>> alloc)
+    public Chip8Display()
     {
         Width = LowResWidth;
         Height = LowResHeight;
-        //NOTE (Zee): Allocate enough space for the high resolution display.
         const int requiredSize = HighResWidth * HighResHeight;
-        _pixels = alloc(requiredSize);
-        if (_pixels.Length < requiredSize)
-            throw new InvalidOperationException($"Allocator returned {_pixels.Length} bytes, expected at least {requiredSize}.");
+        _pixels = new byte[requiredSize];
     }
 
     public void WritePixels(Action<Span<byte>> writeAction)
     {
-        writeAction(_pixels.Span);
+        writeAction(_pixels.AsSpan());
     }
 
     // XO-Chip FX01 plane mask; defaults to plane 0 so legacy (CHIP-8/SCHIP) drawing works.
+
     public byte SelectedPlanes
     {
         get;
@@ -49,7 +48,7 @@ public sealed class Chip8Display : IDisplay
         Width = LowResWidth;
         Height = LowResHeight;
         SelectedPlanes = Plane0Mask;
-        _pixels.Span.Clear();
+        Array.Clear(_pixels);
     }
 
     public void Clear()
@@ -58,13 +57,13 @@ public sealed class Chip8Display : IDisplay
         if (mask == 0) return;
         if (mask == AllPlanesMask)
         {
-            _pixels.Span.Clear();
+            Array.Clear(_pixels);
             return;
         }
         var keep = (byte)(~mask & AllPlanesMask);
         for (var i = 0; i < _pixels.Length; i++)
         {
-            _pixels.Span[i] = (byte)(_pixels.Span[i] & keep);
+            _pixels[i] = (byte)(_pixels[i] & keep);
         }
     }
 
@@ -102,7 +101,7 @@ public sealed class Chip8Display : IDisplay
             return;
         }
 
-        var pixels = _pixels.Span;
+        var pixels = _pixels;
         for (var y = 0; y < Height; y++)
         {
             var row = y * Width;
@@ -132,7 +131,7 @@ public sealed class Chip8Display : IDisplay
             return;
         }
 
-        var pixels = _pixels.Span;
+        var pixels = _pixels;
         for (var y = 0; y < Height; y++)
         {
             var row = y * Width;
@@ -167,7 +166,7 @@ public sealed class Chip8Display : IDisplay
             return;
         }
 
-        var pixels = _pixels.Span;
+        var pixels = _pixels;
         for (var y = Height - 1; y >= n; y--)
         {
             var srcRow = (y - n) * Width;
@@ -203,7 +202,7 @@ public sealed class Chip8Display : IDisplay
             return;
         }
 
-        var pixels = _pixels.Span;
+        var pixels = _pixels;
         for (var y = 0; y < Height - n; y++)
         {
             var srcRow = (y + n) * Width;
@@ -228,10 +227,10 @@ public sealed class Chip8Display : IDisplay
 
     private void ClearSelectedPlanes(byte mask)
     {
-        var pixels = _pixels.Span;
+        var pixels = _pixels;
         if (mask == AllPlanesMask)
         {
-            pixels.Clear();
+            Array.Clear(pixels);
             return;
         }
         var keep = (byte)(~mask & AllPlanesMask);

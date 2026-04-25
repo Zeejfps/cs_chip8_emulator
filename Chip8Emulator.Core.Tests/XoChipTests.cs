@@ -6,8 +6,6 @@ public class XoChipTests
 {
     private const int LowResWidth = 64;
 
-    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-
     private Chip8Interpreter CreateEmulator(IPersistentFlags? flags = null)
         => BuildMachine(new FakeAudio(), flags ?? new InMemoryPersistentFlags());
 
@@ -16,7 +14,7 @@ public class XoChipTests
 
     private Chip8Interpreter BuildMachine(IAudio audio, IPersistentFlags flags)
     {
-        var display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
+        var display = new Chip8Display();
         var memory = new Chip8Memory(size => new byte[size]);
         var input = new FakeInput();
         return new Chip8Interpreter(
@@ -27,7 +25,7 @@ public class XoChipTests
     }
 
     private byte PixelAt(Chip8Interpreter emulator, int x, int y)
-        => _pixelBuffer[y * emulator.Display.Width + x];
+        => emulator.Display.VMem.Span[y * emulator.Display.Width + x];
 
     // ---- FX01 : select bitplane mask ----------------------------------------
 
