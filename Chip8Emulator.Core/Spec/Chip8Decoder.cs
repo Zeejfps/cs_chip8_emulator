@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Chip8Emulator.Core;
+namespace Chip8Emulator.Core.Spec;
 
 internal static class Chip8Decoder
 {
