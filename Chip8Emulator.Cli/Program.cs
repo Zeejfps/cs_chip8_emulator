@@ -29,13 +29,12 @@ try
     var audio = new ConsoleBeepAudio();
 
     var clock = new StopwatchClock();
-    var emulatedDisplay = new Chip8Display();
-    using var consoleDisplay = new AnsiConsoleDisplay(emulatedDisplay);
+    using var renderer = new AnsiConsoleRenderer();
     var machine = Chip8.Builder()
-        .WithDisplay(emulatedDisplay)
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
+        .WithRenderer(renderer)
         .WithPersistentFlags(new FilePersistentFlags())
         .Build();
 
@@ -48,7 +47,6 @@ try
     while (!cancelled && !input.IsCancelRequested)
     {
         clock.Tick();
-        consoleDisplay.Render();
 
         if (input.ConsumeRestartRequest())
         {

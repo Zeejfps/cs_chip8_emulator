@@ -5,7 +5,7 @@ using Chip8Emulator.Core;
 
 namespace Chip8Emulator.Cli;
 
-public sealed class AnsiConsoleDisplay : IDisposable
+public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
 {
     private const string CursorHome = "\x1b[H";
     private const string HideCursor = "\x1b[?25l";
@@ -17,8 +17,7 @@ public sealed class AnsiConsoleDisplay : IDisposable
     private const string DisableAltScroll = "\x1b[?1007l";
     private const string RestoreAltScroll = "\x1b[?1007h";
 
-    private readonly IReadOnlyDisplay _display;
-    private readonly byte[] _previousPixels;
+    private readonly byte[] _previousPixels = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
     private readonly StringBuilder _frame = new(8192);
     private bool _hasRendered;
     private int _lastWindowWidth = -1;
@@ -27,11 +26,8 @@ public sealed class AnsiConsoleDisplay : IDisposable
     private int _lastPixelHeight = -1;
     private readonly string? _savedSttyState;
 
-    public AnsiConsoleDisplay(IReadOnlyDisplay display)
+    public AnsiConsoleRenderer()
     {
-        _display = display;
-        _previousPixels = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-
         Console.OutputEncoding = Encoding.UTF8;
         EnableWindowsAnsi();
         if (!OperatingSystem.IsWindows())
@@ -43,11 +39,11 @@ public sealed class AnsiConsoleDisplay : IDisposable
         Console.Out.Flush();
     }
 
-    public void Render()
+    public void Render(IReadOnlyDisplay display)
     {
-        var pixels = _display.VMem.Span;
-        var pixelWidth = _display.Width;
-        var pixelHeight = _display.Height;
+        var pixels = display.VMem.Span;
+        var pixelWidth = display.Width;
+        var pixelHeight = display.Height;
         var cellHeight = (pixelHeight + 1) / 2;
         var activeLength = pixelWidth * pixelHeight;
         var activePixels = pixels[..activeLength];

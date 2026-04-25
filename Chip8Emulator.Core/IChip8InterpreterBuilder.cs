@@ -10,5 +10,6 @@ public interface IChip8InterpreterBuilder
     IChip8InterpreterBuilder WithMemory(IMemory memory);
     IChip8InterpreterBuilder WithRegisters(IRegisters registers);
     IChip8InterpreterBuilder WithPersistentFlags(IPersistentFlags flags);
+    IChip8InterpreterBuilder WithRenderer(IRenderer renderer);
     IInterpreter Build();
 }

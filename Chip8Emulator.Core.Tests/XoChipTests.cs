@@ -21,7 +21,8 @@ public class XoChipTests
             new FakeClock(), display, memory, audio, input,
             new Chip8Registers(),
             new Chip8Stack(),
-            flags);
+            flags,
+            new NullRenderer());
     }
 
     private byte PixelAt(Chip8Interpreter emulator, int x, int y)

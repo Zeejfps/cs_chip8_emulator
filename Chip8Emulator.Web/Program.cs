@@ -24,6 +24,7 @@ namespace Chip8Emulator.Web
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
+                .WithRenderer(new BrowserRenderer())
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
             _pixelsHandle = _interpreter.Display.VMem.Pin();

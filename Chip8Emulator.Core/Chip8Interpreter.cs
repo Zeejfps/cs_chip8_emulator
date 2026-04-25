@@ -64,6 +64,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     private readonly IAudio _audio;
     private readonly IInput _input;
     private readonly IPersistentFlags _persistentFlags;
+    private readonly IRenderer _renderer;
 
     private readonly long _ticksPerFrame;
     private long _ticksPerInstruction;
@@ -96,7 +97,8 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         IInput input,
         IRegisters registers,
         IStack stack,
-        IPersistentFlags persistentFlags)
+        IPersistentFlags persistentFlags,
+        IRenderer renderer)
     {
         _clock = clock;
         Display = display;
@@ -106,6 +108,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         Registers = registers;
         Stack = stack;
         _persistentFlags = persistentFlags;
+        _renderer = renderer;
 
         _ticksPerFrame = clock.Frequency / 60;
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
@@ -253,7 +256,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         var st = Registers.ReadSt();
         if (st > 0) Registers.WriteSt((byte)(st - 1));
 
-        Display.Render();
+        _renderer.Render(Display);
         _frameAcc -= _ticksPerFrame;
         _waitForVBlank = false;
     }

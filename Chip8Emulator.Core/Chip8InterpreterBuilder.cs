@@ -10,6 +10,7 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
     private IMemory? _memory;
     private IRegisters? _registers;
     private IPersistentFlags? _persistentFlags;
+    private IRenderer? _renderer;
 
     public IChip8InterpreterBuilder WithInput(IInput input)
     {
@@ -59,6 +60,12 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
         return this;
     }
 
+    public IChip8InterpreterBuilder WithRenderer(IRenderer renderer)
+    {
+        _renderer = renderer;
+        return this;
+    }
+
     public IInterpreter Build()
     {
         var audio = _audio ?? throw new InvalidOperationException(
@@ -72,7 +79,8 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
         var memory = _memory ?? new Chip8Memory();
         var display = _display ?? new Chip8Display();
         var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();
+        var renderer = _renderer ?? new NullRenderer();
 
-        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, persistentFlags);
+        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, persistentFlags, renderer);
     }
 }

@@ -5,6 +5,7 @@
   import { emulator } from '$lib/stores/emulator.svelte.js';
   import { settings } from '$lib/stores/settings.svelte.js';
   import { registerFullscreen } from '$lib/emulator-actions.js';
+  import { renderer } from '$lib/renderer.js';
 
   interface Props {
     onOpenRomPicker?: () => void;
@@ -65,9 +66,25 @@
     let lastPc = -1;
     let running = true;
 
-    const render = () => {
+    const paint = () => {
+      const palette = PHOSPHOR_COLORS[settings.phosphor];
+      const ptr = api.GetPixelDataPtr();
+      const view = runtime.localHeapViewU8().subarray(ptr, ptr + pixelLen);
+      for (let i = 0; i < pixelLen; i++) {
+        const rgb = palette[view[i] & 0x03];
+        const o = i * 4;
+        pixels[o] = rgb[0];
+        pixels[o + 1] = rgb[1];
+        pixels[o + 2] = rgb[2];
+      }
+      ctx.putImageData(imageData, 0, 0);
+    };
+
+    const unregisterPaint = renderer.register(paint);
+
+    const tickLoop = () => {
       if (!running) return;
-      rafId = requestAnimationFrame(render);
+      rafId = requestAnimationFrame(tickLoop);
 
       if (emulator.running && !emulator.paused) {
         try {
@@ -86,25 +103,14 @@
           emulator.pc = pc;
         }
       }
-
-      const palette = PHOSPHOR_COLORS[settings.phosphor];
-      const ptr = api.GetPixelDataPtr();
-      const view = runtime.localHeapViewU8().subarray(ptr, ptr + pixelLen);
-      for (let i = 0; i < pixelLen; i++) {
-        const rgb = palette[view[i] & 0x03];
-        const o = i * 4;
-        pixels[o] = rgb[0];
-        pixels[o + 1] = rgb[1];
-        pixels[o + 2] = rgb[2];
-      }
-      ctx.putImageData(imageData, 0, 0);
     };
 
-    rafId = requestAnimationFrame(render);
+    rafId = requestAnimationFrame(tickLoop);
 
     return () => {
       running = false;
       cancelAnimationFrame(rafId);
+      unregisterPaint();
     };
   });
 </script>

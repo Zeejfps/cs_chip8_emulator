@@ -148,11 +148,6 @@ public sealed class Chip8Display : IDisplay
         }
     }
 
-    public void Render()
-    {
-        // Does nothing.
-    }
-
     public void ScrollDown(int n)
     {
         if (n <= 0) return;

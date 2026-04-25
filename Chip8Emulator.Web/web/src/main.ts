@@ -2,6 +2,7 @@ import { mount } from 'svelte';
 import type { DotnetBuilder } from './lib/types/dotnet.js';
 import type { InteropExports } from './lib/interop.js';
 import { Audio } from './lib/audio.js';
+import { renderer } from './lib/renderer.js';
 import App from './components/App.svelte';
 import './app.css';
 
@@ -23,6 +24,9 @@ try {
       stopSound: () => audio.stopSound(),
       setPattern: (pattern: Uint8Array, frequencyHz: number) =>
         audio.setPattern(pattern, frequencyHz),
+    },
+    display: {
+      render: () => renderer.paint(),
     },
     persistentFlags: {
       read: () => {
