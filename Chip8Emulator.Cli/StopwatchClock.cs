@@ -1,6 +1,7 @@
 using System.Diagnostics;
+using Chip8Emulator.Core;
 
-namespace Chip8Emulator.Core;
+namespace Chip8Emulator.Cli;
 
 public sealed class StopwatchClock : IClock
 {
