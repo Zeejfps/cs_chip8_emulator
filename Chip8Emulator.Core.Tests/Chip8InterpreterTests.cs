@@ -1,21 +1,20 @@
+using Chip8Emulator.Core.Internal;
 using Chip8Emulator.Core.Tests.Fakes;
 
 namespace Chip8Emulator.Core.Tests;
 
 public class Chip8InterpreterTests
 {
-    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-
     private Chip8Interpreter CreateEmulator(out FakeAudio audio, out FakeClock clock, out FakeInput input)
     {
         audio = new FakeAudio();
         clock = new FakeClock();
         input = new FakeInput();
-        var display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
-        var stack = new Chip8Stack(size => new int[size]);
-        var memory = new Chip8Memory(size => new byte[size]);
-        var registers = new Chip8Registers(size => new byte[size]);
-        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, new InMemoryPersistentFlags());
+        var display = new Chip8Display();
+        var stack = new Chip8Stack();
+        var memory = new Chip8Memory();
+        var registers = new Chip8Registers();
+        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, new InMemoryPersistentFlags(), new NullRenderer());
     }
 
     private Chip8Interpreter CreateEmulator() => CreateEmulator(out _, out _, out _);
@@ -1000,11 +999,11 @@ public class Chip8InterpreterTests
         emulator.SetIndexRegisterIns(0xA000);
         emulator.Memory.Write(0, [0xFF]);
         emulator.DrawToScreen(0xD001);
-        Assert.Contains(_pixelBuffer, p => p == 1);
+        Assert.Contains(emulator.Display.VMem.ToArray(), p => p == 1);
 
         emulator.ClearDisplay(0x00E0);
 
-        foreach (var p in _pixelBuffer)
+        foreach (var p in emulator.Display.VMem.Span)
             Assert.Equal(0, p);
     }
 

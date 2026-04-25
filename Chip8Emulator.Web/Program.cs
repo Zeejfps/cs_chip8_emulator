@@ -13,14 +13,6 @@ namespace Chip8Emulator.Web
         private static BrowserInput? _input;
         private static ManualClock? _clock;
         private static MemoryHandle _pixelsHandle;
-        private static int[]? _stackBuffer;
-        private static byte[]? _memoryBuffer;
-        private static byte[]? _vRegistersBuffer;
-        private static byte[]? _pixelBuffer;
-        private static IMemory? _memory;
-        private static IDisplay? _display;
-        private static IStack? _stack;
-        private static IRegisters? _registers;
         private static long _lastRealTimestamp;
 
         [JSExport]
@@ -28,25 +20,14 @@ namespace Chip8Emulator.Web
         {
             _input = new BrowserInput();
             _clock = new ManualClock();
-            _stackBuffer = new int[16];
-            _memoryBuffer = new byte[4096];
-            _vRegistersBuffer = new byte[16];
-            _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-            _stack = new Chip8Stack(size => _stackBuffer.AsMemory(0, size));
-            _memory = new Chip8Memory(size => _memoryBuffer.AsMemory(0, size));
-            _registers = new Chip8Registers(size => _vRegistersBuffer.AsMemory(0, size));
-            _display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
             _interpreter = Chip8.Builder()
-                .WithDisplay(_display)
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
-                .WithStack(_stack)
-                .WithMemory(_memory)
-                .WithRegisters(_registers)
+                .WithRenderer(new BrowserRenderer())
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
-            _pixelsHandle = _pixelBuffer.AsMemory().Pin();
+            _pixelsHandle = _interpreter.Display.VMem.Pin();
             _lastRealTimestamp = Stopwatch.GetTimestamp();
         }
 
@@ -82,39 +63,39 @@ namespace Chip8Emulator.Web
             // A vblank-wait draw suspends instruction execution until ~1 frame of ticks accumulates,
             // so a single one-instruction advance can land in a no-op window. Loop up to
             // (steps-per-frame + 1) times until the PC actually moves.
-            var pcBefore = _registers!.ReadPc();
+            var pcBefore = _interpreter!.Registers.ReadPc();
             var delta = _clock!.Frequency / _interpreter!.InstructionsPerSecond;
             var maxSteps = _interpreter.InstructionsPerSecond / 60 + 1;
             for (var i = 0; i < maxSteps; i++)
             {
                 _clock.Advance(delta);
-                if (_registers.ReadPc() != pcBefore) return;
+                if (_interpreter.Registers.ReadPc() != pcBefore) return;
             }
         }
 
         [JSExport]
-        public static int GetProgramCounter() => _registers!.ReadPc();
+        public static int GetProgramCounter() => _interpreter!.Registers.ReadPc();
 
         [JSExport]
-        public static int GetMemoryByte(int address) => _memory!.Read(address);
+        public static int GetMemoryByte(int address) => _interpreter!.Memory.Read(address);
 
         [JSExport]
-        public static byte[] GetVRegisters() => _vRegistersBuffer!;
+        public static byte[] GetVRegisters() => _interpreter!.Registers.VRegisters.ToArray();
 
         [JSExport]
-        public static int GetIndexRegister() => _registers!.ReadI();
+        public static int GetIndexRegister() => _interpreter!.Registers.ReadI();
 
         [JSExport]
-        public static int GetDelayTimer() => _registers!.ReadDt();
+        public static int GetDelayTimer() => _interpreter!.Registers.ReadDt();
 
         [JSExport]
-        public static int GetSoundTimer() => _registers!.ReadSt();
+        public static int GetSoundTimer() => _interpreter!.Registers.ReadSt();
 
         [JSExport]
-        public static int GetStackPointer() => _stack!.StackPointer;
+        public static int GetStackPointer() => _interpreter!.Stack.StackPointer;
 
         [JSExport]
-        public static int[] GetStack() => _stackBuffer!;
+        public static int[] GetStack() => _interpreter!.Stack.Frames.ToArray();
 
         [JSExport]
         public static string DisassembleInstruction(int ins) => Chip8Disassembler.Disassemble(ins);
@@ -123,13 +104,13 @@ namespace Chip8Emulator.Web
         public static unsafe int GetPixelDataPtr() => (int)_pixelsHandle.Pointer;
 
         [JSExport]
-        public static int GetPixelDataLength() => _pixelBuffer!.Length;
+        public static int GetPixelDataLength() => _interpreter!.Display.VMem.Length;
 
         [JSExport]
-        public static int GetWidth() => _display!.Width;
+        public static int GetWidth() => _interpreter!.Display.Width;
 
         [JSExport]
-        public static int GetHeight() => _display!.Height;
+        public static int GetHeight() => _interpreter!.Display.Height;
 
         [JSExport]
         public static void SetKey(int key, bool pressed) => _input!.SetKey((byte)key, pressed);

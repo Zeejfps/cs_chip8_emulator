@@ -29,25 +29,24 @@ try
     var audio = new ConsoleBeepAudio();
 
     var clock = new StopwatchClock();
-    var pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-    var emulatedDisplay = new Chip8Display(size => pixelBuffer.AsMemory(0, size));
-    using var consoleDisplay = new AnsiConsoleDisplay(emulatedDisplay, pixelBuffer);
-    var machine = Chip8.Builder()
-        .WithDisplay(consoleDisplay)
+    using var renderer = new AnsiConsoleRenderer();
+    var interpreter = Chip8.Builder()
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
-        .WithStack(new Chip8Stack(size => new int[size]))
-        .WithMemory(new Chip8Memory(size => new byte[size]))
-        .WithRegisters(new Chip8Registers(size => new byte[size]))
+        .WithRenderer(renderer)
         .WithPersistentFlags(new FilePersistentFlags())
         .Build();
 
     Console.WriteLine($"Loading ROM: {romPath}");
     var romData = File.ReadAllBytes(romPath);
 
-    machine.LoadProgram(romData);
-    machine.Start();
+    interpreter.InstructionsPerSecond = 600;
+    interpreter.LoadStoreIncrementsI = true;
+    interpreter.SpritesWrap = true;
+    interpreter.JumpUsesVx = true;
+    interpreter.LoadProgram(romData);
+    interpreter.Start();
 
     while (!cancelled && !input.IsCancelRequested)
     {
@@ -55,11 +54,11 @@ try
 
         if (input.ConsumeRestartRequest())
         {
-            machine.LoadProgram(romData);
+            interpreter.LoadProgram(romData);
         }
     }
 
-    machine.Stop();
+    interpreter.Stop();
     return 0;
 }
 catch (Exception ex)

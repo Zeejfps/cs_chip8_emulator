@@ -1,3 +1,4 @@
+using Chip8Emulator.Core.Internal;
 using Chip8Emulator.Core.Tests.Fakes;
 
 namespace Chip8Emulator.Core.Tests;
@@ -9,28 +10,27 @@ public class SuperChipTests
     private const int HighResWidth = 128;
     private const int HighResHeight = 64;
 
-    private readonly byte[] _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-
     private Chip8Interpreter CreateEmulator()
     {
-        var display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
-        var memory = new Chip8Memory(size => new byte[size]);
+        var display = new Chip8Display();
+        var memory = new Chip8Memory();
         var audio = new FakeAudio();
         var input = new FakeInput();
         return new Chip8Interpreter(
             new FakeClock(), display, memory, audio, input,
-            new Chip8Registers(size => new byte[size]),
-            new Chip8Stack(size => new int[size]),
-            new InMemoryPersistentFlags());
+            new Chip8Registers(),
+            new Chip8Stack(),
+            new InMemoryPersistentFlags(),
+            new NullRenderer());
     }
 
     private byte PixelAt(Chip8Interpreter emulator, int x, int y)
-        => _pixelBuffer[y * emulator.Display.Width + x];
+        => emulator.Display.VMem.Span[y * emulator.Display.Width + x];
 
     private int CountLitPixels(Chip8Interpreter emulator)
     {
         var count = 0;
-        foreach (var p in _pixelBuffer)
+        foreach (var p in emulator.Display.VMem.Span)
             if (p == 1) count++;
         return count;
     }

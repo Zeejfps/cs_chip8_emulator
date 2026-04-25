@@ -1,8 +1,7 @@
-namespace Chip8Emulator.Core;
+namespace Chip8Emulator.Core.Internal;
 
-public interface IMemory
+internal interface IMemory : IReadOnlyMemory  
 {
-    byte Read(int address);
     void Write(int address, byte value);
     void Write(int address, ReadOnlySpan<byte> value);
     void Clear();

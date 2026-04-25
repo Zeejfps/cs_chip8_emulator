@@ -1,3 +1,4 @@
+using Chip8Emulator.Core.Internal;
 using Chip8Emulator.Core.Tests.Fakes;
 
 namespace Chip8Emulator.Core.Tests;
@@ -47,13 +48,9 @@ public class Chip8InterpreterBuilderTests
     public void Build_ReturnsChip8Emulator()
     {
         var chip = Chip8.Builder()
-            .WithDisplay(new Chip8Display(size => new byte[size]))
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())
             .WithInput(new FakeInput())
-            .WithStack(new Chip8Stack(size => new int[size]))
-            .WithMemory(new Chip8Memory(size => new byte[size]))
-            .WithRegisters(new Chip8Registers(size => new byte[size]))
             .Build();
 
         Assert.NotNull(chip);

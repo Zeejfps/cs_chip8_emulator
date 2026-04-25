@@ -1,29 +1,23 @@
-namespace Chip8Emulator.Core;
+namespace Chip8Emulator.Core.Internal;
 
-public sealed class Chip8Registers : IRegisters
+internal sealed class Chip8Registers : IRegisters
 {
+    public ReadOnlyMemory<byte> VRegisters => _vRegisters;
+
     private byte _delayTimer;
     private byte _soundTimer;
     private int _indexRegister;
     private int _programCounter;
-    private readonly Memory<byte> _vRegisters;
+    private readonly byte[] _vRegisters = new byte[16];
 
-    public Chip8Registers(Func<int, Memory<byte>> alloc)
-    {
-        const int requiredSize = 16;
-        _vRegisters = alloc(requiredSize);
-        if (_vRegisters.Length < requiredSize)
-            throw new InvalidOperationException($"Allocator returned {_vRegisters.Length} bytes, expected at least {requiredSize}.");
-    }
-    
     public byte ReadV(int register)
     {
-        return _vRegisters.Span[register];
+        return _vRegisters[register];
     }
 
     public void WriteV(int register, byte value)
     {
-        _vRegisters.Span[register] = value;
+        _vRegisters[register] = value;
     }
 
     public int ReadI()
@@ -77,6 +71,6 @@ public sealed class Chip8Registers : IRegisters
         _soundTimer = 0;
         _indexRegister = 0;
         _programCounter = 0;
-        _vRegisters.Span.Clear();
+        Array.Clear(_vRegisters);
     }
 }

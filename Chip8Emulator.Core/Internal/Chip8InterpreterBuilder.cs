@@ -1,3 +1,5 @@
+using Chip8Emulator.Core.Internal;
+
 namespace Chip8Emulator.Core;
 
 internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
@@ -10,6 +12,7 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
     private IMemory? _memory;
     private IRegisters? _registers;
     private IPersistentFlags? _persistentFlags;
+    private IRenderer? _renderer;
 
     public IChip8InterpreterBuilder WithInput(IInput input)
     {
@@ -29,33 +32,15 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
         return this;
     }
 
-    public IChip8InterpreterBuilder WithStack(IStack stack)
-    {
-        _stack = stack;
-        return this;
-    }
-
-    public IChip8InterpreterBuilder WithRegisters(IRegisters registers)
-    {
-        _registers = registers;
-        return this;
-    }
-
     public IChip8InterpreterBuilder WithPersistentFlags(IPersistentFlags flags)
     {
         _persistentFlags = flags;
         return this;
     }
 
-    public IChip8InterpreterBuilder WithMemory(IMemory memory)
+    public IChip8InterpreterBuilder WithRenderer(IRenderer renderer)
     {
-        _memory = memory;
-        return this;
-    }
-
-    public IChip8InterpreterBuilder WithDisplay(IDisplay display)
-    {
-        _display = display;
+        _renderer = renderer;
         return this;
     }
 
@@ -67,16 +52,16 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
             $"{nameof(WithClock)} must be called before {nameof(Build)}.");
         var input = _input ?? throw new InvalidOperationException(
             $"{nameof(WithInput)} must be called before {nameof(Build)}.");
-        var stack = _stack ?? throw new InvalidOperationException(
-            $"{nameof(WithStack)} must be called before {nameof(Build)}.");
-        var registers = _registers ?? throw new InvalidOperationException(
-            $"{nameof(WithRegisters)} must be called before {nameof(Build)}.");
-        var memory = _memory ?? throw new InvalidOperationException(
-            $"{nameof(WithMemory)} must be called before {nameof(Build)}.");
-        var display = _display ?? throw new InvalidOperationException(
-            $"{nameof(WithDisplay)} must be called before {nameof(Build)}.");
-        var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();
+        var renderer = _renderer ?? throw new InvalidOperationException(
+            $"{nameof(WithRenderer)} must be called before {nameof(Build)}.");
 
-        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, persistentFlags);
+        var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();
+        
+        var stack = new Chip8Stack();
+        var registers = new Chip8Registers();
+        var memory = new Chip8Memory();
+        var display = new Chip8Display();
+
+        return new Chip8Interpreter(clock, display, memory, audio, input, registers, stack, persistentFlags, renderer);
     }
 }
