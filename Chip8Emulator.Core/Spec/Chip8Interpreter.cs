@@ -85,6 +85,8 @@ internal sealed partial class Chip8Interpreter : IInterpreter
 
     internal readonly Routine[] Routines;
 
+    private readonly DecodedOp[] _decodedCache;
+
     public Chip8Interpreter(
         IClock clock,
         IDisplay display,
@@ -110,6 +112,8 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
 
+        _decodedCache = new DecodedOp[memory.Size];
+
         Routines = LoadRoutines();
 
         ApplyJumpUsesVx();
@@ -124,6 +128,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         Stack.Clear();
         Registers.WritePc(0x200);
         Memory.Write(0x200, program);
+        RebuildDecodeCache();
 
         _audio.Reset();
         Display.Reset();
@@ -172,16 +177,43 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private void FetchDecodeExecute()
     {
-        var op = Chip8Decoder.Decode(Fetch());
+        var pc = Registers.ReadPc();
+        var op = _decodedCache[pc];
         AdvanceProgramCounter();
         Routines[(int)op.Kind](in op);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private int Fetch()
+    private void RebuildDecodeCache()
     {
-        var pc = Registers.ReadPc();
-        return Memory.Read(pc) << 8 | Memory.Read(pc + 1);
+        var lastPc = _decodedCache.Length - 1;
+        for (var pc = 0; pc < lastPc; pc++)
+        {
+            var ins = Memory.Read(pc) << 8 | Memory.Read(pc + 1);
+            _decodedCache[pc] = Chip8Decoder.Decode(ins);
+        }
+        _decodedCache[lastPc] = default;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WriteMemory(int address, byte value)
+    {
+        Memory.Write(address, value);
+        InvalidateAt(address);
+    }
+
+    private void InvalidateAt(int address)
+    {
+        if (address > 0)
+        {
+            var hiPc = address - 1;
+            var ins = Memory.Read(hiPc) << 8 | Memory.Read(address);
+            _decodedCache[hiPc] = Chip8Decoder.Decode(ins);
+        }
+        if (address < _decodedCache.Length - 1)
+        {
+            var ins = Memory.Read(address) << 8 | Memory.Read(address + 1);
+            _decodedCache[address] = Chip8Decoder.Decode(ins);
+        }
     }
 
     // Test helper: decode + dispatch a single instruction without touching PC or the clock loop.

@@ -55,7 +55,7 @@ internal sealed partial class Chip8Interpreter
         var count = Math.Abs(op.Y - op.X) + 1;
         for (var k = 0; k < count; k++)
         {
-            Memory.Write(
+            WriteMemory(
                 Registers.ReadIWithOffset(k),
                 Registers.ReadV(op.X + k * step));
         }

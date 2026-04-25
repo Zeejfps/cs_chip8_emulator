@@ -361,9 +361,9 @@ internal sealed partial class Chip8Interpreter
     internal void StoreBcdInMemory(in DecodedOp op)
     {
         var bcd = Registers.ReadV(op.X);
-        Memory.Write(Registers.ReadIWithOffset(0), (byte)(bcd / 100));
-        Memory.Write(Registers.ReadIWithOffset(1), (byte)(bcd / 10 % 10));
-        Memory.Write(Registers.ReadIWithOffset(2), (byte)(bcd % 10));
+        WriteMemory(Registers.ReadIWithOffset(0), (byte)(bcd / 100));
+        WriteMemory(Registers.ReadIWithOffset(1), (byte)(bcd / 10 % 10));
+        WriteMemory(Registers.ReadIWithOffset(2), (byte)(bcd % 10));
     }
 
     // FX55/FX65 : store/load V0..Vx. Quirk-sensitive (inc I or keep I).
@@ -402,7 +402,7 @@ internal sealed partial class Chip8Interpreter
     {
         for (var i = 0; i <= op.X; i++)
         {
-            Memory.Write(Registers.ReadIWithOffset(i), Registers.ReadV(i));
+            WriteMemory(Registers.ReadIWithOffset(i), Registers.ReadV(i));
         }
     }
 
@@ -410,7 +410,7 @@ internal sealed partial class Chip8Interpreter
     {
         for (var i = 0; i <= op.X; i++)
         {
-            Memory.Write(Registers.ReadIWithOffset(i), Registers.ReadV(i));
+            WriteMemory(Registers.ReadIWithOffset(i), Registers.ReadV(i));
         }
         Registers.WriteI(Registers.ReadI() + op.X + 1);
     }

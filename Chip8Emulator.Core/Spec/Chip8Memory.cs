@@ -3,7 +3,9 @@ namespace Chip8Emulator.Core.Spec;
 internal sealed class Chip8Memory : IMemory
 {
     public ReadOnlyMemory<byte> Memory => _buffer;
-    
+
+    public int Size => _buffer.Length;
+
     private readonly byte[] _buffer = new byte[4096];
 
     public byte Read(int address)
