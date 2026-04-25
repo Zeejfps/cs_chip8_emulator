@@ -1,3 +1,4 @@
+using Chip8Emulator.Core.Internal;
 using Chip8Emulator.Core.Tests.Fakes;
 
 namespace Chip8Emulator.Core.Tests;

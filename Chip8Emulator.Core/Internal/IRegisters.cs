@@ -1,6 +1,6 @@
-namespace Chip8Emulator.Core;
+namespace Chip8Emulator.Core.Internal;
 
-public interface IRegisters : IReadOnlyRegisters
+internal interface IRegisters : IReadOnlyRegisters
 {
     void WriteV(int register, byte value);
     void WriteI(int value);

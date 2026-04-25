@@ -1,4 +1,4 @@
-namespace Chip8Emulator.Core;
+namespace Chip8Emulator.Core.Internal;
 
 internal sealed class Chip8Stack : IStack
 {

@@ -1,6 +1,6 @@
-namespace Chip8Emulator.Core;
+namespace Chip8Emulator.Core.Internal;
 
-public interface IDisplay : IReadOnlyDisplay
+internal interface IDisplay : IReadOnlyDisplay
 {
     byte SelectedPlanes { get; set; }
     bool IsHighRes { get; }
