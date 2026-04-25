@@ -1,4 +1,4 @@
-namespace Chip8Emulator.Core.Internal;
+namespace Chip8Emulator.Core.Spec;
 
 internal interface IRegisters : IReadOnlyRegisters
 {

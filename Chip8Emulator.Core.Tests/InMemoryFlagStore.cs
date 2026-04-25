@@ -1,4 +1,4 @@
-using Chip8Emulator.Core.Internal;
+using Chip8Emulator.Core.Spec;
 
 namespace Chip8Emulator.Core.Tests;
 

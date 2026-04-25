@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Chip8Emulator.Core.Internal;
+namespace Chip8Emulator.Core.Spec;
 
 internal delegate void Routine(int ins);
 

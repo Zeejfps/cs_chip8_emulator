@@ -1,6 +1,6 @@
 using static Chip8Emulator.Core.Chip8Disassembler;
 
-namespace Chip8Emulator.Core.Internal;
+namespace Chip8Emulator.Core.Spec;
 
 // SUPER-CHIP 1.1 additions: hi-res mode, 4-pixel scrolls, scroll down N,
 // 16x16 sprite drawing (DXY0), 10-byte high-res font, persistent user flags.

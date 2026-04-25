@@ -1,6 +1,6 @@
 using static Chip8Emulator.Core.Chip8Disassembler;
 
-namespace Chip8Emulator.Core.Internal;
+namespace Chip8Emulator.Core.Spec;
 
 // Base CHIP-8 opcode handlers plus the quirk-variant handlers for the ambiguous
 // CHIP-8 instructions (OR/AND/XOR VF reset, SHR/SHL Vx-vs-Vy, BNNN jump, FX55/FX65
