@@ -1,8 +1,7 @@
 namespace Chip8Emulator.Core;
 
-public interface IStack
+public interface IStack : IReadOnlyStack
 {
-    int StackPointer { get; }
     void Push(int value);
     int Pop();
     void Clear();

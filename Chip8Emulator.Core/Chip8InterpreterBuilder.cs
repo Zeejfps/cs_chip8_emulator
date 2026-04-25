@@ -67,8 +67,7 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
             $"{nameof(WithClock)} must be called before {nameof(Build)}.");
         var input = _input ?? throw new InvalidOperationException(
             $"{nameof(WithInput)} must be called before {nameof(Build)}.");
-        var stack = _stack ?? throw new InvalidOperationException(
-            $"{nameof(WithStack)} must be called before {nameof(Build)}.");
+        var stack = _stack ?? new Chip8Stack();
         var registers = _registers ?? throw new InvalidOperationException(
             $"{nameof(WithRegisters)} must be called before {nameof(Build)}.");
         var memory = _memory ?? throw new InvalidOperationException(

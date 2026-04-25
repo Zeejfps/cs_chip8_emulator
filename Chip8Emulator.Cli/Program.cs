@@ -37,7 +37,7 @@ try
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
-        .WithStack(new Chip8Stack(size => new int[size]))
+        .WithStack(new Chip8Stack())
         .WithMemory(new Chip8Memory(size => new byte[size]))
         .WithRegisters(new Chip8Registers(size => new byte[size]))
         .WithPersistentFlags(new FilePersistentFlags())

@@ -51,7 +51,7 @@ public class Chip8InterpreterBuilderTests
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())
             .WithInput(new FakeInput())
-            .WithStack(new Chip8Stack(size => new int[size]))
+            .WithStack(new Chip8Stack())
             .WithMemory(new Chip8Memory(size => new byte[size]))
             .WithRegisters(new Chip8Registers(size => new byte[size]))
             .Build();

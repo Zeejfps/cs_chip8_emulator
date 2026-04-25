@@ -2,17 +2,15 @@ namespace Chip8Emulator.Core;
 
 public sealed class Chip8Stack : IStack
 {
+    public ReadOnlyMemory<int> Frames => _buffer.AsMemory();
     public int StackPointer => _stackPointer;
 
-    private readonly Memory<int> _buffer;
+    private readonly int[] _buffer;
     private int _stackPointer = -1;
 
-    public Chip8Stack(Func<int, Memory<int>> alloc)
+    public Chip8Stack()
     {
-        const int requiredSize = 16;
-        _buffer = alloc(requiredSize);
-        if (_buffer.Length < requiredSize)
-            throw new InvalidOperationException($"Allocator returned {_buffer.Length} ints, expected at least {requiredSize}.");
+        _buffer = new int[16];   
     }
     
     public void Push(int value)
@@ -21,7 +19,7 @@ public sealed class Chip8Stack : IStack
         if (nextStackPointer >= _buffer.Length)
             throw new InvalidOperationException("Stack overflow");
         _stackPointer = nextStackPointer;
-        _buffer.Span[_stackPointer] = value;
+        _buffer[_stackPointer] = value;
     }
 
     public int Pop()
@@ -29,14 +27,14 @@ public sealed class Chip8Stack : IStack
         if (_stackPointer < 0)
             throw new InvalidOperationException("Stack underflow");
 
-        var value = _buffer.Span[_stackPointer];
+        var value = _buffer[_stackPointer];
         _stackPointer--;
         return value;
     }
 
     public void Clear()
     {
-        _buffer.Span.Clear();
+        Array.Clear(_buffer);
         _stackPointer = -1;
     }
 }

@@ -22,7 +22,7 @@ public class XoChipTests
         return new Chip8Interpreter(
             new FakeClock(), display, memory, audio, input,
             new Chip8Registers(size => new byte[size]),
-            new Chip8Stack(size => new int[size]),
+            new Chip8Stack(),
             flags);
     }
 

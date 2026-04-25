@@ -13,13 +13,11 @@ namespace Chip8Emulator.Web
         private static BrowserInput? _input;
         private static ManualClock? _clock;
         private static MemoryHandle _pixelsHandle;
-        private static int[]? _stackBuffer;
         private static byte[]? _memoryBuffer;
         private static byte[]? _vRegistersBuffer;
         private static byte[]? _pixelBuffer;
         private static IMemory? _memory;
         private static IDisplay? _display;
-        private static IStack? _stack;
         private static IRegisters? _registers;
         private static long _lastRealTimestamp;
 
@@ -28,11 +26,9 @@ namespace Chip8Emulator.Web
         {
             _input = new BrowserInput();
             _clock = new ManualClock();
-            _stackBuffer = new int[16];
             _memoryBuffer = new byte[4096];
             _vRegistersBuffer = new byte[16];
             _pixelBuffer = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
-            _stack = new Chip8Stack(size => _stackBuffer.AsMemory(0, size));
             _memory = new Chip8Memory(size => _memoryBuffer.AsMemory(0, size));
             _registers = new Chip8Registers(size => _vRegistersBuffer.AsMemory(0, size));
             _display = new Chip8Display(size => _pixelBuffer.AsMemory(0, size));
@@ -41,7 +37,6 @@ namespace Chip8Emulator.Web
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
-                .WithStack(_stack)
                 .WithMemory(_memory)
                 .WithRegisters(_registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
@@ -111,10 +106,10 @@ namespace Chip8Emulator.Web
         public static int GetSoundTimer() => _registers!.ReadSt();
 
         [JSExport]
-        public static int GetStackPointer() => _stack!.StackPointer;
+        public static int GetStackPointer() => _interpreter!.Stack.StackPointer;
 
         [JSExport]
-        public static int[] GetStack() => _stackBuffer!;
+        public static int[] GetStack() => _interpreter!.Stack.Frames.ToArray();
 
         [JSExport]
         public static string DisassembleInstruction(int ins) => Chip8Disassembler.Disassemble(ins);

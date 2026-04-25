@@ -17,6 +17,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     public IMemory Memory { get; }
     public IRegisters Registers { get; }
     public IStack Stack { get; }
+    IReadOnlyStack IInterpreter.Stack => Stack;
 
     public bool IsWaitingForKey => _isWaitingForKey;
 
