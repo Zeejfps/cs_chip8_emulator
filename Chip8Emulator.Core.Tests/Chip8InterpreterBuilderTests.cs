@@ -47,13 +47,9 @@ public class Chip8InterpreterBuilderTests
     public void Build_ReturnsChip8Emulator()
     {
         var chip = Chip8.Builder()
-            .WithDisplay(new Chip8Display())
             .WithAudio(new FakeAudio())
             .WithClock(new FakeClock())
             .WithInput(new FakeInput())
-            .WithStack(new Chip8Stack())
-            .WithMemory(new Chip8Memory())
-            .WithRegisters(new Chip8Registers())
             .Build();
 
         Assert.NotNull(chip);

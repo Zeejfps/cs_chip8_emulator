@@ -17,7 +17,7 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
     private const string DisableAltScroll = "\x1b[?1007l";
     private const string RestoreAltScroll = "\x1b[?1007h";
 
-    private readonly byte[] _previousPixels = new byte[Chip8Display.HighResWidth * Chip8Display.HighResHeight];
+    private byte[]? _previousPixels;
     private readonly StringBuilder _frame = new(8192);
     private bool _hasRendered;
     private int _lastWindowWidth = -1;
@@ -47,6 +47,7 @@ public sealed class AnsiConsoleRenderer : IRenderer, IDisposable
         var cellHeight = (pixelHeight + 1) / 2;
         var activeLength = pixelWidth * pixelHeight;
         var activePixels = pixels[..activeLength];
+        _previousPixels ??= new byte[display.VMem.Length];
         var previousActive = _previousPixels.AsSpan(0, activeLength);
 
         var (windowWidth, windowHeight) = ReadWindowSize();

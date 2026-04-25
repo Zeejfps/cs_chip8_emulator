@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class Chip8Memory : IMemory
+internal sealed class Chip8Memory : IMemory
 {
     public ReadOnlyMemory<byte> Memory => _buffer;
     

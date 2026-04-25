@@ -30,7 +30,7 @@ try
 
     var clock = new StopwatchClock();
     using var renderer = new AnsiConsoleRenderer();
-    var machine = Chip8.Builder()
+    var interpreter = Chip8.Builder()
         .WithAudio(audio)
         .WithClock(clock)
         .WithInput(input)
@@ -41,8 +41,12 @@ try
     Console.WriteLine($"Loading ROM: {romPath}");
     var romData = File.ReadAllBytes(romPath);
 
-    machine.LoadProgram(romData);
-    machine.Start();
+    interpreter.InstructionsPerSecond = 600;
+    interpreter.LoadStoreIncrementsI = true;
+    interpreter.SpritesWrap = true;
+    interpreter.JumpUsesVx = true;
+    interpreter.LoadProgram(romData);
+    interpreter.Start();
 
     while (!cancelled && !input.IsCancelRequested)
     {
@@ -50,11 +54,11 @@ try
 
         if (input.ConsumeRestartRequest())
         {
-            machine.LoadProgram(romData);
+            interpreter.LoadProgram(romData);
         }
     }
 
-    machine.Stop();
+    interpreter.Stop();
     return 0;
 }
 catch (Exception ex)

@@ -30,33 +30,9 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
         return this;
     }
 
-    public IChip8InterpreterBuilder WithStack(IStack stack)
-    {
-        _stack = stack;
-        return this;
-    }
-
-    public IChip8InterpreterBuilder WithRegisters(IRegisters registers)
-    {
-        _registers = registers;
-        return this;
-    }
-
     public IChip8InterpreterBuilder WithPersistentFlags(IPersistentFlags flags)
     {
         _persistentFlags = flags;
-        return this;
-    }
-
-    public IChip8InterpreterBuilder WithMemory(IMemory memory)
-    {
-        _memory = memory;
-        return this;
-    }
-
-    public IChip8InterpreterBuilder WithDisplay(IDisplay display)
-    {
-        _display = display;
         return this;
     }
 
@@ -74,10 +50,10 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
             $"{nameof(WithClock)} must be called before {nameof(Build)}.");
         var input = _input ?? throw new InvalidOperationException(
             $"{nameof(WithInput)} must be called before {nameof(Build)}.");
-        var stack = _stack ?? new Chip8Stack();
-        var registers = _registers ?? new Chip8Registers();
-        var memory = _memory ?? new Chip8Memory();
-        var display = _display ?? new Chip8Display();
+        var stack = new Chip8Stack();
+        var registers = new Chip8Registers();
+        var memory = new Chip8Memory();
+        var display = new Chip8Display();
         var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();
         var renderer = _renderer ?? new NullRenderer();
 

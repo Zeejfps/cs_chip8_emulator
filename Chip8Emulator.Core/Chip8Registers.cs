@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class Chip8Registers : IRegisters
+internal sealed class Chip8Registers : IRegisters
 {
     public ReadOnlyMemory<byte> VRegisters => _vRegisters;
 

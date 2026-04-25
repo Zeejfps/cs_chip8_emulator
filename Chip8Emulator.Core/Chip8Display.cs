@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class Chip8Display : IDisplay
+internal sealed class Chip8Display : IDisplay
 {
     public const int HighResWidth = 128;
     public const int HighResHeight = 64;

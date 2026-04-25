@@ -1,6 +1,6 @@
 namespace Chip8Emulator.Core;
 
-public sealed class Chip8Stack : IStack
+internal sealed class Chip8Stack : IStack
 {
     public ReadOnlyMemory<int> Frames => _buffer.AsMemory();
     public int StackPointer => _stackPointer;
