@@ -10,6 +10,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     public const int HighResFontBaseAddress = 0x0A0;
     public const int LowResFontCharWidth = 5;
     public const int HighResFontCharWidth = 10;
+    public const int FlagBytes = 16;
 
     private const int InstructionSizeInBytes = 2;
 
@@ -263,7 +264,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
 
     private void SaveFlags(int count)
     {
-        Span<byte> buffer = stackalloc byte[IFlagStore.Capacity];
+        Span<byte> buffer = stackalloc byte[FlagBytes];
         _flagStore.LoadInto(buffer);
         for (var i = 0; i <= count && i < buffer.Length; i++)
         {
@@ -274,7 +275,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
 
     private void LoadFlags(int count)
     {
-        Span<byte> buffer = stackalloc byte[IFlagStore.Capacity];
+        Span<byte> buffer = stackalloc byte[FlagBytes];
         _flagStore.LoadInto(buffer);
         for (var i = 0; i <= count && i < buffer.Length; i++)
         {

@@ -1,8 +1,10 @@
+using Chip8Emulator.Core.Internal;
+
 namespace Chip8Emulator.Core.Tests;
 
 public sealed class InMemoryFlagStore : IFlagStore
 {
-    private readonly byte[] _bytes = new byte[IFlagStore.Capacity];
+    private readonly byte[] _bytes = new byte[Chip8Interpreter.FlagBytes];
 
     public void LoadInto(Span<byte> destination)
     {
