@@ -17,7 +17,7 @@ public class SuperChipTests
         var input = new FakeInput();
         return new Chip8Interpreter(
             new FakeClock(), display, memory, audio, input,
-            new Chip8Registers(size => new byte[size]),
+            new Chip8Registers(),
             new Chip8Stack(),
             new InMemoryPersistentFlags());
     }

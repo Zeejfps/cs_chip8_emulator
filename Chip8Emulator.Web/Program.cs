@@ -13,8 +13,6 @@ namespace Chip8Emulator.Web
         private static BrowserInput? _input;
         private static ManualClock? _clock;
         private static MemoryHandle _pixelsHandle;
-        private static byte[]? _vRegistersBuffer;
-        private static IRegisters? _registers;
         private static long _lastRealTimestamp;
 
         [JSExport]
@@ -22,13 +20,10 @@ namespace Chip8Emulator.Web
         {
             _input = new BrowserInput();
             _clock = new ManualClock();
-            _vRegistersBuffer = new byte[16];
-            _registers = new Chip8Registers(size => _vRegistersBuffer.AsMemory(0, size));
             _interpreter = Chip8.Builder()
                 .WithAudio(new BrowserAudio())
                 .WithClock(_clock)
                 .WithInput(_input)
-                .WithRegisters(_registers)
                 .WithPersistentFlags(new LocalStoragePersistentFlags())
                 .Build();
             _pixelsHandle = _interpreter.Display.VMem.Pin();
@@ -67,33 +62,33 @@ namespace Chip8Emulator.Web
             // A vblank-wait draw suspends instruction execution until ~1 frame of ticks accumulates,
             // so a single one-instruction advance can land in a no-op window. Loop up to
             // (steps-per-frame + 1) times until the PC actually moves.
-            var pcBefore = _registers!.ReadPc();
+            var pcBefore = _interpreter!.Registers.ReadPc();
             var delta = _clock!.Frequency / _interpreter!.InstructionsPerSecond;
             var maxSteps = _interpreter.InstructionsPerSecond / 60 + 1;
             for (var i = 0; i < maxSteps; i++)
             {
                 _clock.Advance(delta);
-                if (_registers.ReadPc() != pcBefore) return;
+                if (_interpreter.Registers.ReadPc() != pcBefore) return;
             }
         }
 
         [JSExport]
-        public static int GetProgramCounter() => _registers!.ReadPc();
+        public static int GetProgramCounter() => _interpreter!.Registers.ReadPc();
 
         [JSExport]
         public static int GetMemoryByte(int address) => _interpreter!.Memory.Read(address);
 
         [JSExport]
-        public static byte[] GetVRegisters() => _vRegistersBuffer!;
+        public static byte[] GetVRegisters() => _interpreter!.Registers.VRegisters.ToArray();
 
         [JSExport]
-        public static int GetIndexRegister() => _registers!.ReadI();
+        public static int GetIndexRegister() => _interpreter!.Registers.ReadI();
 
         [JSExport]
-        public static int GetDelayTimer() => _registers!.ReadDt();
+        public static int GetDelayTimer() => _interpreter!.Registers.ReadDt();
 
         [JSExport]
-        public static int GetSoundTimer() => _registers!.ReadSt();
+        public static int GetSoundTimer() => _interpreter!.Registers.ReadSt();
 
         [JSExport]
         public static int GetStackPointer() => _interpreter!.Stack.StackPointer;

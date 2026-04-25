@@ -53,7 +53,7 @@ public class Chip8InterpreterBuilderTests
             .WithInput(new FakeInput())
             .WithStack(new Chip8Stack())
             .WithMemory(new Chip8Memory())
-            .WithRegisters(new Chip8Registers(size => new byte[size]))
+            .WithRegisters(new Chip8Registers())
             .Build();
 
         Assert.NotNull(chip);

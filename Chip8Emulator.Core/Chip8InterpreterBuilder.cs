@@ -68,8 +68,7 @@ internal sealed class Chip8InterpreterBuilder : IChip8InterpreterBuilder
         var input = _input ?? throw new InvalidOperationException(
             $"{nameof(WithInput)} must be called before {nameof(Build)}.");
         var stack = _stack ?? new Chip8Stack();
-        var registers = _registers ?? throw new InvalidOperationException(
-            $"{nameof(WithRegisters)} must be called before {nameof(Build)}.");
+        var registers = _registers ?? new Chip8Registers();
         var memory = _memory ?? new Chip8Memory();
         var display = _display ?? new Chip8Display();
         var persistentFlags = _persistentFlags ?? new InMemoryPersistentFlags();

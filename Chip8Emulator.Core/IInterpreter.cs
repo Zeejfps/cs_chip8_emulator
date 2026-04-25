@@ -5,6 +5,7 @@ public interface IInterpreter
     IReadOnlyStack Stack { get; }
     IReadOnlyDisplay Display { get; }
     IReadOnlyMemory Memory { get; }
+    IReadOnlyRegisters Registers { get; }
 
     int InstructionsPerSecond { get; set; }
     bool ShiftUsesVy { get; set; }

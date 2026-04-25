@@ -1,17 +1,11 @@
 namespace Chip8Emulator.Core;
 
-public interface IRegisters
+public interface IRegisters : IReadOnlyRegisters
 {
-    byte ReadV(int register);
     void WriteV(int register, byte value);
-    int ReadI();
-    int ReadIWithOffset(int offset);
     void WriteI(int value);
-    byte ReadDt();
     void WriteDt(byte value);
     void WriteSt(byte value);
-    byte ReadSt();
-    int ReadPc();
     void WritePc(int value);
     void Clear();
 }
