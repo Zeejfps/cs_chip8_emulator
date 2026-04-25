@@ -1,6 +1,6 @@
-namespace Chip8Emulator.Core;
+namespace Chip8Emulator.Core.Spec;
 
-public enum OpKind
+internal enum OpKind
 {
     Unknown = 0,
 
