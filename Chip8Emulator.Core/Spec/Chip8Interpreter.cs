@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace Chip8Emulator.Core.Spec;
 
-internal delegate void Routine(int ins);
+internal delegate void Routine(in DecodedOp op);
 
 internal sealed partial class Chip8Interpreter : IInterpreter
 {
@@ -18,7 +18,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     public IMemory Memory { get; }
     public IRegisters Registers { get; }
     public IStack Stack { get; }
-    
+
     IReadOnlyMemory IInterpreter.Memory => Memory;
     IReadOnlyDisplay IInterpreter.Display => Display;
     IReadOnlyStack IInterpreter.Stack => Stack;
@@ -83,12 +83,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     private bool _loadStoreIncrementsI;
     private bool _logicResetsVf;
 
-    internal readonly Routine[] UtilityRoutines;
-    internal readonly Routine[] MainRoutines;
-    internal readonly Routine[] SystemRoutines;
-    internal readonly Routine[] InputRoutines;
-    internal readonly Routine[] FiveOpRoutines;
-    internal readonly Routine[] ArithmeticRoutines;
+    internal readonly Routine[] Routines;
 
     public Chip8Interpreter(
         IClock clock,
@@ -115,12 +110,7 @@ internal sealed partial class Chip8Interpreter : IInterpreter
         _ticksPerInstruction = clock.Frequency / _instructionsPerSecond;
         _lastTimestamp = clock.Timestamp;
 
-        MainRoutines = LoadMainRoutines();
-        SystemRoutines = LoadSystemRoutines();
-        UtilityRoutines = LoadUtilityRoutines();
-        InputRoutines = LoadInputRoutines();
-        FiveOpRoutines = LoadFiveOpRoutines();
-        ArithmeticRoutines = LoadArithmeticRoutines();
+        Routines = LoadRoutines();
 
         ApplyJumpUsesVx();
         ApplyLoadStoreIncrementsI();
@@ -182,11 +172,9 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     private void FetchDecodeExecute()
     {
-        var ins = Fetch();
+        var op = Chip8Decoder.Decode(Fetch());
         AdvanceProgramCounter();
-        var opcode = (ins & 0xF000) >> 12;
-        var execute = MainRoutines[opcode];
-        execute(ins);
+        Routines[(int)op.Kind](in op);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -194,6 +182,13 @@ internal sealed partial class Chip8Interpreter : IInterpreter
     {
         var pc = Registers.ReadPc();
         return Memory.Read(pc) << 8 | Memory.Read(pc + 1);
+    }
+
+    // Test helper: decode + dispatch a single instruction without touching PC or the clock loop.
+    internal void Step(int ins)
+    {
+        var op = Chip8Decoder.Decode(ins);
+        Routines[(int)op.Kind](in op);
     }
 
     private void OnTicked(object? sender, EventArgs e)
@@ -285,138 +280,96 @@ internal sealed partial class Chip8Interpreter : IInterpreter
 
     private void ApplyJumpUsesVx()
     {
-        MainRoutines[0xB] = _jumpUsesVx
+        Routines[(int)OpKind.JpV0] = _jumpUsesVx
             ? ExecuteJumpWithVxOffsetIns
             : ExecuteJumpWithV0OffsetIns;
     }
 
     private void ApplyLoadStoreIncrementsI()
     {
-        UtilityRoutines[0x55] = _loadStoreIncrementsI
+        Routines[(int)OpKind.LdIVx] = _loadStoreIncrementsI
             ? ExecuteStoreRegistersIncIIns
             : ExecuteStoreRegistersKeepIIns;
-        UtilityRoutines[0x65] = _loadStoreIncrementsI
+        Routines[(int)OpKind.LdVxI] = _loadStoreIncrementsI
             ? ExecuteLoadRegistersIncIIns
             : ExecuteLoadRegistersKeepIIns;
     }
 
     private void ApplyLogicResetsVf()
     {
-        ArithmeticRoutines[0x1] = _logicResetsVf
+        Routines[(int)OpKind.OrVxVy] = _logicResetsVf
             ? ExecuteBitwiseOrResetVfIns
             : ExecuteBitwiseOrPreserveVfIns;
-        ArithmeticRoutines[0x2] = _logicResetsVf
+        Routines[(int)OpKind.AndVxVy] = _logicResetsVf
             ? ExecuteBitwiseAndResetVfIns
             : ExecuteBitwiseAndPreserveVfIns;
-        ArithmeticRoutines[0x3] = _logicResetsVf
+        Routines[(int)OpKind.XorVxVy] = _logicResetsVf
             ? ExecuteXorResetVfIns
             : ExecuteXorPreserveVfIns;
     }
 
-    private static void NoOp(int ins) { }
+    private static void NoOp(in DecodedOp op) { }
 
-    private Routine[] LoadMainRoutines()
+    private Routine[] LoadRoutines()
     {
-        var table = new Routine[16];
-        table[0x0] = ins => { if ((ins & 0xFF00) == 0x0000) SystemRoutines[ins & 0x00FF](ins); };
-        table[0x1] = JumpToAddress;
-        table[0x2] = CallSubroutine;
-        table[0x3] = SkipNextInsIfRegisterValueEqualsValue;
-        table[0x4] = SkipNextInsIfRegisterValueNotEqualsValue;
-        table[0x5] = ins => FiveOpRoutines[ins & 0x000F](ins);
-        table[0x6] = SetRegisterValue;
-        table[0x7] = AddValueToRegister;
-        table[0x8] = ins => ArithmeticRoutines[ins & 0x000F](ins);
-        table[0x9] = SkipNextInsIfRegisterValueNotEqualsRegisterValue;
-        table[0xA] = SetIndexRegisterIns;
-        table[0xB] = JumpWithOffsetIns;
-        table[0xC] = GenerateRandomNum;
-        table[0xD] = DrawToScreen;
-        table[0xE] = ins => InputRoutines[ins & 0x00FF](ins);
-        table[0xF] = ins => UtilityRoutines[ins & 0x00FF](ins);
+        var count = Enum.GetValues<OpKind>().Length;
+        var table = new Routine[count];
+        Array.Fill(table, NoOp);
+
+        table[(int)OpKind.Cls] = ClearDisplay;
+        table[(int)OpKind.Ret] = ReturnFromSubroutine;
+        table[(int)OpKind.ScrollDown] = ScrollDown;
+        table[(int)OpKind.ScrollUp] = ScrollUp;
+        table[(int)OpKind.ScrollRight] = ScrollRight;
+        table[(int)OpKind.ScrollLeft] = ScrollLeft;
+        table[(int)OpKind.DisableHires] = DisableHiresMode;
+        table[(int)OpKind.EnableHires] = EnableHiresMode;
+
+        table[(int)OpKind.Jp] = JumpToAddress;
+        table[(int)OpKind.Call] = CallSubroutine;
+        table[(int)OpKind.SeVxImm] = SkipNextInsIfRegisterValueEqualsValue;
+        table[(int)OpKind.SneVxImm] = SkipNextInsIfRegisterValueNotEqualsValue;
+
+        table[(int)OpKind.SeVxVy] = SkipIfVxEqualsVy;
+        table[(int)OpKind.StoreRegisterRange] = StoreRegisterRange;
+        table[(int)OpKind.LoadRegisterRange] = LoadRegisterRange;
+
+        table[(int)OpKind.LdVxImm] = SetRegisterValue;
+        table[(int)OpKind.AddVxImm] = AddValueToRegister;
+
+        table[(int)OpKind.LdVxVy] = SetRegisterValueFromRegister;
+        // OrVxVy / AndVxVy / XorVxVy filled by ApplyLogicResetsVf.
+        table[(int)OpKind.AddVxVy] = AddValueToRegisterWithCarry;
+        table[(int)OpKind.SubVxVy] = VxSubVy;
+        table[(int)OpKind.ShrVx] = ShiftRight;
+        table[(int)OpKind.SubnVxVy] = VySubVx;
+        table[(int)OpKind.ShlVx] = ShiftLeft;
+
+        table[(int)OpKind.SneVxVy] = SkipNextInsIfRegisterValueNotEqualsRegisterValue;
+        table[(int)OpKind.LdIImm] = SetIndexRegisterIns;
+        // JpV0 filled by ApplyJumpUsesVx.
+        table[(int)OpKind.Rnd] = GenerateRandomNum;
+        table[(int)OpKind.Drw] = DrawToScreen;
+
+        table[(int)OpKind.Skp] = SkipNextInsIfKeyIsPressed;
+        table[(int)OpKind.Sknp] = SkipNextInsIfKeyIsReleased;
+
+        table[(int)OpKind.LongLoadI] = LongLoadIndexRegister;
+        table[(int)OpKind.SelectPlane] = SelectPlane;
+        table[(int)OpKind.LoadAudioPattern] = LoadAudioPattern;
+        table[(int)OpKind.LdVxDt] = ReadDelayTimer;
+        table[(int)OpKind.LdVxK] = WaitForKeyPressAndRelease;
+        table[(int)OpKind.LdDtVx] = SetDelayTimer;
+        table[(int)OpKind.LdStVx] = SetSoundTimer;
+        table[(int)OpKind.AddIVx] = AddVxToI;
+        table[(int)OpKind.LdFVx] = LoadLowResFontCharacter;
+        table[(int)OpKind.LdHfVx] = LoadHighResFontCharacter;
+        table[(int)OpKind.LdBVx] = StoreBcdInMemory;
+        table[(int)OpKind.SetPitch] = SetPitch;
+        // LdIVx / LdVxI filled by ApplyLoadStoreIncrementsI.
+        table[(int)OpKind.SaveFlags] = SaveFlagsIns;
+        table[(int)OpKind.LoadFlags] = LoadFlagsIns;
+
         return table;
-    }
-
-    private Routine[] LoadSystemRoutines()
-    {
-        var routines = new Routine[256];
-        Array.Fill(routines, NoOp);
-        routines[0xE0] = ClearDisplay;
-        routines[0xEE] = ReturnFromSubroutine;
-        routines[0xFF] = EnableHiresMode;
-        routines[0xFE] = DisableHiresMode;
-        routines[0xFB] = ScrollRight;
-        routines[0xFC] = ScrollLeft;
-        for (var n = 0; n < 16; n++)
-        {
-            // 00CN — S-CHIP: scroll display down N rows.
-            routines[0xC0 + n] = ScrollDown;
-            // 00DN — XO-CHIP: scroll display up N rows.
-            routines[0xD0 + n] = ScrollUp;
-        }
-        return routines;
-    }
-
-    private Routine[] LoadUtilityRoutines()
-    {
-        var routines = new Routine[256];
-        Array.Fill(routines, NoOp);
-        // F000 NNNN — XO-CHIP long load I with the 16-bit word following the opcode.
-        routines[0x00] = LongLoadIndexRegister;
-        // FN01 — XO-CHIP select bitplane mask (N = 0..3).
-        routines[0x01] = SelectPlane;
-        // F002 — XO-CHIP copy 16 bytes at [I] into audio pattern buffer.
-        routines[0x02] = LoadAudioPattern;
-        routines[0x07] = ReadDelayTimer;
-        routines[0x0A] = WaitForKeyPressAndRelease;
-        routines[0x15] = SetDelayTimer;
-        routines[0x18] = SetSoundTimer;
-        routines[0x1E] = AddVxToI;
-        routines[0x29] = LoadLowResFontCharacter;
-        routines[0x30] = LoadHighResFontCharacter;
-        routines[0x33] = StoreBcdInMemory;
-        // FX3A — XO-CHIP set audio playback pitch from Vx.
-        routines[0x3A] = SetPitch;
-        routines[0x55] = StoreRegisters;
-        routines[0x65] = LoadRegisters;
-        // FX75 / FX85 — SCHIP save/load V0..Vx to persistent user flags.
-        routines[0x75] = SaveFlagsIns;
-        routines[0x85] = LoadFlagsIns;
-        return routines;
-    }
-
-    private Routine[] LoadInputRoutines()
-    {
-        var routines = new Routine[256];
-        Array.Fill(routines, NoOp);
-        routines[0x9E] = SkipNextInsIfKeyIsPressed;
-        routines[0xA1] = SkipNextInsIfKeyIsReleased;
-        return routines;
-    }
-
-    private Routine[] LoadFiveOpRoutines()
-    {
-        var routines = new Routine[16];
-        Array.Fill(routines, NoOp);
-        routines[0] = SkipIfVxEqualsVy;
-        routines[2] = StoreRegisterRange;
-        routines[3] = LoadRegisterRange;
-        return routines;
-    }
-
-    private Routine[] LoadArithmeticRoutines()
-    {
-        var routines = new Routine[16];
-        Array.Fill(routines, NoOp);
-        routines[0x0] = SetRegisterValueFromRegister;
-        routines[0x1] = BitwiseOrOnRegisters;
-        routines[0x2] = BitwiseAndOnRegisters;
-        routines[0x3] = XorRegisterValueFromRegister;
-        routines[0x4] = AddValueToRegisterWithCarry;
-        routines[0x5] = VxSubVy;
-        routines[0x6] = ShiftRight;
-        routines[0x7] = VySubVx;
-        routines[0xE] = ShiftLeft;
-        return routines;
     }
 }

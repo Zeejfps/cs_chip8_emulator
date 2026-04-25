@@ -1,5 +1,3 @@
-using static Chip8Emulator.Core.Chip8Disassembler;
-
 namespace Chip8Emulator.Core.Spec;
 
 // Base CHIP-8 opcode handlers plus the quirk-variant handlers for the ambiguous
@@ -11,12 +9,12 @@ internal sealed partial class Chip8Interpreter
 {
     // ---- 0x0*** system ops --------------------------------------------------
 
-    internal void ClearDisplay(int ins)
+    internal void ClearDisplay(in DecodedOp op)
     {
         Display.Clear();
     }
 
-    internal void ReturnFromSubroutine(int ins)
+    internal void ReturnFromSubroutine(in DecodedOp op)
     {
         var address = Stack.Pop();
         Registers.WritePc(address);
@@ -24,58 +22,48 @@ internal sealed partial class Chip8Interpreter
 
     // ---- 0x1NNN / 0x2NNN : jump / call --------------------------------------
 
-    internal void JumpToAddress(int ins)
+    internal void JumpToAddress(in DecodedOp op)
     {
-        var address = ExtractNnn(ins);
-        Registers.WritePc(address);
+        Registers.WritePc(op.Nnn);
     }
 
-    internal void CallSubroutine(int ins)
+    internal void CallSubroutine(in DecodedOp op)
     {
-        var address = ExtractNnn(ins);
         Stack.Push(Registers.ReadPc());
-        Registers.WritePc(address);
+        Registers.WritePc(op.Nnn);
     }
 
     // ---- 0x3XNN / 0x4XNN / 0x9XY0 : conditional skips ------------------------
 
-    internal void SkipNextInsIfRegisterValueEqualsValue(int ins)
+    internal void SkipNextInsIfRegisterValueEqualsValue(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        if (Registers.ReadV(x) == nn)
+        if (Registers.ReadV(op.X) == op.Nn)
         {
             AdvanceProgramCounter();
         }
     }
 
-    internal void SkipNextInsIfRegisterValueNotEqualsValue(int ins)
+    internal void SkipNextInsIfRegisterValueNotEqualsValue(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        if (Registers.ReadV(x) != nn)
+        if (Registers.ReadV(op.X) != op.Nn)
         {
             AdvanceProgramCounter();
         }
     }
 
-    internal void SkipNextInsIfRegisterValueNotEqualsRegisterValue(int ins)
+    internal void SkipNextInsIfRegisterValueNotEqualsRegisterValue(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        if (Registers.ReadV(x) != Registers.ReadV(y))
+        if (Registers.ReadV(op.X) != Registers.ReadV(op.Y))
         {
             AdvanceProgramCounter();
         }
     }
 
-    // ---- 0x5XY0 : SE Vx, Vy (called from FiveOpTable slot 0) ----------------
+    // ---- 0x5XY0 : SE Vx, Vy --------------------------------------------------
 
-    internal void SkipIfVxEqualsVy(int ins)
+    internal void SkipIfVxEqualsVy(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        if (Registers.ReadV(x) == Registers.ReadV(y))
+        if (Registers.ReadV(op.X) == Registers.ReadV(op.Y))
         {
             AdvanceProgramCounter();
         }
@@ -83,213 +71,171 @@ internal sealed partial class Chip8Interpreter
 
     // ---- 0x6XNN / 0x7XNN ----------------------------------------------------
 
-    internal void SetRegisterValue(int ins)
+    internal void SetRegisterValue(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        Registers.WriteV(x, nn);
+        Registers.WriteV(op.X, op.Nn);
     }
 
-    internal void AddValueToRegister(int ins)
+    internal void AddValueToRegister(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
-        Registers.WriteV(x, (byte)(Registers.ReadV(x) + nn));
+        Registers.WriteV(op.X, (byte)(Registers.ReadV(op.X) + op.Nn));
     }
 
     // ---- 0x8XY* arithmetic/logic --------------------------------------------
 
-    internal void SetRegisterValueFromRegister(int ins)
+    internal void SetRegisterValueFromRegister(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        Registers.WriteV(x, Registers.ReadV(y));
+        Registers.WriteV(op.X, Registers.ReadV(op.Y));
     }
 
     // Thin dispatcher (still used by tests).
-    internal void BitwiseOrOnRegisters(int ins)
+    internal void BitwiseOrOnRegisters(in DecodedOp op)
     {
-        if (LogicResetsVf) ExecuteBitwiseOrResetVfIns(ins);
-        else ExecuteBitwiseOrPreserveVfIns(ins);
+        if (LogicResetsVf) ExecuteBitwiseOrResetVfIns(in op);
+        else ExecuteBitwiseOrPreserveVfIns(in op);
     }
 
-    internal void ExecuteBitwiseOrPreserveVfIns(int ins)
+    internal void ExecuteBitwiseOrPreserveVfIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        Registers.WriteV(x, (byte)(Registers.ReadV(x) | Registers.ReadV(y)));
+        Registers.WriteV(op.X, (byte)(Registers.ReadV(op.X) | Registers.ReadV(op.Y)));
     }
 
-    internal void ExecuteBitwiseOrResetVfIns(int ins)
+    internal void ExecuteBitwiseOrResetVfIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        Registers.WriteV(x, (byte)(Registers.ReadV(x) | Registers.ReadV(y)));
+        Registers.WriteV(op.X, (byte)(Registers.ReadV(op.X) | Registers.ReadV(op.Y)));
         Registers.WriteV(0xF, 0);
     }
 
     // Thin dispatcher (still used by tests).
-    internal void BitwiseAndOnRegisters(int ins)
+    internal void BitwiseAndOnRegisters(in DecodedOp op)
     {
-        if (LogicResetsVf) ExecuteBitwiseAndResetVfIns(ins);
-        else ExecuteBitwiseAndPreserveVfIns(ins);
+        if (LogicResetsVf) ExecuteBitwiseAndResetVfIns(in op);
+        else ExecuteBitwiseAndPreserveVfIns(in op);
     }
 
-    internal void ExecuteBitwiseAndPreserveVfIns(int ins)
+    internal void ExecuteBitwiseAndPreserveVfIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        Registers.WriteV(x, (byte)(Registers.ReadV(x) & Registers.ReadV(y)));
+        Registers.WriteV(op.X, (byte)(Registers.ReadV(op.X) & Registers.ReadV(op.Y)));
     }
 
-    internal void ExecuteBitwiseAndResetVfIns(int ins)
+    internal void ExecuteBitwiseAndResetVfIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        Registers.WriteV(x, (byte)(Registers.ReadV(x) & Registers.ReadV(y)));
+        Registers.WriteV(op.X, (byte)(Registers.ReadV(op.X) & Registers.ReadV(op.Y)));
         Registers.WriteV(0xF, 0);
     }
 
     // Thin dispatcher (still used by tests).
-    internal void XorRegisterValueFromRegister(int ins)
+    internal void XorRegisterValueFromRegister(in DecodedOp op)
     {
-        if (LogicResetsVf) ExecuteXorResetVfIns(ins);
-        else ExecuteXorPreserveVfIns(ins);
+        if (LogicResetsVf) ExecuteXorResetVfIns(in op);
+        else ExecuteXorPreserveVfIns(in op);
     }
 
-    internal void ExecuteXorPreserveVfIns(int ins)
+    internal void ExecuteXorPreserveVfIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        Registers.WriteV(x, (byte)(Registers.ReadV(x) ^ Registers.ReadV(y)));
+        Registers.WriteV(op.X, (byte)(Registers.ReadV(op.X) ^ Registers.ReadV(op.Y)));
     }
 
-    internal void ExecuteXorResetVfIns(int ins)
+    internal void ExecuteXorResetVfIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        Registers.WriteV(x, (byte)(Registers.ReadV(x) ^ Registers.ReadV(y)));
+        Registers.WriteV(op.X, (byte)(Registers.ReadV(op.X) ^ Registers.ReadV(op.Y)));
         Registers.WriteV(0xF, 0);
     }
 
-    internal void AddValueToRegisterWithCarry(int ins)
+    internal void AddValueToRegisterWithCarry(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        var sum = Registers.ReadV(x) + Registers.ReadV(y);
+        var sum = Registers.ReadV(op.X) + Registers.ReadV(op.Y);
         var carry = (byte)(sum > 0xFF ? 1 : 0);
         var result = (byte)sum;
-        Registers.WriteV(x, result);
+        Registers.WriteV(op.X, result);
         Registers.WriteV(0xF, carry);
-        if (VfResultWrittenLast) Registers.WriteV(x, result);
+        if (VfResultWrittenLast) Registers.WriteV(op.X, result);
     }
 
-    internal void VxSubVy(int ins)
+    internal void VxSubVy(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
-        var minuend = Registers.ReadV(x);
-        var subtrahend = Registers.ReadV(y);
+        var minuend = Registers.ReadV(op.X);
+        var subtrahend = Registers.ReadV(op.Y);
         var flag = (byte)(minuend >= subtrahend ? 1 : 0);
         var result = (byte)(minuend - subtrahend);
-        Registers.WriteV(x, result);
+        Registers.WriteV(op.X, result);
         Registers.WriteV(0xF, flag);
-        if (VfResultWrittenLast) Registers.WriteV(x, result);
+        if (VfResultWrittenLast) Registers.WriteV(op.X, result);
     }
 
-    internal void VySubVx(int ins)
+    internal void VySubVx(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var y = ExtractY(ins);
         // NOTE(Zee): y first
-        var minuend = Registers.ReadV(y);
-        var subtrahend = Registers.ReadV(x);
+        var minuend = Registers.ReadV(op.Y);
+        var subtrahend = Registers.ReadV(op.X);
         var flag = (byte)(minuend >= subtrahend ? 1 : 0);
         var result = (byte)(minuend - subtrahend);
-        Registers.WriteV(x, result);
+        Registers.WriteV(op.X, result);
         Registers.WriteV(0xF, flag);
-        if (VfResultWrittenLast) Registers.WriteV(x, result);
+        if (VfResultWrittenLast) Registers.WriteV(op.X, result);
     }
 
-    internal void ShiftRight(int ins)
+    internal void ShiftRight(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var value = Registers.ReadV(x);
-
-        if (ShiftUsesVy)
-        {
-            var y = ExtractY(ins);
-            value = Registers.ReadV(y);
-        }
+        var value = Registers.ReadV(op.X);
+        if (ShiftUsesVy) value = Registers.ReadV(op.Y);
 
         var flag = (byte)(value & 0x1);
         var result = (byte)(value >> 1);
-        Registers.WriteV(x, result);
+        Registers.WriteV(op.X, result);
         Registers.WriteV(0xF, flag);
-        if (VfResultWrittenLast) Registers.WriteV(x, result);
+        if (VfResultWrittenLast) Registers.WriteV(op.X, result);
     }
 
-    internal void ShiftLeft(int ins)
+    internal void ShiftLeft(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var value = Registers.ReadV(x);
-
-        if (ShiftUsesVy)
-        {
-            var y = ExtractY(ins);
-            value = Registers.ReadV(y);
-        }
+        var value = Registers.ReadV(op.X);
+        if (ShiftUsesVy) value = Registers.ReadV(op.Y);
 
         var flag = (byte)((value >> 7) & 0x1);
         var result = (byte)(value << 1);
-        Registers.WriteV(x, result);
+        Registers.WriteV(op.X, result);
         Registers.WriteV(0xF, flag);
-        if (VfResultWrittenLast) Registers.WriteV(x, result);
+        if (VfResultWrittenLast) Registers.WriteV(op.X, result);
     }
 
     // ---- 0xANNN / 0xBNNN / 0xCXNN ------------------------------------------
 
-    internal void SetIndexRegisterIns(int ins)
+    internal void SetIndexRegisterIns(in DecodedOp op)
     {
-        var nnn = ExtractNnn(ins);
-        Registers.WriteI(nnn);
+        Registers.WriteI(op.Nnn);
     }
 
     // Thin dispatcher (still used by tests).
-    internal void JumpWithOffsetIns(int ins)
+    internal void JumpWithOffsetIns(in DecodedOp op)
     {
-        if (JumpUsesVx) ExecuteJumpWithVxOffsetIns(ins);
-        else ExecuteJumpWithV0OffsetIns(ins);
+        if (JumpUsesVx) ExecuteJumpWithVxOffsetIns(in op);
+        else ExecuteJumpWithV0OffsetIns(in op);
     }
 
-    internal void ExecuteJumpWithV0OffsetIns(int ins)
+    internal void ExecuteJumpWithV0OffsetIns(in DecodedOp op)
     {
-        var address = ExtractNnn(ins);
-        Registers.WritePc(address + Registers.ReadV(0));
+        Registers.WritePc(op.Nnn + Registers.ReadV(0));
     }
 
-    internal void ExecuteJumpWithVxOffsetIns(int ins)
+    internal void ExecuteJumpWithVxOffsetIns(in DecodedOp op)
     {
-        var address = ExtractNnn(ins);
-        var x = ExtractX(ins);
-        Registers.WritePc(address + Registers.ReadV(x));
+        Registers.WritePc(op.Nnn + Registers.ReadV(op.X));
     }
 
-    internal void GenerateRandomNum(int ins)
+    internal void GenerateRandomNum(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var nn = ExtractNn(ins);
         var randNum = (byte)Random.Shared.Next(0, 256);
-        Registers.WriteV(x, (byte)(randNum & nn));
+        Registers.WriteV(op.X, (byte)(randNum & op.Nn));
     }
 
     // ---- 0xDXYN draw --------------------------------------------------------
 
-    internal void DrawToScreen(int ins)
+    internal void DrawToScreen(in DecodedOp op)
     {
-        var x = Registers.ReadV(ExtractX(ins)) % Display.Width;
-        var y = Registers.ReadV(ExtractY(ins)) % Display.Height;
-        var n = ExtractN(ins);
+        var x = Registers.ReadV(op.X) % Display.Width;
+        var y = Registers.ReadV(op.Y) % Display.Height;
+        var n = op.N;
         var planeMask = (byte)(Display.SelectedPlanes & Chip8Display.AllPlanesMask);
 
         if (planeMask == 0)
@@ -364,66 +310,57 @@ internal sealed partial class Chip8Interpreter
 
     // ---- 0xEX* keyboard skips -----------------------------------------------
 
-    internal void SkipNextInsIfKeyIsPressed(int ins)
+    internal void SkipNextInsIfKeyIsPressed(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var key = Registers.ReadV(x);
+        var key = Registers.ReadV(op.X);
         if (_input.IsKeyPressed(key)) AdvanceProgramCounter();
     }
 
-    internal void SkipNextInsIfKeyIsReleased(int ins)
+    internal void SkipNextInsIfKeyIsReleased(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var key = Registers.ReadV(x);
+        var key = Registers.ReadV(op.X);
         if (!_input.IsKeyPressed(key)) AdvanceProgramCounter();
     }
 
     // ---- 0xFX** timer / system ops ------------------------------------------
 
-    internal void ReadDelayTimer(int ins)
+    internal void ReadDelayTimer(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        Registers.WriteV(x, Registers.ReadDt());
+        Registers.WriteV(op.X, Registers.ReadDt());
     }
 
-    internal void WaitForKeyPressAndRelease(int ins)
+    internal void WaitForKeyPressAndRelease(in DecodedOp op)
     {
-        var x = ExtractX(ins);
         _isWaitingForKey = true;
-        _keyRegisterIndex = x;
+        _keyRegisterIndex = op.X;
     }
 
-    internal void SetDelayTimer(int ins)
+    internal void SetDelayTimer(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        Registers.WriteDt(Registers.ReadV(x));
+        Registers.WriteDt(Registers.ReadV(op.X));
     }
 
-    internal void SetSoundTimer(int ins)
+    internal void SetSoundTimer(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        Registers.WriteSt(Registers.ReadV(x));
+        Registers.WriteSt(Registers.ReadV(op.X));
     }
 
-    internal void AddVxToI(int ins)
+    internal void AddVxToI(in DecodedOp op)
     {
-        var x = ExtractX(ins);
         var i = Registers.ReadI();
-        var vx = Registers.ReadV(x);
+        var vx = Registers.ReadV(op.X);
         Registers.WriteI(i + vx);
     }
 
-    internal void LoadLowResFontCharacter(int ins)
+    internal void LoadLowResFontCharacter(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var value = Registers.ReadV(x);
+        var value = Registers.ReadV(op.X);
         Registers.WriteI((value & 0x0F) * LowResFontCharWidth + LowResFontBaseAddress);
     }
 
-    internal void StoreBcdInMemory(int ins)
+    internal void StoreBcdInMemory(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var bcd = Registers.ReadV(x);
+        var bcd = Registers.ReadV(op.X);
         Memory.Write(Registers.ReadIWithOffset(0), (byte)(bcd / 100));
         Memory.Write(Registers.ReadIWithOffset(1), (byte)(bcd / 10 % 10));
         Memory.Write(Registers.ReadIWithOffset(2), (byte)(bcd % 10));
@@ -432,53 +369,49 @@ internal sealed partial class Chip8Interpreter
     // FX55/FX65 : store/load V0..Vx. Quirk-sensitive (inc I or keep I).
     // Thin dispatchers (still used by tests). Production dispatch picks a variant at flag-set time.
 
-    internal void LoadRegisters(int ins)
+    internal void LoadRegisters(in DecodedOp op)
     {
-        if (LoadStoreIncrementsI) ExecuteLoadRegistersIncIIns(ins);
-        else ExecuteLoadRegistersKeepIIns(ins);
+        if (LoadStoreIncrementsI) ExecuteLoadRegistersIncIIns(in op);
+        else ExecuteLoadRegistersKeepIIns(in op);
     }
 
-    internal void ExecuteLoadRegistersKeepIIns(int ins)
+    internal void ExecuteLoadRegistersKeepIIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        for (var i = 0; i <= x; i++)
+        for (var i = 0; i <= op.X; i++)
         {
             Registers.WriteV(i, Memory.Read(Registers.ReadIWithOffset(i)));
         }
     }
 
-    internal void ExecuteLoadRegistersIncIIns(int ins)
+    internal void ExecuteLoadRegistersIncIIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        for (var i = 0; i <= x; i++)
+        for (var i = 0; i <= op.X; i++)
         {
             Registers.WriteV(i, Memory.Read(Registers.ReadIWithOffset(i)));
         }
-        Registers.WriteI(Registers.ReadI() + x + 1);
+        Registers.WriteI(Registers.ReadI() + op.X + 1);
     }
 
-    internal void StoreRegisters(int ins)
+    internal void StoreRegisters(in DecodedOp op)
     {
-        if (LoadStoreIncrementsI) ExecuteStoreRegistersIncIIns(ins);
-        else ExecuteStoreRegistersKeepIIns(ins);
+        if (LoadStoreIncrementsI) ExecuteStoreRegistersIncIIns(in op);
+        else ExecuteStoreRegistersKeepIIns(in op);
     }
 
-    internal void ExecuteStoreRegistersKeepIIns(int ins)
+    internal void ExecuteStoreRegistersKeepIIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        for (var i = 0; i <= x; i++)
+        for (var i = 0; i <= op.X; i++)
         {
             Memory.Write(Registers.ReadIWithOffset(i), Registers.ReadV(i));
         }
     }
 
-    internal void ExecuteStoreRegistersIncIIns(int ins)
+    internal void ExecuteStoreRegistersIncIIns(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        for (var i = 0; i <= x; i++)
+        for (var i = 0; i <= op.X; i++)
         {
             Memory.Write(Registers.ReadIWithOffset(i), Registers.ReadV(i));
         }
-        Registers.WriteI(Registers.ReadI() + x + 1);
+        Registers.WriteI(Registers.ReadI() + op.X + 1);
     }
 }

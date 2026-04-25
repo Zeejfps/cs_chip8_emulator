@@ -1,5 +1,3 @@
-using static Chip8Emulator.Core.Chip8Disassembler;
-
 namespace Chip8Emulator.Core.Spec;
 
 // SUPER-CHIP 1.1 additions: hi-res mode, 4-pixel scrolls, scroll down N,
@@ -8,31 +6,31 @@ internal sealed partial class Chip8Interpreter
 {
     // ---- 00FF / 00FE : high-res mode toggle ---------------------------------
 
-    internal void EnableHiresMode(int ins)
+    internal void EnableHiresMode(in DecodedOp op)
     {
         Display.EnableHighResMode();
     }
 
-    internal void DisableHiresMode(int ins)
+    internal void DisableHiresMode(in DecodedOp op)
     {
         Display.DisableHighResMode();
     }
 
     // ---- 00FB / 00FC / 00CN : scroll ----------------------------------------
 
-    internal void ScrollRight(int ins)
+    internal void ScrollRight(in DecodedOp op)
     {
         Display.ScrollRight(4);
     }
 
-    internal void ScrollLeft(int ins)
+    internal void ScrollLeft(in DecodedOp op)
     {
         Display.ScrollLeft(4);
     }
 
-    internal void ScrollDown(int ins)
+    internal void ScrollDown(in DecodedOp op)
     {
-        Display.ScrollDown(ins & 0x0F);
+        Display.ScrollDown(op.N);
     }
 
     // ---- DXY0 : 16x16 hi-res sprite -----------------------------------------
@@ -129,22 +127,21 @@ internal sealed partial class Chip8Interpreter
 
     // ---- FX30 : load hi-res font character ----------------------------------
 
-    internal void LoadHighResFontCharacter(int ins)
+    internal void LoadHighResFontCharacter(in DecodedOp op)
     {
-        var x = ExtractX(ins);
-        var value = Registers.ReadV(x);
+        var value = Registers.ReadV(op.X);
         Registers.WriteI((value & 0x0F) * HighResFontCharWidth + HighResFontBaseAddress);
     }
 
     // ---- FX75 / FX85 : persistent user flags --------------------------------
 
-    internal void SaveFlagsIns(int ins)
+    internal void SaveFlagsIns(in DecodedOp op)
     {
-        SaveFlags(ExtractX(ins));
+        SaveFlags(op.X);
     }
 
-    internal void LoadFlagsIns(int ins)
+    internal void LoadFlagsIns(in DecodedOp op)
     {
-        LoadFlags(ExtractX(ins));
+        LoadFlags(op.X);
     }
 }

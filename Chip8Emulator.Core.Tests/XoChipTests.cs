@@ -36,7 +36,7 @@ public class XoChipTests
     {
         var emulator = CreateEmulator();
 
-        emulator.UtilityRoutines[0xF201 & 0x00FF](0xF201); // mask = 2 (plane 1 only)
+        emulator.Step(0xF201); // mask = 2 (plane 1 only)
 
         Assert.Equal(2, emulator.Display.SelectedPlanes);
     }
@@ -46,10 +46,10 @@ public class XoChipTests
     {
         var emulator = CreateEmulator();
         emulator.Memory.Write(0x300, [0xFF]);
-        emulator.SetIndexRegisterIns(0xA300);
+        emulator.Step(0xA300);
 
-        emulator.UtilityRoutines[0xF001 & 0x00FF](0xF001); // mask = 0
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xF001); // mask = 0
+        emulator.Step(0xD001);
 
         for (var x = 0; x < 8; x++) Assert.Equal(0, PixelAt(emulator, x, 0));
         Assert.Equal(0, emulator.Registers.ReadV(0xF));
@@ -60,10 +60,10 @@ public class XoChipTests
     {
         var emulator = CreateEmulator();
         emulator.Memory.Write(0x300, [0xFF]);
-        emulator.SetIndexRegisterIns(0xA300);
+        emulator.Step(0xA300);
 
-        emulator.UtilityRoutines[0xF201 & 0x00FF](0xF201); // mask = 2
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xF201); // mask = 2
+        emulator.Step(0xD001);
 
         for (var x = 0; x < 8; x++) Assert.Equal(0x02, PixelAt(emulator, x, 0));
     }
@@ -75,10 +75,10 @@ public class XoChipTests
         // plane 0 sprite: 1 byte = 0xFF (all on)
         // plane 1 sprite: 1 byte = 0x0F (low nibble on)
         emulator.Memory.Write(0x300, [0xFF, 0x0F]);
-        emulator.SetIndexRegisterIns(0xA300);
-        emulator.UtilityRoutines[0xF301 & 0x00FF](0xF301); // mask = 3 (both planes)
+        emulator.Step(0xA300);
+        emulator.Step(0xF301); // mask = 3 (both planes)
 
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xD001);
 
         // Bits 0..3: plane 0 on AND plane 1 off -> 0x01
         // Bits 4..7: plane 0 on AND plane 1 on  -> 0x03
@@ -91,13 +91,13 @@ public class XoChipTests
     {
         var emulator = CreateEmulator();
         emulator.Memory.Write(0x300, [0xFF, 0xFF]);
-        emulator.SetIndexRegisterIns(0xA300);
-        emulator.UtilityRoutines[0xF301 & 0x00FF](0xF301); // mask = 3
+        emulator.Step(0xA300);
+        emulator.Step(0xF301); // mask = 3
 
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xD001);
         Assert.Equal(0, emulator.Registers.ReadV(0xF));
 
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xD001);
         Assert.Equal(1, emulator.Registers.ReadV(0xF));
     }
 
@@ -109,15 +109,15 @@ public class XoChipTests
         var emulator = CreateEmulator();
         // Set plane 0 pixels
         emulator.Memory.Write(0x300, [0xFF]);
-        emulator.SetIndexRegisterIns(0xA300);
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xA300);
+        emulator.Step(0xD001);
         // Set plane 1 pixels on the same row
-        emulator.UtilityRoutines[0xF201 & 0x00FF](0xF201); // mask = 2
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xF201); // mask = 2
+        emulator.Step(0xD001);
 
         // Now clear only plane 0
-        emulator.UtilityRoutines[0xF101 & 0x00FF](0xF101); // mask = 1
-        emulator.SystemRoutines[0x00E0 & 0x00FF](0x00E0);
+        emulator.Step(0xF101); // mask = 1
+        emulator.Step(0x00E0);
 
         // Plane 0 bits gone, plane 1 bits remain
         for (var x = 0; x < 8; x++) Assert.Equal(0x02, PixelAt(emulator, x, 0));
@@ -128,16 +128,16 @@ public class XoChipTests
     {
         var emulator = CreateEmulator();
         emulator.Memory.Write(0x300, [0xFF]);
-        emulator.SetIndexRegisterIns(0xA300);
+        emulator.Step(0xA300);
 
         // Draw into plane 0
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xD001);
         // Draw the same shape into plane 1
-        emulator.UtilityRoutines[0xF201 & 0x00FF](0xF201);
-        emulator.DrawToScreen(0xD001);
+        emulator.Step(0xF201);
+        emulator.Step(0xD001);
 
         // Scroll right by 4 but only plane 1
-        emulator.SystemRoutines[0x00FB & 0x00FF](0x00FB);
+        emulator.Step(0x00FB);
 
         // x=0..3 : plane 0 only (0x01)
         // x=4..7 : plane 0 and plane 1 (0x03)
@@ -157,9 +157,9 @@ public class XoChipTests
         var pattern = new byte[16];
         for (var i = 0; i < pattern.Length; i++) pattern[i] = (byte)(i + 1);
         emulator.Memory.Write(0x400, pattern);
-        emulator.SetIndexRegisterIns(0xA400);
+        emulator.Step(0xA400);
 
-        emulator.UtilityRoutines[0xF002 & 0x00FF](0xF002);
+        emulator.Step(0xF002);
 
         Assert.Equal(1, audio.WritePatternCount);
         Assert.Equal(pattern, audio.LastPattern);
@@ -171,7 +171,7 @@ public class XoChipTests
         var audio = new FakeAudio();
         var emulator = CreateEmulator(audio);
 
-        emulator.UtilityRoutines[0xF102 & 0x00FF](0xF102); // F102 is not F002
+        emulator.Step(0xF102); // F102 is not F002
 
         Assert.Equal(0, audio.WritePatternCount);
     }
@@ -183,9 +183,9 @@ public class XoChipTests
     {
         var audio = new FakeAudio();
         var emulator = CreateEmulator(audio);
-        emulator.SetRegisterValue(0x6070); // V0 = 112
+        emulator.Step(0x6070); // V0 = 112
 
-        emulator.UtilityRoutines[0xF03A & 0x00FF](0xF03A);
+        emulator.Step(0xF03A);
 
         Assert.Equal(112, audio.Pitch);
     }
@@ -197,11 +197,11 @@ public class XoChipTests
     {
         var flags = new InMemoryFlagStore();
         var emulator = CreateEmulator(flags);
-        emulator.SetRegisterValue(0x60AA); // V0 = 0xAA
-        emulator.SetRegisterValue(0x61BB); // V1 = 0xBB
-        emulator.SetRegisterValue(0x62CC); // V2 = 0xCC
+        emulator.Step(0x60AA); // V0 = 0xAA
+        emulator.Step(0x61BB); // V1 = 0xBB
+        emulator.Step(0x62CC); // V2 = 0xCC
 
-        emulator.UtilityRoutines[0xF275 & 0x00FF](0xF275); // FX75 with X=2 saves V0..V2
+        emulator.Step(0xF275); // FX75 with X=2 saves V0..V2
 
         Span<byte> readBack = stackalloc byte[16];
         flags.LoadInto(readBack);
@@ -219,7 +219,7 @@ public class XoChipTests
         flags.SaveFrom(seed);
         var emulator = CreateEmulator(flags);
 
-        emulator.UtilityRoutines[0xF385 & 0x00FF](0xF385); // FX85 with X=3 loads V0..V3
+        emulator.Step(0xF385); // FX85 with X=3 loads V0..V3
 
         Assert.Equal(0x11, emulator.Registers.ReadV(0));
         Assert.Equal(0x22, emulator.Registers.ReadV(1));
@@ -234,13 +234,13 @@ public class XoChipTests
         var emulator = CreateEmulator(flags);
         for (var i = 0; i < 16; i++)
         {
-            emulator.SetRegisterValue(0x6000 | (i << 8) | (i * 17));
+            emulator.Step(0x6000 | (i << 8) | (i * 17));
         }
 
-        emulator.UtilityRoutines[0xFF75 & 0x00FF](0xFF75); // save V0..VF
+        emulator.Step(0xFF75); // save V0..VF
 
         var restored = CreateEmulator(flags);
-        restored.UtilityRoutines[0xFF85 & 0x00FF](0xFF85); // load V0..VF
+        restored.Step(0xFF85); // load V0..VF
 
         for (var i = 0; i < 16; i++)
         {
@@ -258,7 +258,7 @@ public class XoChipTests
         // Simulate the fetch/decode phase: PC points at the NNNN word after the F000 opcode.
         emulator.Registers.WritePc(0x400);
 
-        emulator.UtilityRoutines[0xF000 & 0x00FF](0xF000);
+        emulator.Step(0xF000);
 
         Assert.Equal(0x1234, emulator.Registers.ReadI());
     }
@@ -269,7 +269,7 @@ public class XoChipTests
     public void LoadProgram_ResetsSelectedPlanesToPlaneZero()
     {
         var emulator = CreateEmulator();
-        emulator.UtilityRoutines[0xF301 & 0x00FF](0xF301); // mask = 3
+        emulator.Step(0xF301); // mask = 3
 
         emulator.LoadProgram([0x00, 0xE0]);
 
