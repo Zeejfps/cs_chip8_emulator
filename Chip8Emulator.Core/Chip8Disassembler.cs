@@ -59,7 +59,6 @@ public static class Chip8Disassembler
             OpKind.LdVxI => $"LD   V{op.X:X}, [I]",
             OpKind.SaveFlags => $"LD   R, V{op.X:X}",
             OpKind.LoadFlags => $"LD   V{op.X:X}, R",
-            OpKind.Unknown => $"DW   0x{op.Raw:X4}",
             _ => $"DW   0x{op.Raw:X4}"
         };
     }
